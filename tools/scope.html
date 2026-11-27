@@ -1,0 +1,8 @@
+<!doctype html><html><body style="margin:0;background:#000"><canvas id="c" width="1280" height="720"></canvas>
+<script type="module">
+import { Livescope } from "../src/livescope.js";
+const s = new Livescope(document.getElementById("c"));
+const arg = { bodem: (v) => 8.1 + Math.max(0, v - 4) * 0.06 + Math.sin(v * 0.7) * 0.08, vissen: [{ v: -1.05, d: 3.0, lengte: 0.75, hoek: 0, soort: "Snoekbaars" }, { v: 0.75, d: 3.0, lengte: 0.95, hoek: 0, soort: "Snoekbaars" }, { v: -2.1, d: 4.1, lengte: 0.25, soort: "Voorn" }, { v: 1.4, d: 3.3, lengte: 0.2, soort: "Voorn" }],
+  temp: 14.79, snelheid: 0.29, volt: 12.5, tijd: "12:50", onder: 8.1 };
+for (let i = 0; i < 5; i++) s.teken(arg); window.KLAAR = 1;
+</script></body></html>

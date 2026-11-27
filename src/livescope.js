@@ -1,92 +1,105 @@
-// De livescope op de belly boat: een nagebouwd sonarbeeld (vooruitkijkend, 10 m bereik).
-// Zoals op de opname: blauw water met ruis, de bodem als dikke rood-gele band, vissen als langgerekte rood-gele vlekken,
-// je kunstaas als een groepje stipjes, een zwarte wig linksboven (buiten de bundel), een raster in meters, temperatuur en tijd.
-const BW0 = 256, BH0 = 144;        // het sonarbeeld zelf wordt klein getekend en uitgerekt: dat geeft de wazige korrel
-const X0 = -5, X1 = 13.5, D1 = 13; // wat er in beeld is: van 5 m achter je tot 13,5 m voor je, tot 13 m diep (de Lot is overal ± 10 m)
+// De livescope op de bellyboat: nagebouwd naar Bobs eigen opname van zijn Garmin LiveScope (ref/livescope-echt.mp4).
+// Vooruitkijkend: bovenaan de afstand (4 m achter je tot ± 12 m voor je), links de diepte. Het water is effen
+// koningsblauw met een fijne korrel; vlak bij de transducer een waaier van lichtblauwe spikkels. De bodem is een dikke
+// rood-oranje band met geel-groene randen en schuine strepen, met daaronder schuine lichtblauwe vegen. Vissen zijn
+// liggende vlekken: rode kern, geel-groene rand, lichtblauwe gloed; kleine visjes lichtblauwe stipjes.
+// Linksboven groot de diepte onder de boot, daaronder watertemperatuur, snelheid (knopen), accuspanning en tijd.
+// Het bereik schaalt mee met de diepte (Auto): bij 8 m bodem 12 m, zoals op de opname; bij 10 m bodem 14 m.
 
-/** De kleuren van het scherm: donkerblauw → blauw → cyaan → groen → geel → rood → donkerrood. */
-const KLEUR = (() => { const t = new Uint8Array(256 * 3), stop = [[0, 0, 0, 110], [0.22, 0, 20, 235], [0.42, 0, 190, 255], [0.55, 60, 255, 170], [0.68, 255, 240, 0], [0.84, 255, 40, 0], [1, 120, 0, 0]];
+/** De kleuren: blauw (3,12,198) → lichtblauw → cyaan → groen → geel → oranje → rood → donkerrood (gemeten op de opname). */
+const KLEUR = (() => { const t = new Uint8Array(256 * 3), stop = [[0, 3, 12, 198], [0.18, 0, 40, 225], [0.34, 0, 150, 235], [0.46, 0, 210, 215], [0.56, 100, 238, 123], [0.66, 206, 234, 34], [0.78, 254, 160, 0], [0.88, 250, 70, 0], [1, 170, 0, 0]];
   for (let i = 0; i < 256; i++) { const v = i / 255; let k = 0; while (k < stop.length - 2 && v > stop[k + 1][0]) k++; const a = stop[k], b = stop[k + 1], f = Math.min(1, Math.max(0, (v - a[0]) / (b[0] - a[0]))); for (let c = 0; c < 3; c++) t[i * 3 + c] = a[c + 1] + (b[c + 1] - a[c + 1]) * f; }
   return t; })();
 const h2 = (x, y) => { const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return s - Math.floor(s); };
-/** Zachte ruis (voor de structuur van de bodem en de wolken in het water). */
 const wolk = (x, y) => { const xi = Math.floor(x), yi = Math.floor(y), u = x - xi, v = y - yi, a = h2(xi, yi), b = h2(xi + 1, yi), c = h2(xi, yi + 1), d = h2(xi + 1, yi + 1), su = u * u * (3 - 2 * u), sv = v * v * (3 - 2 * v); return a + (b - a) * su + (c - a) * sv + (a - b - c + d) * su * sv; };
+const BW = 384; // breedte van het sonarbeeld in pixels (wordt uitgerekt naar het scherm)
+const FONT = '"Helvetica Neue", Arial, sans-serif';
 
 export class Livescope {
-  constructor(canvas) {
-    this.c = canvas; this.x = canvas.getContext("2d");
-    this.klein = document.createElement("canvas"); this.klein.width = BW0; this.klein.height = BH0; this.kx = this.klein.getContext("2d"); this.beeld = this.kx.createImageData(BW0, BH0);
-    this.t = 0;
-  }
+  constructor(canvas) { this.c = canvas; this.x = canvas.getContext("2d"); this.klein = document.createElement("canvas"); this.kx = this.klein.getContext("2d"); this.t = 0; this.bereik = 12; }
   /**
-   * Teken één beeld. bodem(v) = diepte op v meter voor je (negatief = achter je); vissen = [{ v, d, lengte, hoek }];
-   * aas = { v, d } (waar je aas hangt: v meter voor de transducer, d diep) of null; school = [{ v, d }] (kleine visjes).
-   * vissen: soort Meerval / Karper / anders; hoek = zwemrichting ten opzichte van de bundel.
+   * bodem(v) = diepte op v meter voor de transducer (negatief = erachter); vissen = [{ v, d, lengte, hoek, soort }];
+   * school = [{ v, d }]; planten = [{ v, bodem, top }]; aas = { v, d } of null; onder = diepte onder de boot; richting = stand van de transducer.
    */
-  teken({ bodem, vissen = [], aas = null, school = [], planten = [], temp = 27.4, tijd = "10:23", richting = null }) {
-    // het sonarbeeld krijgt dezelfde verhouding als het scherm (liggend of staand op het hele scherm)
-    { const bh = Math.max(60, Math.round((BW0 * this.c.height) / this.c.width)); if (bh !== this.klein.height) { this.klein.height = bh; this.beeld = this.kx.createImageData(BW0, bh); } }
-    const BW = BW0, BH = this.klein.height;
-    this.t += 1; const px = this.beeld.data, t = this.t;
-    const bod = new Float32Array(BW); for (let i = 0; i < BW; i++) bod[i] = bodem(X0 + ((i + 0.5) / BW) * (X1 - X0));
-    for (let j = 0; j < BH; j++) {
-      const d = (j / BH) * D1;
-      for (let i = 0; i < BW; i++) {
-        const v = X0 + ((i + 0.5) / BW) * (X1 - X0), b = bod[i]; let s;
-        if (v < 0 && d < -v * 1.32 - 0.05) { px.set([0, 0, 0, 255], (j * BW + i) * 4); continue; } // buiten de bundel: zwart
-        const korrel = h2(i + t * 7.3, j - t * 3.1);
-        if (d < b - 0.25) {
-          // open water: donkerblauw met korrel en vage wolken; bovenin de rommel van het oppervlak
-          s = 0.1 + korrel * 0.1 + wolk(i * 0.06 + 3, j * 0.09 + t * 0.02) * 0.1;
-          if (v > 5.5) s += wolk(i * 0.03, j * 0.05) * 0.12 * Math.min(1, (v - 5.5) / 2); // verder weg wordt het lichter
-          if (d < 0.75 && v > 3.6) s += Math.max(0, wolk(i * 0.22 + t * 0.05, 5) - 0.35) * 1.1 * (1 - d / 0.75) + korrel * 0.12;
-          if (d < 0.18 && v > 0 && v < 3.4) s += 0.25 * korrel;
-        } else if (d < b + 0.95) {
-          // de bodem: een dikke harde band, rood met gele vlekken, met een gele rand erboven
-          const in_ = (d - b + 0.25) / 1.2, kern = Math.sin(Math.min(1, in_ * 1.25) * Math.PI);
-          s = 0.52 + kern * 0.42 + (wolk(i * 0.5 + 9, j * 0.9) - 0.5) * 0.26 + (korrel - 0.5) * 0.12;
+  teken({ bodem, vissen = [], aas = null, school = [], planten = [], temp = 14.8, snelheid = 0, volt = 12.5, tijd = "12:50", richting = null, onder = null }) {
+    this.t += 1; const t = this.t, c = this.c, W = c.width, H = c.height, F = Math.min(H, (W * 9) / 16);
+    // het bereik (Auto): bodem + ruim 3,5 m op hele meters; vooruit even ver, achteruit 0,385 daarvan;
+    // de diepte-as heeft dezelfde verhouding meters per pixel als op de opname
+    const ref = onder ?? bodem(0); const doel = Math.min(24, Math.max(6, Math.ceil(ref + 3.6))); if (Math.abs(doel - this.bereik) >= 1) this.bereik = doel;
+    const R = this.bereik, X0 = -R * 0.385, X1 = R * 0.985, D1 = Math.max((X1 - X0) * (H / W) * 1.257, ref + 2.6); // op een breed scherm toch de bodem met ruimte eronder
+    const BH = Math.max(80, Math.round((BW * H) / W)); if (this.klein.width !== BW || this.klein.height !== BH) { this.klein.width = BW; this.klein.height = BH; this.beeld = this.kx.createImageData(BW, BH); }
+    const px = this.beeld.data, bod = new Float32Array(BW); for (let i = 0; i < BW; i++) bod[i] = bodem(X0 + ((i + 0.5) / BW) * (X1 - X0));
+    const wig = 1.25; // helling van de zwarte wig linksboven
+    for (let j = 0; j < BH; j++) { const d = ((j + 0.5) / BH) * D1;
+      for (let i = 0; i < BW; i++) { const v = X0 + ((i + 0.5) / BW) * (X1 - X0), b = bod[i], o = (j * BW + i) * 4;
+        if (v < 0 && d < -v * wig) { px[o] = px[o + 1] = px[o + 2] = 6; px[o + 3] = 255; continue; } // buiten de bundel: zwart
+        const korrel = h2(i + t * 7.3, j - t * 3.1); let s = 0.01 + korrel * 0.035;
+        if (d < b - 0.15) {
+          // het water: effen blauw met een fijne korrel; af en toe een lichter spikkeltje; bij de transducer de waaier
+          const r = Math.hypot(v, d * 0.9);
+          if (korrel > 0.9985) s += 0.16; s += (wolk(i * 0.08 + t * 0.01, j * 0.1) - 0.5) * 0.04;
+          if (r < 3.0 && v > -0.15) { const a = Math.atan2(d, v), st = h2(Math.round(a * 140), Math.floor(r * 3 + h2(Math.round(a * 140), 5) * 3) + (t >> 2)); if (st > 0.82 && a < 1.45) s += (0.32 + korrel * 0.15) * (1 - r / 3.0) ** 0.7 + 0.06; }
+        } else if (d < b + 1.05) {
+          // de bodem: rood-oranje kern, geel-groene randen, schuine strepen
+          const x_ = (d - b + 0.15) / 1.2, kern = Math.sin(Math.min(1, x_ * 1.15) * Math.PI) ** 0.8, streep = wolk((i * 0.9 - j * 1.6) * 0.09, (i * 0.3 + j * 0.9) * 0.6) * 0.6 + wolk(i * 0.05 + 7, j * 0.12) * 0.4, fijn = wolk((i * 1.4 - j * 2.2) * 0.25, (i + j) * 0.9);
+          const dikte = 0.65 + wolk(i * 0.018 + 3, 1.7) * 0.55; s = 0.36 + kern * 0.52 * dikte + (streep - 0.5) * 0.36 + (fijn - 0.5) * 0.16 + (korrel - 0.5) * 0.08 - (1 - kern) * 0.12;
         } else {
-          // onder de bodem: de nagalm, blauw-cyaan met vegen
-          const diep = d - b - 0.95; s = 0.42 - Math.min(0.22, diep * 0.09) + (wolk(i * 0.12 + j * 0.05, j * 0.2 - i * 0.03) - 0.5) * 0.3 + (korrel - 0.5) * 0.14;
+          // onder de bodem: donkerblauw met schuine lichtblauwe vegen
+          const veeg = wolk((i * 0.35 + j * 0.15) * 0.12, (j * 0.35 - i * 0.12) * 0.05) * wolk(i * 0.6 - j * 0.3, j * 0.25), diep = d - b - 1.05;
+          s = 0.03 + Math.max(0, veeg - 0.3) * 1.3 * Math.max(0.25, 1 - diep / 4) + korrel * 0.04;
         }
-        const k = Math.max(0, Math.min(255, (s * 255) | 0)) * 3; px.set([KLEUR[k], KLEUR[k + 1], KLEUR[k + 2], 255], (j * BW + i) * 4);
-      }
-    }
+        const k = Math.max(0, Math.min(255, (s * 255) | 0)) * 3; px[o] = KLEUR[k]; px[o + 1] = KLEUR[k + 1]; px[o + 2] = KLEUR[k + 2]; px[o + 3] = 255; } }
     this.kx.putImageData(this.beeld, 0, 0);
-    // vissen, aas en visjes: lichtgevende vlekken die optellen bij het beeld
-    const X = (v) => ((v - X0) / (X1 - X0)) * BW, Y = (d) => (d / D1) * BH, k = this.kx; k.globalCompositeOperation = "lighter";
-    const vlek = (cx, cy, rx, ry, hoek, sterk) => { k.save(); k.translate(cx, cy); k.rotate(hoek); k.scale(1, ry / rx); const g = k.createRadialGradient(0, 0, 0, 0, 0, rx); g.addColorStop(0, `rgba(255,${(90 * sterk) | 0},0,${0.95 * sterk})`); g.addColorStop(0.45, `rgba(255,220,0,${0.8 * sterk})`); g.addColorStop(0.8, `rgba(0,255,190,${0.45 * sterk})`); g.addColorStop(1, "rgba(0,120,255,0)"); k.fillStyle = g; k.beginPath(); k.arc(0, 0, rx, 0, 6.3); k.fill(); k.restore(); };
-    // de vorm verraadt de soort: een meerval is een kikkervisje (dikke kop, pens, dunne staart), een karper is bol en hoog
+    // vissen, visjes, planten en het aas: lichtgevende vlekken die optellen
+    const X = (v) => ((v - X0) / (X1 - X0)) * BW, Y = (d) => (d / D1) * BH, k = this.kx, ppm = BW / (X1 - X0), ppmY = BH / D1; k.globalCompositeOperation = "source-over";
+    const vlek = (cx, cy, rx, ry, sterk) => { k.save(); k.translate(cx, cy); k.scale(1, ry / rx); const g = k.createRadialGradient(0, 0, 0, 0, 0, rx);
+      g.addColorStop(0, `rgba(235,25,0,${Math.min(1, 1.0 * sterk)})`); g.addColorStop(0.28, `rgba(254,140,0,${Math.min(1, 0.95 * sterk)})`); g.addColorStop(0.5, `rgba(206,234,34,${0.85 * sterk})`); g.addColorStop(0.7, `rgba(100,238,123,${0.6 * sterk})`); g.addColorStop(0.86, `rgba(0,200,225,${0.35 * sterk})`); g.addColorStop(1, "rgba(0,40,225,0)"); k.fillStyle = g; k.beginPath(); k.arc(0, 0, rx, 0, 6.3); k.fill(); k.restore(); };
+    const stip = (cx, cy, r, sterk) => { const g = k.createRadialGradient(cx, cy, 0, cx, cy, r); g.addColorStop(0, `rgba(120,255,230,${sterk})`); g.addColorStop(0.5, `rgba(0,200,235,${sterk * 0.6})`); g.addColorStop(1, "rgba(0,60,230,0)"); k.fillStyle = g; k.beginPath(); k.arc(cx, cy, r, 0, 6.3); k.fill(); };
+    for (const p of planten) { if (p.v < X0 || p.v > X1) continue; for (let d = p.bodem; d > p.top; d -= 0.22) stip(X(p.v) + Math.sin(d * 5 + p.v) * 1.1, Y(d), 1.8, 0.45 * (0.4 + 0.6 * (d - p.top) / (p.bodem - p.top + 0.01))); }
+    for (const s of school) { if (s.v < X0 || s.v > X1) continue; stip(X(s.v) + Math.sin(t * 0.7 + s.d * 9) * 0.8, Y(s.d) + Math.cos(t * 0.5 + s.v * 7) * 0.5, 2.0, 0.7); }
+    // de vorm verraadt de soort: een meerval is een kikkervisje (dikke kop, pens, dunne staart), een karper bol en hoog
     for (const f of vissen) { if (f.v < X0 || f.v > X1 || f.d > D1) continue;
-      const c = Math.cos(f.hoek ?? 0), kop = c >= 0 ? 1 : -1, L = (f.lengte / (X1 - X0)) * BW * (0.4 + 0.6 * Math.abs(c)), hY = (f.lengte * BH) / D1, cx = X(f.v), cy = Y(f.d), wieg = Math.sin(t * 0.25 + f.v * 3) * 0.6, sterk = f.sterk ?? 1;
+      const cs = Math.cos(f.hoek ?? 0), kop = cs >= 0 ? 1 : -1, L = f.lengte * ppm * (0.45 + 0.55 * Math.abs(cs)), hY = f.lengte * ppmY, cx = X(f.v), cy = Y(f.d), wieg = Math.sin(t * 0.25 + f.v * 3) * 0.5, z = f.sterk ?? 1;
+      if (f.lengte < 0.3) { stip(cx, cy, 2.6, 0.85); continue; }
+      const dik = Math.max(2.4, ppmY * (0.14 + f.lengte * 0.1)); // de echo is dikker dan de vis
       if (f.soort === "Meerval") {
-        vlek(cx + kop * L * 0.3, cy, Math.max(2.2, L * 0.2), Math.max(1.6, hY * 0.12), 0, sterk); // de kop
-        vlek(cx + kop * L * 0.08, cy + hY * 0.02, Math.max(2, L * 0.2), Math.max(1.5, hY * 0.11), 0, sterk); // de pens
-        for (let i = 0; i < 4; i++) { const a = 0.12 + i * 0.13; vlek(cx - kop * L * a, cy + wieg * i * 0.4, Math.max(1.2, L * (0.12 - i * 0.022)), Math.max(0.9, hY * (0.065 - i * 0.012)), 0, sterk * (0.9 - i * 0.1)); } // de staart
-      } else if (f.soort === "Karper" || f.soort === "Brasem") {
-        vlek(cx + kop * L * 0.05, cy, Math.max(2.4, L * 0.36), Math.max(2, hY * 0.2), 0, sterk); vlek(cx - kop * L * 0.4, cy + wieg * 0.3, Math.max(1.2, L * 0.1), Math.max(1, hY * 0.1), 0, sterk * 0.8);
-      } else vlek(cx, cy, Math.max(1.8, L * 0.3), Math.max(1.2, hY * 0.12), 0, sterk * 0.85); }
-    // waterplanten: pluimen van de bodem omhoog
-    for (const p of planten) { if (p.v < X0 || p.v > X1) continue; for (let d = p.bodem; d > p.top; d -= 0.28) vlek(X(p.v) + Math.sin(d * 5 + p.v) * 0.8, Y(d), 1.5, 1.4, 0, 0.55 * (0.5 + 0.5 * (d - p.top) / (p.bodem - p.top + 0.01))); }
-    for (const s of school) { if (s.v < X0 || s.v > X1) continue; vlek(X(s.v) + Math.sin(t * 0.7 + s.d * 9) * 1.2, Y(s.d) + Math.cos(t * 0.5 + s.v * 7) * 0.8, 1.9, 1.3, 0, 0.75); }
-    if (aas && aas.v != null) { vlek(X(aas.v), Y(aas.d), 2.4, 1.6, 0, 0.95); for (let i = 1; i < 5; i++) if (aas.d - i * 0.6 > 0.3) vlek(X(aas.v) - 0.2 + Math.sin(i * 2.1) * 0.8, Y(aas.d - i * 0.6), 1.1, 0.9, 0, 0.4); }
+        vlek(cx + kop * L * 0.22, cy, Math.max(3, L * 0.3), dik * 1.15, z); vlek(cx + kop * L * 0.0, cy + dik * 0.1, Math.max(2.6, L * 0.28), dik * 1.05, z);
+        for (let i = 0; i < 4; i++) vlek(cx - kop * L * (0.22 + i * 0.13), cy + wieg * i * 0.35, Math.max(1.5, L * (0.16 - i * 0.028)), dik * (0.75 - i * 0.12), z * (0.85 - i * 0.12));
+      } else if (f.soort === "Karper" || f.soort === "Brasem") { vlek(cx + kop * L * 0.04, cy, Math.max(3, L * 0.42), dik * 1.5, z); vlek(cx - kop * L * 0.45, cy + wieg * 0.3, Math.max(1.4, L * 0.13), dik * 0.7, z * 0.7); }
+      else { vlek(cx + kop * L * 0.05, cy, Math.max(2.6, L * 0.45), dik, z); vlek(cx - kop * L * 0.42, cy, Math.max(1.4, L * 0.2), dik * 0.6, z * 0.6); }
+      // rafels en het spoor erachter, zoals op de opname
+      for (let i = 0; i < 3; i++) { const q = Math.sin(t * 0.9 + i * 2.3 + f.v * 5); vlek(cx + (i - 1) * L * 0.3 + q * 1.2, cy + q * dik * 0.4, Math.max(1.4, L * 0.12), dik * 0.45, 0.5 * z); }
+      vlek(cx - kop * L * 0.85, cy, Math.max(2, L * 0.55), dik * 0.4, 0.35 * z); }
+    if (aas && aas.v != null) { vlek(X(aas.v), Y(aas.d), 2.2, 1.5, 0.9); for (let i = 1; i < 6; i++) if (aas.d - i * 0.5 > 0.3) stip(X(aas.v) + Math.sin(i * 2.1) * 0.6, Y(aas.d - i * 0.5), 1.2, 0.35); }
     k.globalCompositeOperation = "source-over";
-    // uitvergroten naar het scherm, met het raster en de cijfers erover
-    const c = this.c, x = this.x, W = c.width, H = c.height, F = Math.min(H, (W * 9) / 16); x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high"; x.drawImage(this.klein, 0, 0, W, H);
-    const sx = (v) => ((v - X0) / (X1 - X0)) * W, sy = (d) => (d / D1) * H;
-    x.strokeStyle = "rgba(255,255,255,0.16)"; x.lineWidth = 1; x.fillStyle = "#fff"; x.font = `${Math.round(F * 0.036)}px sans-serif`; x.textAlign = "center"; x.textBaseline = "top";
-    for (let v = Math.ceil(X0); v <= Math.floor(X1); v++) { x.beginPath(); x.moveTo(sx(v), 0); x.lineTo(sx(v), H); x.stroke(); x.fillText(String(Math.abs(v)), sx(v), 2); }
-    x.textAlign = "left"; x.textBaseline = "middle"; for (let d = 1; d < D1; d++) { x.beginPath(); x.moveTo(0, sy(d)); x.lineTo(W, sy(d)); x.stroke(); x.fillText(String(d), 3, sy(d)); }
-    x.strokeStyle = "#fff"; x.lineWidth = 1.5; x.beginPath(); x.moveTo(sx(X0), sy(-X0 * 1.32)); x.lineTo(sx(0), sy(0.12)); x.lineTo(sx(3.3), 0); x.stroke(); // de rand van de bundel
-    x.font = `bold ${Math.round(F * 0.058)}px sans-serif`; x.textBaseline = "top"; x.fillText(`${temp.toFixed(2)}°c`, W * 0.045, H * 0.03); x.fillText(tijd, W * 0.045, H * 0.085);
-    // waar kijkt de transducer heen? Een bellyboat van boven met de bundel
-    if (richting !== null) { const r = F * 0.11, cx = W - F * 0.2, cy = F * 0.24; x.save(); x.fillStyle = "rgba(10,14,20,0.65)"; x.beginPath(); x.arc(cx, cy, r * 1.25, 0, 6.3); x.fill();
-      x.fillStyle = "rgba(255,230,60,0.55)"; x.beginPath(); x.moveTo(cx + r * 0.25, cy - r * 0.3); x.arc(cx + r * 0.25, cy - r * 0.3, r * 1.05, -Math.PI / 2 - richting - 0.2, -Math.PI / 2 - richting + 0.2); x.closePath(); x.fill();
+
+    // ---- uitvergroten naar het scherm, met raster, cijfers en knoppen erover ----
+    const x = this.x; x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high"; x.drawImage(this.klein, 0, 0, W, H);
+    const sx = (v) => ((v - X0) / (X1 - X0)) * W, sy = (d) => (d / D1) * H, lijn = Math.max(1, F / 600), stapM = R > 16 ? 2 : 1;
+    x.strokeStyle = "rgba(255,255,255,0.33)"; x.lineWidth = lijn; x.fillStyle = "#fff";
+    // bovenaan de afstand achter (links van 0) en voor de transducer, links de diepte
+    x.font = `${Math.round(F * 0.034)}px ${FONT}`; x.textAlign = "center"; x.textBaseline = "top";
+    for (let v = Math.ceil(X0 / stapM) * stapM; v <= X1; v += stapM) { x.beginPath(); x.moveTo(sx(v), 0); x.lineTo(sx(v), H); x.stroke(); x.fillText(String(Math.abs(v)), sx(v), F * 0.004); }
+    x.textAlign = "left"; x.textBaseline = "middle"; for (let d = stapM; d < D1; d += stapM) { x.beginPath(); x.moveTo(0, sy(d)); x.lineTo(W, sy(d)); x.stroke(); x.fillText(String(d), F * 0.006, sy(d)); }
+    // de rand van de bundel en het oppervlak
+    x.strokeStyle = "#fff"; x.lineWidth = lijn * 2; x.beginPath(); x.moveTo(sx(X0), sy(-X0 * wig)); x.lineTo(sx(0), sy(0.02)); x.lineTo(sx(X1 * 0.3), 0); x.stroke();
+    // de grote diepte en de regels eronder
+    const L0 = F * 0.08; x.textBaseline = "alphabetic"; x.shadowColor = "rgba(0,0,0,0.5)"; x.shadowBlur = F * 0.01;
+    if (onder != null) { x.font = `bold ${Math.round(F * 0.19)}px ${FONT}`; const tk = onder.toFixed(1); x.fillText(tk, L0, F * 0.175); const bw = x.measureText(tk).width; x.font = `bold ${Math.round(F * 0.1)}px ${FONT}`; x.fillText("m", L0 + bw + F * 0.005, F * 0.175); }
+    [[temp.toFixed(2), "°", "C"], [snelheid.toFixed(2), "k", "t"], [volt.toFixed(1), "", "V"], [tijd, "", ""]].forEach(([w, e1, e2], i) => { const y = F * (0.226 + i * 0.0445); x.font = `${Math.round(F * 0.056)}px ${FONT}`; x.fillText(w, L0, y); const bw = x.measureText(w).width; x.font = `${Math.round(F * 0.027)}px ${FONT}`; if (e1) x.fillText(e1, L0 + bw + 2, y - F * 0.022); if (e2) x.fillText(e2, L0 + bw + 2, y - (e1 ? 0 : F * 0.002)); });
+    x.shadowBlur = 0;
+    // waar kijkt de transducer heen? (een bellyboat van boven met de bundel; niet van Garmin, maar handig in het spel)
+    if (richting !== null) { const r = F * 0.09, cx = W - F * 0.2, cy = F * 0.2; x.save(); x.fillStyle = "rgba(10,14,30,0.55)"; x.beginPath(); x.arc(cx, cy, r * 1.25, 0, 6.3); x.fill();
+      x.fillStyle = "rgba(255,230,60,0.6)"; x.beginPath(); x.moveTo(cx + r * 0.25, cy - r * 0.3); x.arc(cx + r * 0.25, cy - r * 0.3, r * 1.05, -Math.PI / 2 - richting - 0.2, -Math.PI / 2 - richting + 0.2); x.closePath(); x.fill();
       x.strokeStyle = "#fff"; x.lineWidth = 2; x.beginPath(); x.moveTo(cx - r * 0.3, cy - r * 0.5); x.lineTo(cx - r * 0.3, cy + r * 0.3); x.quadraticCurveTo(cx, cy + r * 0.65, cx + r * 0.3, cy + r * 0.3); x.lineTo(cx + r * 0.3, cy - r * 0.5); x.stroke(); x.restore(); }
-    // de knoppen van het toestel (alleen voor het beeld)
-    x.font = `${Math.round(F * 0.05)}px sans-serif`; x.textAlign = "center"; x.textBaseline = "middle";
-    const knop = (kx_, ky, tekst, klein) => { const bw = F * 0.11, bh = F * 0.085; x.fillStyle = "rgba(70,78,90,0.82)"; x.fillRect(kx_ - bw / 2, ky - bh / 2, bw, bh); x.fillStyle = "#fff"; if (klein) { x.font = `${Math.round(F * 0.026)}px sans-serif`; } x.fillText(tekst, kx_, ky); x.font = `${Math.round(F * 0.05)}px sans-serif`; };
-    const by = H * 0.925; knop(W * 0.08, by, "II"); knop(W * 0.255, by, "–"); knop(W * 0.34, by, "13m", true); knop(W * 0.425, by, "+"); knop(W * 0.625, by, "–"); knop(W * 0.71, by, "Gain 78%", true); knop(W * 0.795, by, "+");
-    knop(W * 0.967, H * 0.65, "–"); knop(W * 0.967, H * 0.78, "Auto 13m", true); knop(W * 0.967, H * 0.915, "+");
+    // de knoppen van het toestel, zoals op de opname
+    const U = (F * 16) / 9; // breedte van een 16:9-scherm met deze hoogte: de knoppen staan op dezelfde plek als op de opname
+    const knop = (kx_, ky, tekst, klein, b, h) => { const bw = U * b, bh = F * h; x.fillStyle = "rgba(58,62,70,0.85)"; x.fillRect(kx_ - bw / 2, ky - bh / 2, bw, bh);
+      x.fillStyle = "#fff"; x.textAlign = "center"; x.textBaseline = "middle"; const rg = tekst.split("\n"); x.font = `${Math.round(F * (klein ? 0.026 : 0.05))}px ${FONT}`; rg.forEach((r_, i) => x.fillText(r_, kx_, ky + (i - (rg.length - 1) / 2) * F * 0.03)); };
+    const by = H - F * 0.086; knop(U * 0.08, by, "II", false, 0.074, 0.09);
+    for (const [px_, tk, kl] of [[0.257, "–", false], [0.342, `${R}m`, true], [0.427, "+", false]]) knop(U * px_, by, tk, kl, 0.074, 0.09);
+    for (const [px_, tk, kl] of [[0.794, "+", false], [0.709, "Ver.\n68%", true], [0.624, "–", false]]) knop(W - U * (1 - px_), by, tk, kl, 0.074, 0.09);
+    const rx = W - U * 0.034; knop(rx, H - F * 0.355, "–", false, 0.05, 0.12); knop(rx, H - F * 0.222, `Auto\n${R}m`, true, 0.05, 0.12); knop(rx, H - F * 0.095, "+", false, 0.05, 0.12);
+    x.textAlign = "left"; x.textBaseline = "middle"; x.font = `${Math.round(F * 0.025)}px ${FONT}`; x.fillStyle = "#fff"; x.fillText("GLS10", U * 0.045, H - F * 0.145);
   }
 }

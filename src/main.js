@@ -271,7 +271,7 @@ function stapBelly(dt) {
   if ((b.scopeT -= dt) <= 0) { b.scopeT = 0.1; const nu = new Date(), av = zie(top.x, top.z);
     scope.teken({ bodem: (v) => W.diepte(bron.x + fb.x * v, bron.z + fb.z * v), vissen: inBeeld, aas: dril.aan || av === null ? null : { v: av, d: b.aas - b.tik * 0.3 },
       school: vb.scholen.flatMap((q) => { const out = []; for (let i = 0; i < q.n; i++) { const o = vb.schoolPunt(q, i), v = zie(o.x, o.z); if (v !== null) out.push({ v, d: o.d }); } return out; }), planten: planten.inBundel(zie),
-      richting: b.sonar, temp: 27.46 + Math.sin(b.klok * 0.4) * 0.012, tijd: `${String(nu.getHours()).padStart(2, "0")}:${String(nu.getMinutes()).padStart(2, "0")}` });
+      richting: b.sonar, onder: W.diepte(bron.x, bron.z), snelheid: Math.abs(b.v) * 1.944, volt: 12.5, temp: 14.78 + Math.sin(b.klok * 0.4) * 0.02, tijd: `${String(nu.getHours()).padStart(2, "0")}:${String(nu.getMinutes()).padStart(2, "0")}` });
     scopeTex.needsUpdate = true; }
   hud.tel.textContent = `${bodem.toFixed(1)} m diep · aas ${b.aas.toFixed(1)} m`;
   // de camera volgt de boot vanzelf (tenzij je net zelf rondkeek); bij varen hoog achter de boot met zicht over de rivier
