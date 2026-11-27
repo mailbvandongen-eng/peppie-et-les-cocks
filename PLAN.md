@@ -1,7 +1,7 @@
 # Plan: Peppie et les Cocks — verbouwing
 
 Vastgelegd 27-11-2026 na Bobs foto's en video. Werkvolgorde: eerst advies, dan bijstellen met Bob, dan bouwen.
-Referentiebeelden staan lokaal in `ref/` (niet in de repo: er staan echte mensen op).
+Referentiebeelden staan lokaal in `ref/`. Bob heeft op 27-11 toestemming gegeven om de foto's te gebruiken, ook voor de gezichten: de karakters moeten herkenbaar worden.
 
 ## 1. De vier karakters
 Elk karakter moet direct herkenbaar zijn en een eigen kenmerk hebben.
@@ -14,6 +14,8 @@ Elk karakter moet direct herkenbaar zijn en een eigen kenmerk hebben.
 | **Wim** | ouder, kaal met grijze rand; zwart "I'm Yorkshire"-shirt, grijs vest | drinkt alleen **Fristi** — nog uitwerken wat dat in het spel doet |
 
 Nog onzeker: wie de man met de bruine cowboyhoed en bril is (meervalfoto, steigerfoto) en wie de man met de witte Adidas-pet en oranje portofoon in de zwarte bellyboat is.
+
+Gezichten: 3D-hoofd per persoon gevormd naar de foto's, met de foto als gezichtstextuur, plus hun eigen kleding, petten en hoeden.
 
 Uitwerking van eigenschappen volgt later van Bob.
 
@@ -55,4 +57,4 @@ Uitwerking van eigenschappen volgt later van Bob.
 ## 7. Nog van Bob
 - Details tekkeljacht, kippen, missies groene boot.
 - Wat Fristi voor Wim betekent in het spel; eigenschappen per karakter.
-- Dronebeelden van de plek (eerder aangeboden).
+- Dronebeelden van de plek: Bob zoekt ze op (27-11). Pas daarna bouwen.
