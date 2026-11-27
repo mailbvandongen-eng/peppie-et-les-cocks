@@ -109,9 +109,12 @@ const cam = { yaw: huis.yaw + Math.PI, pitch: 0.28, afstand: 5, sleep: 0 };
   const los = (e) => { if (e.pointerId === kid) kid = null; };
   vlak.addEventListener("pointerup", los); vlak.addEventListener("pointercancel", los);
   const sc = $("#scope");
-  sc.addEventListener("pointerdown", (e) => { e.preventDefault(); geluid.start(); scid = e.pointerId; scx = e.clientX; sc.setPointerCapture(scid); });
+  let sc0 = 0, sct = 0;
+  sc.addEventListener("pointerdown", (e) => { e.preventDefault(); geluid.start(); scid = e.pointerId; scx = sc0 = e.clientX; sct = e.clientY; sc.setPointerCapture(scid); });
   sc.addEventListener("pointermove", (e) => { if (e.pointerId === scid) { invoer.sonarSleep += (e.clientX - scx) / sc.clientWidth; scx = e.clientX; } });
-  for (const ev of ["pointerup", "pointercancel"]) sc.addEventListener(ev, (e) => { if (e.pointerId === scid) scid = null; });
+  // een korte tik (zonder vegen) bedient de knoppen van het toestel: bereik, gevoeligheid, pauze
+  sc.addEventListener("pointerup", (e) => { if (e.pointerId !== scid) return; scid = null; if (Math.abs(e.clientX - sc0) < 8 && Math.abs(e.clientY - sct) < 8) { const r = sc.getBoundingClientRect(); if (scope.tik(((e.clientX - r.left) * sc.width) / r.width, ((e.clientY - r.top) * sc.height) / r.height)) { geluid.toon({ freq: 1400, duur: 0.04, gain: 0.03 }); belly.scopeT = 0; } } });
+  sc.addEventListener("pointercancel", (e) => { if (e.pointerId === scid) scid = null; });
   for (const [id, naam] of [["#knopA", "A"], ["#knopB", "B"], ["#knopOp", "op"], ["#knopNeer", "neer"], ["#knopLinks", "links"], ["#knopRechts", "rechts"]]) { const k = $(id);
     k.addEventListener("pointerdown", (e) => { e.preventDefault(); geluid.start(); invoer[naam] = true; if (naam === "A") invoer.Atik = true; if (naam === "B") invoer.Btik = true; k.classList.add("in"); });
     for (const ev of ["pointerup", "pointercancel", "pointerleave"]) k.addEventListener(ev, () => { invoer[naam] = false; k.classList.remove("in"); }); }

@@ -3,4 +3,4 @@ const { chromium } = require("/root/tools/pw/node_modules/playwright-core"); con
 const ROOT = path.resolve(__dirname, ".."), T = { ".html": "text/html", ".js": "text/javascript" };
 (async () => { const b = await chromium.launch({ executablePath: "/usr/bin/chromium", args: ["--no-sandbox"] }); const p = await b.newPage({ viewport: { width: 1280, height: 720 } });
   await p.route("http://s.test/**", (r) => { const f = path.join(ROOT, new URL(r.request().url()).pathname); r.fulfill(fs.existsSync(f) ? { body: fs.readFileSync(f), contentType: T[path.extname(f)] } : { status: 404 }); });
-  p.on("pageerror", (e) => console.log("FOUT", e.message)); await p.goto("http://s.test/tools/scope.html"); await p.waitForFunction(() => window.KLAAR); await p.screenshot({ path: "/tmp/lot/scope.png" }); await b.close(); })();
+  p.on("pageerror", (e) => console.log("FOUT", e.message)); await p.goto("http://s.test/tools/scope.html" + (process.argv[2] || "")); await p.waitForFunction(() => window.KLAAR); await p.screenshot({ path: process.argv[3] || "/tmp/lot/scope.png" }); await b.close(); })();

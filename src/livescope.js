@@ -16,7 +16,12 @@ const BW = 384; // breedte van het sonarbeeld in pixels (wordt uitgerekt naar he
 const FONT = '"Helvetica Neue", Arial, sans-serif';
 
 export class Livescope {
-  constructor(canvas) { this.c = canvas; this.x = canvas.getContext("2d"); this.klein = document.createElement("canvas"); this.kx = this.klein.getContext("2d"); this.t = 0; this.bereik = 12; }
+  constructor(canvas) { this.c = canvas; this.x = canvas.getContext("2d"); this.klein = document.createElement("canvas"); this.kx = this.klein.getContext("2d"); this.t = 0; this.diepte = 12; this.vooruit = 12; this.gain = 68; this.pauze = false; this.knoppen = []; }
+  /** Een tik op het scherm (in canvas-pixels): de knoppen van het toestel werken. Geeft true als er een knop geraakt is. */
+  tik(px, py) { const STAP = [8, 12, 16, 20, 28, 36]; for (const k of this.knoppen) { if (px < k.x0 || px > k.x1 || py < k.y0 || py > k.y1) continue;
+      if (k.id === "bereik-") this.vooruit = STAP[Math.max(0, STAP.indexOf(this.vooruit) - 1)]; if (k.id === "bereik+") this.vooruit = STAP[Math.min(STAP.length - 1, STAP.indexOf(this.vooruit) + 1)];
+      if (k.id === "ver-") this.gain = Math.max(30, this.gain - 6); if (k.id === "ver+") this.gain = Math.min(100, this.gain + 6); if (k.id === "pauze") this.pauze = !this.pauze; if (k.id === "diep-" || k.id === "diep+" || k.id === "auto") this.autoUit = k.id !== "auto";
+      if (k.id === "diep-") this.diepte = Math.max(6, this.diepte - 6); if (k.id === "diep+") this.diepte = Math.min(36, this.diepte + 6); return true; } return false; }
   /**
    * bodem(v) = diepte op v meter voor de transducer (negatief = erachter); vissen = [{ v, d, lengte, hoek, soort }];
    * school = [{ v, d }]; planten = [{ v, bodem, top }]; aas = { v, d } of null; onder = diepte onder de boot; richting = stand van de transducer.
@@ -25,11 +30,15 @@ export class Livescope {
     this.t += 1; const t = this.t, c = this.c, W = c.width, H = c.height, F = Math.min(H, (W * 9) / 16);
     // het bereik (Auto): bodem + ruim 3,5 m op hele meters; vooruit even ver, achteruit 0,385 daarvan;
     // de diepte-as heeft dezelfde verhouding meters per pixel als op de opname
-    const ref = onder ?? bodem(0); const doel = Math.min(24, Math.max(6, Math.ceil(ref + 3.6))); if (Math.abs(doel - this.bereik) >= 1) this.bereik = doel;
-    const R = this.bereik, X0 = -R * 0.385, X1 = R * 0.985, D1 = Math.max((X1 - X0) * (H / W) * 1.257, ref + 2.6); // op een breed scherm toch de bodem met ruimte eronder
+    if (this.pauze) return; // stilgezet met de pauzeknop
+    // vooruit: het bereik dat je zelf instelt (− en +); diepte: Auto, de bodem in beeld plus wat ruimte, in stappen van 6 m (12, 18, 24)
+    const ref = onder ?? bodem(0); let maxB = ref; for (let v = 0; v <= this.vooruit; v += this.vooruit / 12) maxB = Math.max(maxB, bodem(v));
+    if (!this.autoUit) this.diepte = Math.min(36, Math.max(6, Math.ceil((maxB + 2.5) / 6) * 6));
+    const R = this.vooruit, DA = this.diepte, D1 = DA * 0.94 * Math.max(1, (H / W) * (16 / 9) * 0.85), X1 = R * 0.985, X0 = -0.4 * D1 * Math.min(1, (W / H) * (9 / 16));
+    const versterk = (this.gain / 68) ** 0.8;
     const BH = Math.max(80, Math.round((BW * H) / W)); if (this.klein.width !== BW || this.klein.height !== BH) { this.klein.width = BW; this.klein.height = BH; this.beeld = this.kx.createImageData(BW, BH); }
     const px = this.beeld.data, bod = new Float32Array(BW); for (let i = 0; i < BW; i++) bod[i] = bodem(X0 + ((i + 0.5) / BW) * (X1 - X0));
-    const wig = 1.25; // helling van de zwarte wig linksboven
+    const wig = (-0.55 * D1) / X0; // de zwarte wig linksboven komt halverwege links uit, zoals op de opnamen
     for (let j = 0; j < BH; j++) { const d = ((j + 0.5) / BH) * D1;
       for (let i = 0; i < BW; i++) { const v = X0 + ((i + 0.5) / BW) * (X1 - X0), b = bod[i], o = (j * BW + i) * 4;
         if (v < 0 && d < -v * wig) { px[o] = px[o + 1] = px[o + 2] = 6; px[o + 3] = 255; continue; } // buiten de bundel: zwart
@@ -42,13 +51,13 @@ export class Livescope {
         } else if (d < b + 1.05) {
           // de bodem: rood-oranje kern, geel-groene randen, schuine strepen
           const x_ = (d - b + 0.15) / 1.2, kern = Math.sin(Math.min(1, x_ * 1.15) * Math.PI) ** 0.8, streep = wolk((i * 0.9 - j * 1.6) * 0.09, (i * 0.3 + j * 0.9) * 0.6) * 0.6 + wolk(i * 0.05 + 7, j * 0.12) * 0.4, fijn = wolk((i * 1.4 - j * 2.2) * 0.25, (i + j) * 0.9);
-          const dikte = 0.65 + wolk(i * 0.018 + 3, 1.7) * 0.55; s = 0.36 + kern * 0.52 * dikte + (streep - 0.5) * 0.36 + (fijn - 0.5) * 0.16 + (korrel - 0.5) * 0.08 - (1 - kern) * 0.12;
+          const dikte = (0.65 + wolk(i * 0.018 + 3, 1.7) * 0.55) * (1 - Math.max(0, v) / 50); s = 0.36 + kern * 0.52 * dikte + (streep - 0.5) * 0.36 + (fijn - 0.5) * 0.16 + (korrel - 0.5) * 0.08 - (1 - kern) * 0.12;
         } else {
           // onder de bodem: donkerblauw met schuine lichtblauwe vegen
           const veeg = wolk((i * 0.35 + j * 0.15) * 0.12, (j * 0.35 - i * 0.12) * 0.05) * wolk(i * 0.6 - j * 0.3, j * 0.25), diep = d - b - 1.05;
           s = 0.03 + Math.max(0, veeg - 0.3) * 1.3 * Math.max(0.25, 1 - diep / 4) + korrel * 0.04;
         }
-        const k = Math.max(0, Math.min(255, (s * 255) | 0)) * 3; px[o] = KLEUR[k]; px[o + 1] = KLEUR[k + 1]; px[o + 2] = KLEUR[k + 2]; px[o + 3] = 255; } }
+        if (s > 0.08) s *= versterk; const k = Math.max(0, Math.min(255, (s * 255) | 0)) * 3; px[o] = KLEUR[k]; px[o + 1] = KLEUR[k + 1]; px[o + 2] = KLEUR[k + 2]; px[o + 3] = 255; } }
     this.kx.putImageData(this.beeld, 0, 0);
     // vissen, visjes, planten en het aas: lichtgevende vlekken die optellen
     const X = (v) => ((v - X0) / (X1 - X0)) * BW, Y = (d) => (d / D1) * BH, k = this.kx, ppm = BW / (X1 - X0), ppmY = BH / D1; k.globalCompositeOperation = "source-over";
@@ -59,9 +68,9 @@ export class Livescope {
     for (const s of school) { if (s.v < X0 || s.v > X1) continue; stip(X(s.v) + Math.sin(t * 0.7 + s.d * 9) * 0.8, Y(s.d) + Math.cos(t * 0.5 + s.v * 7) * 0.5, 2.0, 0.7); }
     // de vorm verraadt de soort: een meerval is een kikkervisje (dikke kop, pens, dunne staart), een karper bol en hoog
     for (const f of vissen) { if (f.v < X0 || f.v > X1 || f.d > D1) continue;
-      const cs = Math.cos(f.hoek ?? 0), kop = cs >= 0 ? 1 : -1, L = f.lengte * ppm * (0.45 + 0.55 * Math.abs(cs)), hY = f.lengte * ppmY, cx = X(f.v), cy = Y(f.d), wieg = Math.sin(t * 0.25 + f.v * 3) * 0.5, z = f.sterk ?? 1;
+      const ver = Math.max(0, f.v) / 30, cs = Math.cos(f.hoek ?? 0), kop = cs >= 0 ? 1 : -1, L = f.lengte * ppm * (0.45 + 0.55 * Math.abs(cs)) + ver * 6, hY = f.lengte * ppmY, cx = X(f.v), cy = Y(f.d), wieg = Math.sin(t * 0.25 + f.v * 3) * 0.5, z = (f.sterk ?? 1) * (1 - ver * 0.45) * Math.min(1.3, versterk); // verder weg: groter, vager
       if (f.lengte < 0.3) { stip(cx, cy, 2.6, 0.85); continue; }
-      const dik = Math.max(2.4, ppmY * (0.14 + f.lengte * 0.1)); // de echo is dikker dan de vis
+      const dik = Math.max(2.4, ppmY * (0.14 + f.lengte * 0.1)) + ver * 3; // de echo is dikker dan de vis
       if (f.soort === "Meerval") {
         // zoals op Bobs opname: een lange dunne echo; voorin dik en rood (kop en pens), daarachter een lange dunne staart die meebuigt
         const LM = f.lengte * ppm * 1.1 * (0.35 + 0.65 * Math.abs(cs)), buig = (f.buig ?? 0) * dik * 3;
@@ -79,12 +88,12 @@ export class Livescope {
 
     // ---- uitvergroten naar het scherm, met raster, cijfers en knoppen erover ----
     const x = this.x; x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high"; x.drawImage(this.klein, 0, 0, W, H);
-    const sx = (v) => ((v - X0) / (X1 - X0)) * W, sy = (d) => (d / D1) * H, lijn = Math.max(1, F / 600), stapM = R > 16 ? 2 : 1;
+    const sx = (v) => ((v - X0) / (X1 - X0)) * W, sy = (d) => (d / D1) * H, lijn = Math.max(1, F / 600), stapM = R > 16 ? 2 : 1, stapD = DA > 12 ? 2 : 1;
     x.strokeStyle = "rgba(255,255,255,0.33)"; x.lineWidth = lijn; x.fillStyle = "#fff";
     // bovenaan de afstand achter (links van 0) en voor de transducer, links de diepte
     x.font = `${Math.round(F * 0.034)}px ${FONT}`; x.textAlign = "center"; x.textBaseline = "top";
     for (let v = Math.ceil(X0 / stapM) * stapM; v <= X1; v += stapM) { x.beginPath(); x.moveTo(sx(v), 0); x.lineTo(sx(v), H); x.stroke(); x.fillText(String(Math.abs(v)), sx(v), F * 0.004); }
-    x.textAlign = "left"; x.textBaseline = "middle"; for (let d = stapM; d < D1; d += stapM) { x.beginPath(); x.moveTo(0, sy(d)); x.lineTo(W, sy(d)); x.stroke(); x.fillText(String(d), F * 0.006, sy(d)); }
+    x.textAlign = "left"; x.textBaseline = "middle"; for (let d = stapD; d < D1; d += stapD) { x.beginPath(); x.moveTo(0, sy(d)); x.lineTo(W, sy(d)); x.stroke(); x.fillText(String(d), F * 0.006, sy(d)); }
     // de rand van de bundel en het oppervlak
     x.strokeStyle = "#fff"; x.lineWidth = lijn * 2; x.beginPath(); x.moveTo(sx(X0), sy(-X0 * wig)); x.lineTo(sx(0), sy(0.02)); x.lineTo(sx(X1 * 0.3), 0); x.stroke();
     // de grote diepte en de regels eronder
@@ -98,12 +107,13 @@ export class Livescope {
       x.strokeStyle = "#fff"; x.lineWidth = 2; x.beginPath(); x.moveTo(cx - r * 0.3, cy - r * 0.5); x.lineTo(cx - r * 0.3, cy + r * 0.3); x.quadraticCurveTo(cx, cy + r * 0.65, cx + r * 0.3, cy + r * 0.3); x.lineTo(cx + r * 0.3, cy - r * 0.5); x.stroke(); x.restore(); }
     // de knoppen van het toestel, zoals op de opname
     const U = (F * 16) / 9; // breedte van een 16:9-scherm met deze hoogte: de knoppen staan op dezelfde plek als op de opname
-    const knop = (kx_, ky, tekst, klein, b, h) => { const bw = U * b, bh = F * h; x.fillStyle = "rgba(58,62,70,0.85)"; x.fillRect(kx_ - bw / 2, ky - bh / 2, bw, bh);
+    this.knoppen = [];
+    const knop = (kx_, ky, tekst, klein, b, h, id) => { const bw = U * b, bh = F * h; x.fillStyle = "rgba(58,62,70,0.85)"; x.fillRect(kx_ - bw / 2, ky - bh / 2, bw, bh); this.knoppen.push({ id, x0: kx_ - bw / 2, x1: kx_ + bw / 2, y0: ky - bh / 2, y1: ky + bh / 2 });
       x.fillStyle = "#fff"; x.textAlign = "center"; x.textBaseline = "middle"; const rg = tekst.split("\n"); x.font = `${Math.round(F * (klein ? 0.026 : 0.05))}px ${FONT}`; rg.forEach((r_, i) => x.fillText(r_, kx_, ky + (i - (rg.length - 1) / 2) * F * 0.03)); };
-    const by = H - F * 0.086; knop(U * 0.08, by, "II", false, 0.074, 0.09);
-    for (const [px_, tk, kl] of [[0.257, "–", false], [0.342, `${R}m`, true], [0.427, "+", false]]) knop(U * px_, by, tk, kl, 0.074, 0.09);
-    for (const [px_, tk, kl] of [[0.794, "+", false], [0.709, "Ver.\n68%", true], [0.624, "–", false]]) knop(W - U * (1 - px_), by, tk, kl, 0.074, 0.09);
-    const rx = W - U * 0.034; knop(rx, H - F * 0.355, "–", false, 0.05, 0.12); knop(rx, H - F * 0.222, `Auto\n${R}m`, true, 0.05, 0.12); knop(rx, H - F * 0.095, "+", false, 0.05, 0.12);
+    const by = H - F * 0.086; knop(U * 0.08, by, "II", false, 0.074, 0.09, "pauze");
+    for (const [px_, tk, kl, id] of [[0.257, "–", false, "bereik-"], [0.342, `${R}m`, true, "bereik"], [0.427, "+", false, "bereik+"]]) knop(U * px_, by, tk, kl, 0.074, 0.09, id);
+    for (const [px_, tk, kl, id] of [[0.794, "+", false, "ver+"], [0.709, `Ver.\n${this.gain}%`, true, "ver"], [0.624, "–", false, "ver-"]]) knop(W - U * (1 - px_), by, tk, kl, 0.074, 0.09, id);
+    const rx = W - U * 0.034; knop(rx, H - F * 0.355, "–", false, 0.05, 0.12, "diep-"); knop(rx, H - F * 0.222, this.autoUit ? `${DA}m` : `Auto\n${DA}m`, true, 0.05, 0.12, "auto"); knop(rx, H - F * 0.095, "+", false, 0.05, 0.12, "diep+");
     x.textAlign = "left"; x.textBaseline = "middle"; x.font = `${Math.round(F * 0.025)}px ${FONT}`; x.fillStyle = "#fff"; x.fillText("GLS10", U * 0.045, H - F * 0.145);
   }
 }

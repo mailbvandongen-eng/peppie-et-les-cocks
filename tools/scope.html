@@ -4,5 +4,6 @@ import { Livescope } from "../src/livescope.js";
 const s = new Livescope(document.getElementById("c"));
 const arg = { bodem: (v) => 8.1 + Math.max(0, v - 4) * 0.06 + Math.sin(v * 0.7) * 0.08, vissen: [{ v: -1.0, d: 3.0, lengte: 0.9, hoek: 0, soort: "Meerval" }, { v: 0.85, d: 3.0, lengte: 1.1, hoek: Math.PI, soort: "Meerval", buig: -0.6 }, { v: -2.0, d: 4.1, lengte: 0.6, hoek: 0.9, soort: "Meerval" }], aas: { v: 1.45, d: 3.35 },
   temp: 14.79, snelheid: 0.29, volt: 12.5, tijd: "12:50", onder: 8.1 };
+const q = new URLSearchParams(location.search); if (q.get("r")) s.vooruit = +q.get("r"); if (q.get("b")) { const b0 = +q.get("b"); arg.bodem = (v) => b0 + Math.max(0, v) * 0.07; arg.onder = b0; arg.vissen = [{ v: 19, d: 8.5, lengte: 0.8, hoek: 1.2, soort: "Karper" }, { v: 6, d: 6.5, lengte: 1.2, hoek: 0.2, soort: "Meerval" }]; }
 for (let i = 0; i < 5; i++) s.teken(arg); window.KLAAR = 1;
 </script></body></html>
