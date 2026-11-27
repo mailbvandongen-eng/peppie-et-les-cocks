@@ -66,7 +66,7 @@ export async function maakVisbestand(scene, W, { telefoon = false, fx = null, ge
       if (Math.hypot(v.tx - v.x, v.tz - v.z) < 0.8) { const a = Math.random() * 6.28, r = Math.random() * v.straal; v.tx = v.x0 + Math.cos(a) * r; v.tz = v.z0 + Math.sin(a) * r; }
       const dx = v.tx - v.x, dz = v.tz - v.z, l = Math.hypot(dx, dz) || 1, sn = SOORTEN[v.soort].snel * (0.7 + v.lengte * 0.3) + (v.zin > 0 ? 0.3 : 0);
       const nx = v.x + (dx / l) * sn * dt, nz = v.z + (dz / l) * sn * dt; if (bodem(nx, nz) > 0.8) { v.x = nx; v.z = nz; } else { v.tx = v.x0; v.tz = v.z0; }
-      let dh = Math.atan2(dx, dz) - v.h; dh = Math.atan2(Math.sin(dh), Math.cos(dh)); v.h += dh * Math.min(1, dt * 2);
+      let dh = Math.atan2(dx, dz) - v.h; dh = Math.atan2(Math.sin(dh), Math.cos(dh)); const dr = dh * Math.min(1, dt * 2); v.h += dr; v.draai = (v.draai ?? 0) * 0.9 + (dr / Math.max(dt, 0.001)) * 0.1;
       const doelD = v.lok ?? Math.max(0.4, bodem(v.x, v.z) - v.boven); v.d += (doelD - v.d) * Math.min(1, dt * (v.lok != null ? 1.2 : 0.4)); v.staart += dt * (4 + sn * 8); }
     // tekenen (alleen wat in de buurt van de camera is; diep onder water zie je het toch niet)
     const cp = camera.position, n = { meerval: 0, karper: 0, brasem: 0, snoekbaars: 0 };

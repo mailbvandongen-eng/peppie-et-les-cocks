@@ -63,14 +63,18 @@ export class Livescope {
       if (f.lengte < 0.3) { stip(cx, cy, 2.6, 0.85); continue; }
       const dik = Math.max(2.4, ppmY * (0.14 + f.lengte * 0.1)); // de echo is dikker dan de vis
       if (f.soort === "Meerval") {
-        vlek(cx + kop * L * 0.22, cy, Math.max(3, L * 0.3), dik * 1.15, z); vlek(cx + kop * L * 0.0, cy + dik * 0.1, Math.max(2.6, L * 0.28), dik * 1.05, z);
-        for (let i = 0; i < 4; i++) vlek(cx - kop * L * (0.22 + i * 0.13), cy + wieg * i * 0.35, Math.max(1.5, L * (0.16 - i * 0.028)), dik * (0.75 - i * 0.12), z * (0.85 - i * 0.12));
+        // zoals op Bobs opname: een lange dunne echo; voorin dik en rood (kop en pens), daarachter een lange dunne staart die meebuigt
+        const LM = f.lengte * ppm * 1.1 * (0.35 + 0.65 * Math.abs(cs)), buig = (f.buig ?? 0) * dik * 3;
+        const r0 = Math.sin(t * 0.7 + f.v * 4) * 0.25;
+        vlek(cx + kop * LM * 0.28, cy - dik * 0.1, Math.max(3.2, LM * 0.24), dik * (1.05 + r0 * 0.2), z); vlek(cx + kop * LM * 0.08, cy + dik * 0.12, Math.max(3, LM * 0.24), dik * 1.1, z); vlek(cx + kop * LM * 0.38, cy + dik * 0.25 * r0, Math.max(2, LM * 0.12), dik * 0.7, z * 0.8);
+        for (let i = 0; i < 14; i++) { const a = (i + 1) / 14; vlek(cx - kop * LM * (0.05 + a * 0.55), cy + buig * 0.5 * a * a + wieg * a * 0.4, Math.max(2, LM * (0.13 - a * 0.06)), dik * (0.6 - a * 0.32), z * (0.75 - a * 0.4)); }
       } else if (f.soort === "Karper" || f.soort === "Brasem") { vlek(cx + kop * L * 0.04, cy, Math.max(3, L * 0.42), dik * 1.5, z); vlek(cx - kop * L * 0.45, cy + wieg * 0.3, Math.max(1.4, L * 0.13), dik * 0.7, z * 0.7); }
       else { vlek(cx + kop * L * 0.05, cy, Math.max(2.6, L * 0.45), dik, z); vlek(cx - kop * L * 0.42, cy, Math.max(1.4, L * 0.2), dik * 0.6, z * 0.6); }
       // rafels en het spoor erachter, zoals op de opname
       for (let i = 0; i < 3; i++) { const q = Math.sin(t * 0.9 + i * 2.3 + f.v * 5); vlek(cx + (i - 1) * L * 0.3 + q * 1.2, cy + q * dik * 0.4, Math.max(1.4, L * 0.12), dik * 0.45, 0.5 * z); }
-      vlek(cx - kop * L * 0.85, cy, Math.max(2, L * 0.55), dik * 0.4, 0.35 * z); }
-    if (aas && aas.v != null) { vlek(X(aas.v), Y(aas.d), 2.2, 1.5, 0.9); for (let i = 1; i < 6; i++) if (aas.d - i * 0.5 > 0.3) stip(X(aas.v) + Math.sin(i * 2.1) * 0.6, Y(aas.d - i * 0.5), 1.2, 0.35); }
+      if (f.soort !== "Meerval") vlek(cx - kop * L * 0.85, cy, Math.max(2, L * 0.55), dik * 0.4, 0.3 * z); }
+    if (aas && aas.v != null) { // het aas: een klein lichtblauw streepje rechtop, met een vage lijn naar boven (zoals op de opname)
+      const ax = X(aas.v), ay = Y(aas.d); for (let i = 0; i < 4; i++) stip(ax, ay - i * ppmY * 0.08, 1.6, 0.9 - i * 0.12); for (let d = aas.d - 0.4; d > 0.4; d -= 0.35) if (h2(d * 10, t >> 2) > 0.45) stip(ax + Math.sin(d * 3) * 0.3, Y(d), 0.9, 0.25); }
     k.globalCompositeOperation = "source-over";
 
     // ---- uitvergroten naar het scherm, met raster, cijfers en knoppen erover ----

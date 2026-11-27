@@ -246,14 +246,18 @@ function stapBelly(dt) {
   const zie = (x, z) => { const rx = x - bron.x, rz = z - bron.z, v = rx * fb.x + rz * fb.z, lat = rx * rb.x + rz * rb.z; return Math.abs(lat) < 0.5 + Math.abs(v) * 0.2 ? v : null; };
   // de hengel recht vooruit, de top 1,3 m voor de boot; de lijn hangt recht omlaag
   const top = houdHengel(b.yaw, dril.aan ? 0.8 : 0.06, dril.aan ? 0.3 + dril.span * 0.2 : 0.02 + b.tik * 0.06); b.top.copy(top);
-  const inBeeld = []; for (const v of vb.alle()) { const a = zie(v.x, v.z); if (a === null) continue; const d = v === b.vis ? klem(dril.afstand * 0.8, 0.6, W.diepte(v.x, v.z) - 0.2) : v.d; inBeeld.push({ v: a, d, lengte: v.lengte, hoek: v.h - sy, soort: v.soort, vis: v }); }
+  const inBeeld = []; for (const v of vb.alle()) { const a = zie(v.x, v.z); if (a === null) continue; const d = v === b.vis ? klem(dril.afstand * 0.8, 0.6, W.diepte(v.x, v.z) - 0.2) : v.d; inBeeld.push({ v: a, d, lengte: v.lengte, hoek: v.h - sy, soort: v.soort, buig: Math.max(-1, Math.min(1, (v.draai ?? 0) * 2)), vis: v }); }
   if (!dril.aan) {
     if (invoer.neer) b.aas += 1.5 * dt; if (invoer.op) b.aas -= 1.5 * dt; b.aas = klem(b.aas, 0.3, Math.max(0.4, W.diepte(top.x, top.z) - 0.1));
     if (invoer.Atik) { b.tik = 1; geluid.toon({ freq: 180, duur: 0.05, gain: 0.03 }); } b.tik = Math.max(0, b.tik - dt * 1.4);
     // een vis die vlak bij het aas zwemt, wordt nieuwsgierig; tikken maakt hem gretig
-    for (const v of vb.alle()) { const afst = Math.hypot(v.x - top.x, v.z - top.z), dd = Math.abs(v.d - b.aas), bij = afst < 0.9 + v.lengte * 0.35 && dd < 1.4 + v.zin * 3;
-      if (bij) { v.zin = Math.min(1.05, v.zin + dt * (0.06 + b.tik * 0.5)); v.tx = top.x; v.tz = top.z; v.lok = b.aas; } else { v.zin = Math.max(0, v.zin - dt * 0.2); if (v.zin <= 0) v.lok = null; }
-      if (v.zin >= 1 && afst < 0.8) { b.vis = v; v.zin = 0; v.lok = null; v.vast = true; beginDril(v, v.d + 2 + v.lengte); meld("Beet! Houd de spanning in het groen", 3); geluid.piep(); spetter(top.clone().setY(0), 14, 0.6); break; } }
+    // vissen merken het aas op een paar meter afstand op; ze komen erheen, op dezelfde diepte, en cirkelen eromheen
+    // (zoals de drie meervallen op Bobs opname). Tikken maakt ze gretig; een vis die vlak bij is en vol zin heeft, pakt het.
+    for (const v of vb.alle()) { const afst = Math.hypot(v.x - top.x, v.z - top.z), dd = Math.abs(v.d - b.aas), bij = afst < 7 && dd < 4;
+      if (bij) v.zin = Math.min(1.05, v.zin + dt * (0.035 + b.tik * 0.22) * (v.soort === "Meerval" ? 1.3 : 0.8) * (afst < 2.5 ? 1.6 : 1)); else v.zin = Math.max(0, v.zin - dt * 0.12);
+      if (v.zin > 0.12) { v.lok = b.aas + Math.sin(v.staart * 0.2) * 0.4; v.fase = (v.fase ?? Math.random() * 6.28) + dt * (0.35 + v.zin * 0.3); const r = 0.5 + (1 - v.zin) * 2.8; v.tx = top.x + Math.cos(v.fase) * r; v.tz = top.z + Math.sin(v.fase) * r; v.straal = 0.3; v.x0 = v.tx; v.z0 = v.tz; }
+      else if (v.lok != null) { v.lok = null; v.straal = v.soort === "Meerval" ? 8 : 14; }
+      if (v.zin >= 1 && afst < 1.1) { b.vis = v; v.zin = 0; v.lok = null; v.vast = true; beginDril(v, v.d + 2 + v.lengte); meld("Beet! Houd de spanning in het groen", 3); geluid.piep(); spetter(top.clone().setY(0), 14, 0.6); break; } }
     if (belly.weergave !== "varen") knoppen({ A: "Tik", hoogte: true }); else knoppen({});
     zetLijn(top, V(top.x, -Math.min(b.aas, 2.5), top.z), 0);
   } else {
