@@ -1,4 +1,4 @@
-# Peppie et le Cocks
+# Peppie et les Cocks
 
 Een visspel op de Lot bij Le Temple-sur-Lot (Frankrijk), in de browser (three.js). Dit is een eerste, grove versie.
 

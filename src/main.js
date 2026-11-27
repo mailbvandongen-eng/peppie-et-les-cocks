@@ -1,4 +1,4 @@
-// Peppie et le Cocks — vissen op de Lot bij Le Temple-sur-Lot. Eerste, grove versie.
+// Peppie et les Cocks — vissen op de Lot bij Le Temple-sur-Lot. Eerste, grove versie.
 // Vier missies: vissen vanaf de kant, met de belly boat en de livescope op meerval, met de drone een glas water
 // op de slapende Cocks laten vallen, en beverratten scheppen vanaf de steiger.
 import * as THREE from "three";
@@ -50,7 +50,7 @@ const peppie = mens("rooie"), cocks = mens("visser");
 { const s = cocks.m.object.scale; s.set(s.x * 1.2, s.y, s.z * 1.28); }
 const huis = W.huis, u = huis.u, t = huis.t; // u = naar de rivier, t = langs de oever
 
-// le Cocks ligt in bed (boven, bij het open raam) en snurkt
+// Cocks ligt in bed (boven, bij het open raam) en snurkt
 function legCocks(wakker = false) {
   cocks.g.position.copy(huis.bed).addScaledVector(u, wakker ? -0.3 : 0.75); cocks.g.rotation.set(0, huis.yaw, 0);
   if (wakker) cocks.m.zet("schrik", 1, 0); else cocks.m.zet("liggen", 1, "eind");
