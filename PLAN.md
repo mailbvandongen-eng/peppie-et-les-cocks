@@ -11,16 +11,16 @@ Elk karakter moet direct herkenbaar zijn en een eigen kenmerk hebben.
 | **Paul** | blond, kort haar, oorbel, rood gezicht; zwarte hoodie; groen T-shirt in de groene boot | drinkt ("lazarus") |
 | **Dave** | kaalgeschoren, stoppels, grote grijns; zwart T-shirt; in zijn bellyboat geel/groen poloshirt, witte pet, zonnebril, groen/zwarte "CATFISH"-bellyboat | drinkt ("lazarus") |
 | **Bob** | kaal, rond hoofd, lichte wenkbrauwen; zwarte North Face-jas | drinkt ("lazarus") |
-| **Wim** | ouder, kaal met grijze rand; zwart "I'm Yorkshire"-shirt, grijs vest | drinkt alleen **Fristi** — nog uitwerken wat dat in het spel doet |
+| **Wim** | ouder, kaal met grijze rand; bruine cowboyhoed met hoofdlamp, bril, brede glimlach; donker T-shirt met opdruk, korte broek; zwarte 12BB-bellyboat; ook zwart "I'm Yorkshire"-shirt, grijs vest | drinkt alleen **Fristi** — nog uitwerken wat dat in het spel doet |
 
-Nog onzeker: wie de man met de bruine cowboyhoed en bril is (meervalfoto, steigerfoto) en wie de man met de witte Adidas-pet en oranje portofoon in de zwarte bellyboat is.
+Nog onzeker: wie de man met de witte Adidas-pet en oranje portofoon in de zwarte bellyboat is.
 
 Gezichten: 3D-hoofd per persoon gevormd naar de foto's, met de foto als gezichtstextuur, plus hun eigen kleding, petten en hoeden.
 
 Uitwerking van eigenschappen volgt later van Bob.
 
 ## 2. Bellyboten (zo exact mogelijk)
-- Zwarte U-vormige bellyboat (12BB.eu-sticker), opvouwbare stoel, twee pontons met spitse neus.
+- Zwarte U-vormige bellyboat van Wim (12BB.eu-sticker), staartmotor links achter, hengelhouder en scherm rechts, opvouwbare stoel, twee pontons met spitse neus.
 - Groen/zwarte bellyboat met "CATFISH"-opdruk (Dave).
 - Elektrische motor achter (staartmotor met helmstok/accu).
 - **Garmin-scherm** (LiveScope) op een arm voor de stoel, met een tweede arm/stang naar beneden waarmee je de **transducer** draait.
@@ -39,6 +39,11 @@ Uitwerking van eigenschappen volgt later van Bob.
 - Missies, o.a. **lijnen uitvaren** (aas met boei uitvaren, lijn naar de kant). Meer missies volgen.
 
 ## 5. Het terrein (exact naar foto's)
+- **Indeling (luchtfoto)**: huis met toren links, bijgebouwen rechts, oprit in een boog erachter, schuur rechts. Zwembad tussen huis en rivier, gazon tot de oever met bomen links en rechts. **Drie steigers** langs de oever.
+- **Middelste steiger**: twee delen in een hoek, RVS-trapje links, autoband met parasolvoet, drie grijze kuipstoelen, emmers, bak, hengels op steunen, prullenbak rechts.
+- **Steiger bij de toren**: lage houten steiger met autobanden als stootrand, stenen trap omhoog het talud op, twee zwarte stoeltjes en tafeltje, rode parasol. Hier ligt de groene boot aan.
+- **Huis**: toren van rode baksteen met kleine gaten en wit kozijn, lichtgroene luiken; wit gepleisterd bijgebouw met witte schoorsteen en groene luiken; grijze parasol, ligstoelen, zwarte stoel bij de deur.
+- Huisnaam en adres niet in het spel.
 - **Steigers** precies nagebouwd: grijze verweerde planken, twee delen in een hoek, RVS-trapje naar het water, autoband, grijze kuipstoelen (Kartell-achtig), hengelsteunen, tafeltjes.
 - **Zwembad** met blauwe rolafdekking en zwembadrobot, tegelrand.
 - Gazon tot aan het water, picknicktafel (houten) bij het water, bomen langs de oever.
@@ -57,4 +62,4 @@ Uitwerking van eigenschappen volgt later van Bob.
 ## 7. Nog van Bob
 - Details tekkeljacht, kippen, missies groene boot.
 - Wat Fristi voor Wim betekent in het spel; eigenschappen per karakter.
-- Dronebeelden van de plek: Bob zoekt ze op (27-11). Pas daarna bouwen.
+- Meer beelden van Bob (dronebeelden, derde steiger). Pas daarna bouwen.
