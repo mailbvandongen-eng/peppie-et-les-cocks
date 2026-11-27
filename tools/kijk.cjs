@@ -13,6 +13,8 @@ const STANDPUNTEN = [
   ["zwembad", [12, 1.7, 17], [11, 2, -2]],
   ["kippen", [4, 1.4, 12], [2, 0.3, 6]],
   ["boot", [19, 1.6, 22], [16, 0.3, 19]],
+  ["bellyboten", [17.5, 1.3, 27.5], [20.5, 0.2, 24.3]],
+  ["bellyboten2", [24, 1.8, 22.6], [20.5, 0.1, 24.3]],
 ];
 (async () => {
   const kies = process.argv.slice(2);

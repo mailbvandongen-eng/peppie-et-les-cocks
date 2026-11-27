@@ -8,6 +8,7 @@ import { Livescope } from "./livescope.js";
 import { bouwWereld } from "./wereld.js";
 import { laadVisspullen } from "./hengel.js";
 import { Kippen } from "./kippen.js";
+import { maakBellyboat } from "./bellyboat.js";
 
 const $ = (q) => document.querySelector(q);
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -52,7 +53,7 @@ const W = bouwWereld(data, scene);
   for (let i = 0; i < p.count; i++) { const y = p.getY(i) / 50; if (y > 0.12) c.set("#e4eef4").lerp(new THREE.Color("#8fbde0"), Math.min(1, (y - 0.12) * 1.6)); else if (y > -0.02) c.set("#7f9a6a").lerp(new THREE.Color("#e4eef4"), (y + 0.02) / 0.14); else c.set("#4c6040"); kl.push(c.r, c.g, c.b); }
   g.setAttribute("color", new THREE.Float32BufferAttribute(kl, 3)); lucht.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide })));
   const env = new THREE.PMREMGenerator(renderer).fromScene(lucht, 0.01).texture;
-  Object.assign(W.water.material, { envMap: env, envMapIntensity: 0.5, color: new THREE.Color("#4d6852"), metalness: 0.3, roughness: 0.09, opacity: 0.93 }); W.water.material.needsUpdate = true;
+  Object.assign(W.water.material, { envMap: env, envMapIntensity: 0.38, color: new THREE.Color("#466149"), metalness: 0.3, roughness: 0.1, opacity: 0.95 }); W.water.material.needsUpdate = true;
   W.domein.groep.traverse((o) => { if (o.isMesh && o.material.transparent && o.material.color?.getHexString() === "5fd0f2") { o.material.envMap = env; o.material.needsUpdate = true; } }); }
 await laadMensen((v) => $("#laden").style.setProperty("--v", v));
 const spul = await laadVisspullen(scene);
@@ -88,7 +89,7 @@ legCocks();
   for (let i = 0; i < 14; i++) { const b = spul.vorm("blik", 0.066); b.scale.setScalar(1.9); b.traverse((o) => { if (o.isMesh) o.material = blikGroen; }); zet(b, 4 + tussen(-1.2, 1.2), 10 + tussen(-1.6, 1.6), Math.random() * 6); if (i % 2) { b.rotation.z = Math.PI / 2; b.position.y += 0.035; } } }
 
 // ---------- bediening ----------
-const invoer = { x: 0, y: 0, A: false, Atik: false, B: false, Btik: false, op: false, neer: false, toets: {} };
+const invoer = { links: false, rechts: false, x: 0, y: 0, A: false, Atik: false, B: false, Btik: false, op: false, neer: false, toets: {} };
 const cam = { yaw: huis.yaw + Math.PI, pitch: 0.28, afstand: 5 };
 { const stick = $("#stick"), dop = $("#stick i"); let sid = null, kid = null, sx = 0, sy = 0, lx = 0, ly = 0;
   const vlak = renderer.domElement;
@@ -100,7 +101,7 @@ const cam = { yaw: huis.yaw + Math.PI, pitch: 0.28, afstand: 5 };
     else if (e.pointerId === kid) { cam.yaw -= (e.clientX - lx) * 0.0055; cam.pitch = klem(cam.pitch + (e.clientY - ly) * 0.004, -0.5, 1.2); lx = e.clientX; ly = e.clientY; } });
   const los = (e) => { if (e.pointerId === sid) { sid = null; invoer.x = invoer.y = 0; stick.hidden = true; dop.style.transform = ""; } if (e.pointerId === kid) kid = null; };
   vlak.addEventListener("pointerup", los); vlak.addEventListener("pointercancel", los);
-  for (const [id, naam] of [["#knopA", "A"], ["#knopB", "B"], ["#knopOp", "op"], ["#knopNeer", "neer"]]) { const k = $(id);
+  for (const [id, naam] of [["#knopA", "A"], ["#knopB", "B"], ["#knopOp", "op"], ["#knopNeer", "neer"], ["#knopLinks", "links"], ["#knopRechts", "rechts"]]) { const k = $(id);
     k.addEventListener("pointerdown", (e) => { e.preventDefault(); geluid.start(); invoer[naam] = true; if (naam === "A") invoer.Atik = true; if (naam === "B") invoer.Btik = true; k.classList.add("in"); });
     for (const ev of ["pointerup", "pointercancel", "pointerleave"]) k.addEventListener(ev, () => { invoer[naam] = false; k.classList.remove("in"); }); }
   const T = { Space: "A", KeyE: "B", KeyR: "op", KeyF: "neer" };
@@ -111,8 +112,8 @@ function stuur() { const k = invoer.toets, x = invoer.x + (k.KeyD || k.ArrowRigh
 
 // ---------- het spel ----------
 const spel = { modus: "menu", t: 0, klaar: false, vangsten: [] };
-const hud = { missie: $("#missie"), tel: $("#tel"), A: $("#knopA"), B: $("#knopB"), op: $("#knopOp"), neer: $("#knopNeer"), span: $("#span"), spanI: $("#span i"), meter: $("#meter"), melding: $("#melding"), scope: $("#scope") };
-function knoppen({ A = null, B = null, hoogte = false }) { hud.A.hidden = !A; hud.B.hidden = !B; if (A) hud.A.textContent = A; if (B) hud.B.textContent = B; hud.op.hidden = hud.neer.hidden = !hoogte; }
+const hud = { links: $("#knopLinks"), rechts: $("#knopRechts"), missie: $("#missie"), tel: $("#tel"), A: $("#knopA"), B: $("#knopB"), op: $("#knopOp"), neer: $("#knopNeer"), span: $("#span"), spanI: $("#span i"), meter: $("#meter"), melding: $("#melding"), scope: $("#scope") };
+function knoppen({ A = null, B = null, hoogte = false }) { hud.links.hidden = hud.rechts.hidden = true; hud.A.hidden = !A; hud.B.hidden = !B; if (A) hud.A.textContent = A; if (B) hud.B.textContent = B; hud.op.hidden = hud.neer.hidden = !hoogte; }
 let meldT = 0;
 function meld(tekst, sec = 3) { hud.melding.textContent = tekst; hud.melding.hidden = false; meldT = sec; }
 function einde(gelukt, tekst) { if (spel.klaar) return; spel.klaar = true; (gelukt ? geluid.goed : geluid.fout).call(geluid); $("#uitslagKop").textContent = gelukt ? "Gelukt!" : "Mislukt"; $("#uitslagTekst").textContent = tekst; setTimeout(() => { $("#uitslag").hidden = false; }, gelukt ? 1800 : 900); }
@@ -202,59 +203,82 @@ function stapKant(dt) {
   volg(loop.pos.clone().add(V(0, 1.4, 0)));
 }
 
-// ---------- missie 2: de belly boat met livescope ----------
-const boot = new THREE.Group(); { const ring = new THREE.Mesh(new THREE.TorusGeometry(0.62, 0.24, 10, 22, 5.2).rotateX(Math.PI / 2).rotateY(Math.PI * 1.33), new THREE.MeshStandardMaterial({ color: "#2f5f6f", roughness: 0.6 })); ring.position.y = 0.12; ring.castShadow = true;
-  const rug = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.55, 0.12), new THREE.MeshStandardMaterial({ color: "#1f2a30", roughness: 0.8 })); rug.position.set(0, 0.5, -0.5); rug.rotation.x = -0.2;
-  const zit = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.06, 0.6), rug.material); zit.position.set(0, 0.02, -0.1);
-  const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.5, 6), new THREE.MeshStandardMaterial({ color: "#222" })); arm.position.set(0.55, 0.45, 0.35);
-  const scherm = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.2, 0.03), new THREE.MeshStandardMaterial({ color: "#0a1a40", emissive: "#1030a0", emissiveIntensity: 0.8 })); scherm.position.set(0.55, 0.72, 0.35); scherm.rotation.set(-0.3, -0.5, 0);
-  boot.add(ring, rug, zit, arm, scherm); boot.visible = false; scene.add(boot); }
-const belly = { pos: V(0, 0, 0), yaw: 0, aas: 2, tik: 0, vissen: [], school: [], vis: null, klok: 0, scopeT: 0 };
+// ---------- missie 2: de bellyboat met livescope ----------
+// Verticaal vissen: de hengel steekt recht vooruit, de lijn hangt recht omlaag. Eerst zoek je de vis op: met de stang draai je
+// de transducer rond en op het scherm zie je wat er voor de bundel zwemt — scholen witvis, meervalletjes (kikkervisjes: dikke
+// kop, pens, dunne staart), bolle karpers en in de diepe kolken de reuzen. Dan vaar je erheen tot de vis onder je hengeltop
+// hangt, laat je het aas zakken tot zijn diepte en tik je tot hij pakt.
+const scopeTex = new THREE.CanvasTexture(hud.scope); scopeTex.colorSpace = THREE.SRGBColorSpace;
+const bb = maakBellyboat("paul", { scherm: scopeTex }), boot = bb.g; boot.visible = false; scene.add(boot);
+// de bellyboten van de anderen liggen bij de linker steiger, zoals op Bobs video
+const aangemeerd = [["wim", 19.6, 2.9, 0.25], ["dave", 21.4, 3.3, -0.15], ["bob", 12.4, 3.0, 0.4]].map(([soort, lx, lz, r]) => { const b = maakBellyboat(soort).g, p = dom.wereld(lx, 0, dom.oeverZ(lx) + lz); b.position.set(p.x, 0.02, p.z); b.rotation.y = huis.yaw + Math.PI / 2 + r; scene.add(b); return { b, f: Math.random() * 6 }; });
+const belly = { pos: V(0, 0, 0), yaw: 0, sonar: 0, aas: 1, tik: 0, vissen: [], school: [], vis: null, klok: 0, scopeT: 0, top: V(0, 0, 0) };
 const scope = new Livescope(hud.scope);
+const VISDIEPTE = (v) => { const bodem = W.diepte(v.x, v.z); return v.soort === "Meerval" ? Math.max(0.5, bodem - v.boven) : Math.min(bodem - 0.4, v.diep); };
 function beginBelly() {
-  belly.pos.copy(W.steiger.eind).addScaledVector(u, 3); belly.yaw = huis.yaw; belly.aas = 2; belly.vis = null; cam.yaw = huis.yaw + Math.PI; cam.afstand = 4.2; cam.pitch = 0.42;
-  // meervallen: in elke diepe kolk één echte reus, en kleinere verspreid over de rivier
-  belly.vissen = []; const zet = (x, z, lengte, straal) => belly.vissen.push({ soort: "Meerval", x, z, tx: x, tz: z, x0: x, z0: z, straal, lengte, h: Math.random() * 6, boven: tussen(0.3, 1.1), zin: 0 });
-  for (const [x, z, r] of W.kolken) zet(x + tussen(-4, 4), z + tussen(-4, 4), tussen(2.04, 2.45), r * 0.45);
-  for (let i = 0; i < 22; i++) { const p = belly.pos.clone().addScaledVector(u, tussen(5, 150)).addScaledVector(t, tussen(-190, 190)); if (W.diepte(p.x, p.z) > 3) zet(p.x, p.z, tussen(0.85, 1.85), 18); }
-  belly.school = []; for (let s = 0; s < 14; s++) { const p = belly.pos.clone().addScaledVector(u, tussen(0, 150)).addScaledVector(t, tussen(-180, 180)), d = tussen(1.5, 3.5); for (let i = 0; i < 9; i++) belly.school.push({ x: p.x + tussen(-1.2, 1.2), z: p.z + tussen(-1.2, 1.2), d: d + tussen(-0.5, 0.5) }); }
-  hud.missie.textContent = "Vang een meerval van 2 meter of meer. Zoek de diepe kolken op de livescope."; hud.scope.hidden = false; hud.tel.textContent = "";
+  belly.pos.copy(W.steiger.eind).addScaledVector(u, 3.5); belly.yaw = huis.yaw; belly.sonar = 0; belly.aas = 1; belly.vis = null; cam.yaw = huis.yaw + Math.PI; cam.afstand = 3.6; cam.pitch = 0.38;
+  belly.vissen = []; const zet = (soort, x, z, lengte, straal, extra = {}) => belly.vissen.push({ soort, x, z, tx: x, tz: z, x0: x, z0: z, straal, lengte, h: Math.random() * 6, boven: tussen(0.25, 1.0), diep: tussen(1.2, 4), zin: 0, ...extra });
+  const ergens = (min = 2.5) => { for (let i = 0; i < 30; i++) { const p = belly.pos.clone().addScaledVector(u, tussen(4, 150)).addScaledVector(t, tussen(-170, 170)); if (W.diepte(p.x, p.z) > min) return p; } return belly.pos.clone().addScaledVector(u, 30); };
+  // in elke diepe kolk één echte reus, daarnaast middelgrote meervallen, veel meervalletjes, groepjes karpers
+  for (const [x, z, r] of W.kolken) zet("Meerval", x + tussen(-4, 4), z + tussen(-4, 4), tussen(2.04, 2.45), r * 0.45);
+  for (let i = 0; i < 16; i++) { const p = ergens(3); zet("Meerval", p.x, p.z, tussen(0.95, 1.85), 16); }
+  for (let i = 0; i < 34; i++) { const p = ergens(1.8); zet("Meerval", p.x, p.z, tussen(0.35, 0.85), 10); }
+  for (let i = 0; i < 9; i++) { const p = ergens(2); for (let k = 0; k < 2 + ((Math.random() * 3) | 0); k++) zet("Karper", p.x + tussen(-3, 3), p.z + tussen(-3, 3), tussen(0.45, 0.95), 14, { diep: tussen(1.2, 3.2) }); }
+  // een paar dicht bij de start, zodat je meteen iets ziet
+  for (let i = 0; i < 4; i++) { const p = belly.pos.clone().addScaledVector(u, tussen(5, 14)).addScaledVector(t, tussen(-8, 8)); if (W.diepte(p.x, p.z) > 1.5) zet(i % 2 ? "Karper" : "Meerval", p.x, p.z, tussen(0.4, 0.8), 6); }
+  // scholen witvis die voorbij trekken
+  belly.school = []; for (let s = 0; s < 14; s++) belly.school.push(nieuweSchool({}, true));
+  hud.missie.textContent = "Zoek een grote meerval op de livescope (dikke kop, dunne staart) en vang er een van 2 meter of meer"; hud.scope.hidden = false; hud.tel.textContent = "";
 }
+function nieuweSchool(q, overal = false) { const a = Math.random() * 6.28, p = belly.pos.clone().addScaledVector(u, tussen(3, overal ? 120 : 40)).addScaledVector(t, overal ? tussen(-120, 120) : tussen(-30, 30));
+  return Object.assign(q, { x: p.x, z: p.z, vx: Math.sin(a) * tussen(0.35, 0.9), vz: Math.cos(a) * tussen(0.35, 0.9), d: tussen(0.8, 3.5), n: 10 + ((Math.random() * 14) | 0), r: tussen(0.8, 2), zaad: Math.random() * 100 }); }
 function stapBelly(dt) {
   const b = belly, s = stuur(), f = voor(b.yaw), rechts = V(-f.z, 0, f.x); b.klok += dt;
-  if (!dril.aan) { b.yaw -= s.x * 1.3 * dt; const nx = b.pos.x + f.x * s.y * 1.25 * dt, nz = b.pos.z + f.z * s.y * 1.25 * dt; if (W.diepte(nx, nz) > 0.7) b.pos.set(nx, 0, nz); }
-  boot.visible = true; boot.position.set(b.pos.x, 0.04 + Math.sin(b.klok * 1.7) * 0.025, b.pos.z); boot.rotation.set(Math.sin(b.klok * 1.3) * 0.03, b.yaw, Math.sin(b.klok * 1.1) * 0.03);
-  peppie.m.zet("zitten"); peppie.m.mixer.update(dt); peppie.g.position.copy(boot.position).add(V(0, 0.08 - peppie.m.zithoogte(), 0)).addScaledVector(f, -0.12); peppie.g.rotation.set(0, b.yaw, 0);
+  // varen met de motor: vooruit/achteruit en draaien
+  let vaart = 0; if (!dril.aan) { b.yaw -= s.x * 1.1 * dt; vaart = s.y * 1.1; const nx = b.pos.x + f.x * vaart * dt, nz = b.pos.z + f.z * vaart * dt; if (W.diepte(nx, nz) > 0.7) b.pos.set(nx, 0, nz); }
+  // de transducer draaien met de stang
+  const kn = invoer.toets; if (invoer.links || kn.KeyQ || kn.KeyZ) b.sonar += 1.4 * dt; if (invoer.rechts || kn.KeyC) b.sonar -= 1.4 * dt; b.sonar = klem(b.sonar, -2.6, 2.6);
+  boot.visible = true; boot.position.set(b.pos.x, 0.0 + Math.sin(b.klok * 1.7) * 0.02, b.pos.z); boot.rotation.set(Math.sin(b.klok * 1.3) * 0.025, b.yaw, Math.sin(b.klok * 1.1) * 0.025); bb.stang.rotation.y = b.sonar; bb.schroef.rotation.z += dt * (Math.abs(vaart) * 30 + (dril.aan ? 4 : 0)); bb.motor.rotation.y = -s.x * 0.5;
+  boot.updateMatrixWorld(true);
+  peppie.m.zet("zitten"); peppie.m.mixer.update(dt); peppie.g.position.copy(boot.localToWorld(bb.zit.clone())).add(V(0, -peppie.m.zithoogte() + 0.02, 0)); peppie.g.rotation.set(0, b.yaw, 0);
   const bodem = W.diepte(b.pos.x, b.pos.z);
-  // de meervallen zwemmen traag rond boven de bodem
+  // de vissen: meervallen traag rond boven de bodem, karpers in het midden, scholen trekken voorbij
   for (const v of b.vissen) { if (v === b.vis) continue; if (Math.hypot(v.tx - v.x, v.tz - v.z) < 1) { const a = Math.random() * 6.28, r = Math.random() * v.straal; v.tx = v.x0 + Math.cos(a) * r; v.tz = v.z0 + Math.sin(a) * r; }
-    const dx = v.tx - v.x, dz = v.tz - v.z, l = Math.hypot(dx, dz) || 1, sn = 0.25 + (v.zin > 0 ? 0.5 : 0); v.x += (dx / l) * sn * dt; v.z += (dz / l) * sn * dt; v.h = Math.atan2(dx, dz); }
-  // wat de livescope ziet: alles binnen de bundel voor je
-  const zie = (x, z) => { const rx = x - b.pos.x, rz = z - b.pos.z, v = rx * f.x + rz * f.z, lat = rx * rechts.x + rz * rechts.z; return Math.abs(lat) < 1.5 + Math.abs(v) * 0.14 ? v : null; };
-  const inBeeld = []; for (const v of b.vissen) { const a = zie(v.x, v.z); if (a === null) continue; const d = v === b.vis ? klem(dril.afstand * 0.8, 0.6, W.diepte(v.x, v.z) - 0.2) : W.diepte(v.x, v.z) - v.boven - v.zin * (W.diepte(v.x, v.z) - v.boven - b.aas) * 0.9; inBeeld.push({ v: a, d, lengte: v.lengte, hoek: v.h - b.yaw, vis: v }); }
+    const dx = v.tx - v.x, dz = v.tz - v.z, l = Math.hypot(dx, dz) || 1, sn = (v.soort === "Karper" ? 0.4 : 0.22) + (v.zin > 0 ? 0.4 : 0); v.x += (dx / l) * sn * dt; v.z += (dz / l) * sn * dt; let dh = Math.atan2(dx, dz) - v.h; dh = Math.atan2(Math.sin(dh), Math.cos(dh)); v.h += dh * Math.min(1, dt * 2); }
+  for (const q of b.school) { q.x += q.vx * dt; q.z += q.vz * dt; if (Math.hypot(q.x - b.pos.x, q.z - b.pos.z) > 70 || W.diepte(q.x, q.z) < q.d + 0.3) nieuweSchool(q); }
+  // de bundel: vanaf de transducer rechts voorin, in de richting van de stang; ± 20 graden breed
+  const bron = boot.localToWorld(V(0.6, 0, 0.66)), sy = b.yaw + b.sonar, fb = voor(sy), rb = V(-fb.z, 0, fb.x);
+  const zie = (x, z) => { const rx = x - bron.x, rz = z - bron.z, v = rx * fb.x + rz * fb.z, lat = rx * rb.x + rz * rb.z; return Math.abs(lat) < 0.35 + Math.abs(v) * 0.18 ? v : null; };
+  // de hengel recht vooruit, de top 1,3 m voor de boot; de lijn hangt recht omlaag
+  const top = houdHengel(b.yaw, dril.aan ? 0.8 : 0.06, dril.aan ? 0.3 + dril.span * 0.2 : 0.02 + b.tik * 0.06); b.top.copy(top);
+  const inBeeld = []; for (const v of b.vissen) { const a = zie(v.x, v.z); if (a === null) continue; const d = v === b.vis ? klem(dril.afstand * 0.8, 0.6, W.diepte(v.x, v.z) - 0.2) : VISDIEPTE(v) - v.zin * (VISDIEPTE(v) - b.aas) * 0.9; inBeeld.push({ v: a, d, lengte: v.lengte, hoek: v.h - sy, soort: v.soort, vis: v }); }
   if (!dril.aan) {
-    // het aas: omlaag en omhoog, en tikken om de vis te lokken
-    if (invoer.neer) b.aas += 1.6 * dt; if (invoer.op) b.aas -= 1.6 * dt; b.aas = klem(b.aas, 0.4, Math.max(0.5, bodem - 0.15));
+    if (invoer.neer) b.aas += 1.5 * dt; if (invoer.op) b.aas -= 1.5 * dt; b.aas = klem(b.aas, 0.3, Math.max(0.4, W.diepte(top.x, top.z) - 0.1));
     if (invoer.Atik) { b.tik = 1; geluid.toon({ freq: 180, duur: 0.05, gain: 0.03 }); } b.tik = Math.max(0, b.tik - dt * 1.4);
-    for (const e of inBeeld) { const v = e.vis, dicht = Math.abs(e.v - 0.25) < 1.5; if (dicht && Math.abs(e.d - b.aas) < 1.3 + v.zin * 3) { v.zin = Math.min(1.05, v.zin + dt * (0.08 + b.tik * 0.55)); v.tx = b.pos.x + f.x * 0.25; v.tz = b.pos.z + f.z * 0.25; } else v.zin = Math.max(0, v.zin - dt * 0.2);
-      if (v.zin >= 1 && Math.abs(e.v - 0.25) < 0.9) { b.vis = v; v.zin = 0; beginDril(v, e.d + 3); meld("Beet! Houd de spanning in het groen", 3); geluid.piep(); spetter(b.pos.clone().addScaledVector(f, 0.8), 14, 0.6); } }
-    knoppen({ A: "Tik", hoogte: true });
+    // een vis die vlak bij het aas zwemt, wordt nieuwsgierig; tikken maakt hem gretig
+    for (const v of b.vissen) { const afst = Math.hypot(v.x - top.x, v.z - top.z), dd = Math.abs(VISDIEPTE(v) - b.aas), bij = afst < 0.9 + v.lengte * 0.35 && dd < 1.1 + v.zin * 3;
+      if (bij) { v.zin = Math.min(1.05, v.zin + dt * (0.06 + b.tik * 0.5)); v.tx = top.x; v.tz = top.z; } else v.zin = Math.max(0, v.zin - dt * 0.2);
+      if (v.zin >= 1 && afst < 0.8) { b.vis = v; v.zin = 0; beginDril(v, VISDIEPTE(v) + 2 + v.lengte); meld("Beet! Houd de spanning in het groen", 3); geluid.piep(); spetter(top.clone().setY(0), 14, 0.6); break; } }
+    knoppen({ A: "Tik", hoogte: true }); hud.links.hidden = hud.rechts.hidden = false;
+    zetLijn(top, V(top.x, -Math.min(b.aas, 2.5), top.z), 0);
   } else {
-    // de dril: een grote meerval sleept de belly boat mee
-    const v = b.vis, uit = stapDril(dt, invoer.A), ren = dril.ren > 0, sleep = (0.2 + v.lengte * 0.45) * (ren ? 1 : 0.25);
+    // de dril: een grote meerval sleept de bellyboat mee
+    hud.links.hidden = hud.rechts.hidden = true;
+    const v = b.vis, uit = stapDril(dt, invoer.A), ren = dril.ren > 0, sleep = (0.15 + v.lengte * 0.45) * (ren ? 1 : 0.25);
     v.h += Math.sin(b.klok * 0.6) * 0.5 * dt; const nx = b.pos.x + Math.sin(v.h) * sleep * dt, nz = b.pos.z + Math.cos(v.h) * sleep * dt; if (W.diepte(nx, nz) > 1) b.pos.set(nx, 0, nz); else v.h += Math.PI * 0.6;
     v.x = b.pos.x + Math.sin(v.h) * Math.min(3, dril.afstand * 0.4); v.z = b.pos.z + Math.cos(v.h) * Math.min(3, dril.afstand * 0.4); let d = v.h - b.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); b.yaw += d * Math.min(1, dt * 1.5);
     if (ren && Math.random() < dt * 6) spetter(b.pos.clone().addScaledVector(voor(v.h), 1.2), 4, 0.5);
-    knoppen({ A: "Draai" });
+    knoppen({ A: "Draai" }); zetLijn(top, V(v.x, -0.1, v.z), 0.1);
     if (uit !== "bezig") { b.vis = null;
-      if (uit === "binnen") { const tekst = vangst(v); b.vissen.splice(b.vissen.indexOf(v), 1); spetter(b.pos.clone().addScaledVector(f, 0.9), 40, 1.2); if (v.lengte >= 2) einde(true, `${tekst}. Een echte reus!`); else meld(`${tekst}. Nog geen twee meter…`, 4); }
+      if (uit === "binnen") { const tekst = vangst(v); b.vissen.splice(b.vissen.indexOf(v), 1); spetter(b.pos.clone().addScaledVector(f, 0.9), 40, 1.2); if (v.soort === "Meerval" && v.lengte >= 2) einde(true, `${tekst}. Een echte reus!`); else meld(v.soort === "Meerval" ? `${tekst}. Nog geen twee meter…` : tekst, 4); }
       else { meld(uit === "breuk" ? "Lijnbreuk! Laat hem lopen als hij trekt." : "Los… houd de lijn strak.", 4); geluid.fout(); v.x0 += tussen(-6, 6); } }
   }
-  // de hengel: kort over de rand, de lijn recht omlaag
-  const top = houdHengel(b.yaw, dril.aan ? 0.75 : 0.3, dril.aan ? 0.3 + dril.span * 0.2 : 0.03 + b.tik * 0.08); zetLijn(top, b.pos.clone().addScaledVector(f, dril.aan ? 1.6 : 1.0).setY(-0.05));
-  // het scherm: tien keer per seconde een nieuw beeld
-  if ((b.scopeT -= dt) <= 0) { b.scopeT = 0.1; const nu = new Date();
-    scope.teken({ bodem: (v) => W.diepte(b.pos.x + f.x * v, b.pos.z + f.z * v), vissen: inBeeld, aas: dril.aan ? null : { d: b.aas - b.tik * 0.3 }, school: b.school.map((q) => { const a = zie(q.x, q.z); return a === null ? null : { v: a, d: q.d }; }).filter(Boolean), temp: 27.46 + Math.sin(b.klok * 0.4) * 0.012, tijd: `${String(nu.getHours()).padStart(2, "0")}:${String(nu.getMinutes()).padStart(2, "0")}` }); }
+  // het scherm: tien keer per seconde een nieuw beeld, ook op het toestel op de arm
+  if ((b.scopeT -= dt) <= 0) { b.scopeT = 0.1; const nu = new Date(), av = zie(top.x, top.z);
+    scope.teken({ bodem: (v) => W.diepte(bron.x + fb.x * v, bron.z + fb.z * v), vissen: inBeeld, aas: dril.aan || av === null ? null : { v: av, d: b.aas - b.tik * 0.3 },
+      school: b.school.flatMap((q) => { const out = []; for (let i = 0; i < q.n; i++) { const a = q.zaad + i * 2.4, x = q.x + Math.sin(a) * q.r * ((i * 0.37) % 1), z = q.z + Math.cos(a * 1.3) * q.r * ((i * 0.61) % 1), v = zie(x, z); if (v !== null) out.push({ v, d: q.d + Math.sin(a * 0.7) * 0.4 }); } return out; }),
+      temp: 27.46 + Math.sin(b.klok * 0.4) * 0.012, tijd: `${String(nu.getHours()).padStart(2, "0")}:${String(nu.getMinutes()).padStart(2, "0")}` });
+    scopeTex.needsUpdate = true; }
   hud.tel.textContent = `diepte ${bodem.toFixed(1)} m · aas ${b.aas.toFixed(1)} m`;
   volg(b.pos.clone().add(V(0, 0.9, 0)));
 }
@@ -304,7 +328,7 @@ const net = new THREE.Group(); { const steel = new THREE.Mesh(new THREE.Cylinder
   const ring = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.014, 6, 18).rotateX(Math.PI / 2), steel.material); ring.position.z = 2.7; const zak = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.45, 12, 1, true), new THREE.MeshStandardMaterial({ color: "#3d5a3a", transparent: true, opacity: 0.7, side: THREE.DoubleSide })); zak.rotation.x = Math.PI; zak.position.set(0, -0.23, 2.7); net.add(steel, ring, zak); net.visible = false; scene.add(net); }
 const kooi = new THREE.Group(); { const m = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.45, 0.55), new THREE.MeshStandardMaterial({ color: "#8a8f94", wireframe: true })); m.position.y = 0.23; kooi.add(m); kooi.visible = false; scene.add(kooi); }
 const rat = { lijst: [], n: 0, tijd: 0, zwaai: 0, gevangen: [] };
-function nieuweRat(r = {}) { const kant_ = Math.random() < 0.5 ? 1 : -1; Object.assign(r, { langs: -kant_ * tussen(22, 40), uit: tussen(0.8, 10.5), v: kant_ * tussen(0.7, 1.5), duik: 0, f: Math.random() * 6 }); r.m ??= maakRat(); r.m.visible = true; return r; }
+function nieuweRat(r = {}) { const kant_ = Math.random() < 0.5 ? 1 : -1; Object.assign(r, { langs: -kant_ * tussen(22, 40), uit: tussen(0.6, 6), v: kant_ * tussen(0.7, 1.5), duik: 0, f: Math.random() * 6 }); r.m ??= maakRat(); r.m.visible = true; return r; }
 function beginRat() { for (const r of rat.lijst) r.m.visible = false; for (const g of rat.gevangen) scene.remove(g); rat.gevangen = []; rat.lijst = [0, 1, 2, 3, 4].map((i) => nieuweRat(rat.lijst[i] ?? {})); Object.assign(rat, { n: 0, tijd: 120, zwaai: 0 });
   loop.pos.copy(W.steiger.midden); loop.yaw = huis.yaw; cam.yaw = huis.yaw + Math.PI; cam.afstand = 5.5; cam.pitch = 0.4; kooi.visible = true; kooi.position.copy(W.steiger.begin).addScaledVector(u, 1.2).setY(W.steiger.dek); kooi.rotation.y = huis.yaw;
   hud.missie.textContent = "Schep vijf beverratten vanaf de steiger. Loop rustig, anders duiken ze onder."; }
@@ -349,6 +373,7 @@ function lus() {
     peppie.g.position.copy(W.steiger.eind).addScaledVector(u, -1).setY(W.steiger.dek); peppie.g.rotation.set(0, huis.yaw, 0); peppie.m.zet("staan"); peppie.m.mixer.update(dt);
   } else if (spel.modus === "kijk") { /* camera van buitenaf (tools/kijk.cjs) */ } else if (!spel.klaar || spel.modus === "drone") MISSIES[spel.modus][1](dt);
   if (meldT > 0 && (meldT -= dt) <= 0) hud.melding.hidden = true;
+  for (const a of aangemeerd) { a.f += dt; a.b.position.y = 0.02 + Math.sin(a.f * 1.5) * 0.015; }
   kippen.stap(dt, spel.modus === "kant" || spel.modus === "rat" ? { x: loop.pos.x, z: loop.pos.z, v: loop.v } : null);
   invoer.Atik = invoer.Btik = false; fx.stap(dt); W.water.position.y = Math.sin(spel.t * 0.6) * 0.012;
   renderer.render(scene, camera); requestAnimationFrame(lus);

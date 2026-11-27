@@ -20,7 +20,8 @@ export class Livescope {
   }
   /**
    * Teken één beeld. bodem(v) = diepte op v meter voor je (negatief = achter je); vissen = [{ v, d, lengte, hoek }];
-   * aas = { d } (diepte van je kunstaas, recht onder je) of null; school = [{ v, d }] (kleine visjes).
+   * aas = { v, d } (waar je aas hangt: v meter voor de transducer, d diep) of null; school = [{ v, d }] (kleine visjes).
+   * vissen: soort Meerval / Karper / anders; hoek = zwemrichting ten opzichte van de bundel.
    */
   teken({ bodem, vissen = [], aas = null, school = [], temp = 27.4, tijd = "10:23" }) {
     this.t += 1; const px = this.beeld.data, t = this.t;
@@ -52,9 +53,18 @@ export class Livescope {
     // vissen, aas en visjes: lichtgevende vlekken die optellen bij het beeld
     const X = (v) => ((v - X0) / (X1 - X0)) * BW, Y = (d) => (d / D1) * BH, k = this.kx; k.globalCompositeOperation = "lighter";
     const vlek = (cx, cy, rx, ry, hoek, sterk) => { k.save(); k.translate(cx, cy); k.rotate(hoek); k.scale(1, ry / rx); const g = k.createRadialGradient(0, 0, 0, 0, 0, rx); g.addColorStop(0, `rgba(255,${(90 * sterk) | 0},0,${0.95 * sterk})`); g.addColorStop(0.45, `rgba(255,220,0,${0.8 * sterk})`); g.addColorStop(0.8, `rgba(0,255,190,${0.45 * sterk})`); g.addColorStop(1, "rgba(0,120,255,0)"); k.fillStyle = g; k.beginPath(); k.arc(0, 0, rx, 0, 6.3); k.fill(); k.restore(); };
-    for (const f of vissen) { if (f.v < X0 || f.v > X1 || f.d > D1) continue; const lang = (f.lengte / (X1 - X0)) * BW * 0.55 * (0.45 + 0.55 * Math.abs(Math.cos(f.hoek ?? 0))); vlek(X(f.v), Y(f.d), Math.max(3, lang), Math.max(1.6, 1.2 + f.lengte * 1.1), Math.sin(t * 0.3 + f.v) * 0.25 - 0.1, 1); }
+    // de vorm verraadt de soort: een meerval is een kikkervisje (dikke kop, pens, dunne staart), een karper is bol en hoog
+    for (const f of vissen) { if (f.v < X0 || f.v > X1 || f.d > D1) continue;
+      const c = Math.cos(f.hoek ?? 0), kop = c >= 0 ? 1 : -1, L = (f.lengte / (X1 - X0)) * BW * (0.4 + 0.6 * Math.abs(c)), hY = (f.lengte * BH) / D1, cx = X(f.v), cy = Y(f.d), wieg = Math.sin(t * 0.25 + f.v * 3) * 0.6, sterk = f.sterk ?? 1;
+      if (f.soort === "Meerval") {
+        vlek(cx + kop * L * 0.3, cy, Math.max(2.2, L * 0.2), Math.max(1.6, hY * 0.12), 0, sterk); // de kop
+        vlek(cx + kop * L * 0.08, cy + hY * 0.02, Math.max(2, L * 0.2), Math.max(1.5, hY * 0.11), 0, sterk); // de pens
+        for (let i = 0; i < 4; i++) { const a = 0.12 + i * 0.13; vlek(cx - kop * L * a, cy + wieg * i * 0.4, Math.max(1.2, L * (0.12 - i * 0.022)), Math.max(0.9, hY * (0.065 - i * 0.012)), 0, sterk * (0.9 - i * 0.1)); } // de staart
+      } else if (f.soort === "Karper") {
+        vlek(cx + kop * L * 0.05, cy, Math.max(2.4, L * 0.36), Math.max(2, hY * 0.2), 0, sterk); vlek(cx - kop * L * 0.4, cy + wieg * 0.3, Math.max(1.2, L * 0.1), Math.max(1, hY * 0.1), 0, sterk * 0.8);
+      } else vlek(cx, cy, Math.max(1.8, L * 0.3), Math.max(1.2, hY * 0.12), 0, sterk * 0.85); }
     for (const s of school) { if (s.v < X0 || s.v > X1) continue; vlek(X(s.v) + Math.sin(t * 0.7 + s.d * 9) * 1.2, Y(s.d) + Math.cos(t * 0.5 + s.v * 7) * 0.8, 1.9, 1.3, 0, 0.75); }
-    if (aas) { vlek(X(0.25), Y(aas.d), 2.4, 1.6, 0, 0.95); for (let i = 1; i < 5; i++) if (aas.d - i * 0.6 > 0.3) vlek(X(0.2) + Math.sin(i * 2.1) * 0.8, Y(aas.d - i * 0.6), 1.1, 0.9, 0, 0.4); }
+    if (aas && aas.v != null) { vlek(X(aas.v), Y(aas.d), 2.4, 1.6, 0, 0.95); for (let i = 1; i < 5; i++) if (aas.d - i * 0.6 > 0.3) vlek(X(aas.v) - 0.2 + Math.sin(i * 2.1) * 0.8, Y(aas.d - i * 0.6), 1.1, 0.9, 0, 0.4); }
     k.globalCompositeOperation = "source-over";
     // uitvergroten naar het scherm, met het raster en de cijfers erover
     const c = this.c, x = this.x, W = c.width, H = c.height; x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high"; x.drawImage(this.klein, 0, 0, W, H);

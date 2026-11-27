@@ -72,3 +72,8 @@ Uitwerking van eigenschappen volgt later van Bob.
 - Details tekkeljacht, kippen, missies groene boot.
 - Wat Fristi voor Wim betekent in het spel; eigenschappen per karakter.
 - Meer beelden van Bob (dronebeelden, derde steiger). Pas daarna bouwen.
+
+## 8. Voortgang
+- **27-11 stap 1 (klaar):** terrein volgens de luchtfoto. Wit woonhuis, toren met de slaapkamer (drone-missie), bakstenen schuur, zwembad met rolafdekking en robot, terras, palmen in potten, picknicktafel, populieren. Drie steigers met wal en stenen treden; de groene boot ligt aan de linker steiger. Zestien tot achttien kippen met haan, kuifkippen en de roze verrassing. Code: `src/domein.js`, `src/kippen.js`; beelden: `node tools/kijk.cjs`.
+- **27-11 stap 2 (klaar):** drie bellyboten (`src/bellyboat.js`): Paul/Bob zwart met Garmin op een arm (toont de echte livescope), transducerstang en motor; Wim kaki met lichte neuzen; Dave gifgroen. Verticaal vissen: de hengel recht vooruit, de lijn recht omlaag, de transducer draaien met ⟲ ⟳ (Q/C), eerst de vis zoeken. Op het scherm scholen witvis, meervalletjes als kikkervisjes en bolle karpers.
+- **Volgende:** stap 3 de vier karakters met hun gezichten van de foto's; stap 4 de groene boot met lijnen uitvaren; stap 5 de tekkels (Pleurisbeesten) en de jacht.
