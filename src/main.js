@@ -7,6 +7,7 @@ import { Effecten } from "./effecten.js";
 import { Livescope } from "./livescope.js";
 import { bouwWereld } from "./wereld.js";
 import { laadVisspullen } from "./hengel.js";
+import { Kippen } from "./kippen.js";
 
 const $ = (q) => document.querySelector(q);
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -37,11 +38,22 @@ const geluid = { ctx: null,
   fout() { this.toon({ freq: 220, freq2: 110, duur: 0.4, type: "sawtooth", gain: 0.06 }); },
   snurk() { this.ruis({ duur: 1.1, freq: 260, gain: 0.35 }); this.ruis({ duur: 0.9, freq: 700, gain: 0.12, start: 1.3 }); },
   slip() { this.ruis({ duur: 0.25, freq: 5000, gain: 0.12 }); },
+  // kippen: getok, gekakel en de haan (zacht, en alleen als je er dichtbij bent)
+  tok(v = 1) { for (let i = 0; i < 2 + ((Math.random() * 3) | 0); i++) this.toon({ freq: 520 + Math.random() * 80, freq2: 380, duur: 0.07, type: "square", gain: 0.018 * v, start: i * 0.16 }); },
+  kakel(v = 1) { for (let i = 0; i < 7; i++) this.toon({ freq: 600 + Math.random() * 300, freq2: 420, duur: 0.08, type: "square", gain: 0.022 * v, start: i * 0.1 + (i > 4 ? 0.15 : 0) }); },
+  kraai(v = 1) { [[420, 560, 0.18], [560, 700, 0.16], [700, 760, 0.5], [760, 520, 0.35]].reduce((t, [a, b, d]) => { this.toon({ freq: a, freq2: b, duur: d, type: "sawtooth", gain: 0.03 * v, start: t }); this.toon({ freq: a * 2, freq2: b * 2, duur: d, type: "triangle", gain: 0.015 * v, start: t }); return t + d * 0.9; }, 0); },
 };
 
 // ---------- laden ----------
 const data = await (await fetch(`data/lot.json?v=${window.VERSIE ?? ""}`)).json();
 const W = bouwWereld(data, scene);
+// een lucht om in te spiegelen: de rivier en het zwembad weerkaatsen de hemel en de groene oevers
+{ const lucht = new THREE.Scene(), g = new THREE.SphereGeometry(50, 32, 16), kl = [], c = new THREE.Color(), p = g.attributes.position;
+  for (let i = 0; i < p.count; i++) { const y = p.getY(i) / 50; if (y > 0.12) c.set("#e4eef4").lerp(new THREE.Color("#8fbde0"), Math.min(1, (y - 0.12) * 1.6)); else if (y > -0.02) c.set("#7f9a6a").lerp(new THREE.Color("#e4eef4"), (y + 0.02) / 0.14); else c.set("#4c6040"); kl.push(c.r, c.g, c.b); }
+  g.setAttribute("color", new THREE.Float32BufferAttribute(kl, 3)); lucht.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide })));
+  const env = new THREE.PMREMGenerator(renderer).fromScene(lucht, 0.01).texture;
+  Object.assign(W.water.material, { envMap: env, envMapIntensity: 0.5, color: new THREE.Color("#4d6852"), metalness: 0.3, roughness: 0.09, opacity: 0.93 }); W.water.material.needsUpdate = true;
+  W.domein.groep.traverse((o) => { if (o.isMesh && o.material.transparent && o.material.color?.getHexString() === "5fd0f2") { o.material.envMap = env; o.material.needsUpdate = true; } }); }
 await laadMensen((v) => $("#laden").style.setProperty("--v", v));
 const spul = await laadVisspullen(scene);
 const fx = new Effecten(scene);
@@ -49,6 +61,16 @@ const mens = (rol) => { const m = maakMens(rol), g = new THREE.Group(); m.object
 const peppie = mens("rooie"), cocks = mens("visser");
 { const s = cocks.m.object.scale; s.set(s.x * 1.2, s.y, s.z * 1.28); }
 const huis = W.huis, u = huis.u, t = huis.t; // u = naar de rivier, t = langs de oever
+// de kippen lopen over het gras tussen het huis en de oever, en soms over de steigers
+const dom = W.domein;
+const kippen = new Kippen(scene, {
+  grond: (x, z) => W.opSteiger(x, z) ?? W.hoogte(x, z),
+  mag: (x, z) => (W.opSteiger(x, z) !== null || W.oever(x, z) < -0.6) && !W.inHuis(x, z, 0.15) && (() => { const l = dom.lokaal(V(x, 0, z)); return l.x > -24 && l.x < 34 && l.z > -1; })(),
+  plek: () => { for (let i = 0; i < 40; i++) { if (Math.random() < 0.12) { const s = kies(W.steigers), p = dom.wereld(s.x + tussen(-2.5, 2.5), 0, s.z0 + tussen(0, 1)); if (W.opSteiger(p.x, p.z) !== null) return { x: p.x, z: p.z }; }
+    const lx = tussen(-18, 22), p = dom.wereld(lx, 0, tussen(1.5, dom.oeverZ(lx) - 1)); if (!W.inHuis(p.x, p.z, 0.3) && W.oever(p.x, p.z) < -0.8) return { x: p.x, z: p.z }; } const p = W.tuin; return { x: p.x, z: p.z }; },
+  aantal: telefoon ? 13 : 18,
+  geluid: (n) => { const c = camera.position, k = Math.hypot(c.x - W.tuin.x, c.z - W.tuin.z); if (k < 45) geluid[n]?.(Math.max(0.15, 1 - k / 45)); },
+});
 
 // Cocks ligt in bed (boven, bij het open raam) en snurkt
 function legCocks(wakker = false) {
@@ -147,7 +169,7 @@ const spetter = (p, n = 24, k = 1) => { for (let i = 0; i < n; i++) fx.deeltje(p
 
 // ---------- missie 1: vissen vanaf de kant ----------
 const kant = { fase: "loop", t: 0, wacht: 0, doel: V(0, 0, 0), vis: null, n: 0 };
-function beginKant() { Object.assign(kant, { fase: "loop", n: 0 }); loop.pos.copy(W.steiger.begin).addScaledVector(u, 3); loop.yaw = huis.yaw; cam.yaw = huis.yaw + Math.PI; cam.afstand = 5; hud.missie.textContent = "Vang drie vissen vanaf de oever of de steiger"; }
+function beginKant() { Object.assign(kant, { fase: "loop", n: 0 }); loop.pos.copy(W.steiger.midden); loop.yaw = huis.yaw; cam.yaw = huis.yaw + Math.PI; cam.afstand = 5; hud.missie.textContent = "Vang drie vissen vanaf de oever of de steiger"; }
 function stapKant(dt) {
   const k = kant; k.t += dt; let top;
   if (k.fase === "loop") {
@@ -260,7 +282,7 @@ function stapDrone(dt) {
   glas.visible = dr.glas !== "weg";
   if (dr.glas === "hangt") { glas.position.copy(dr.pos).add(V(0, -0.16, 0)); glas.rotation.set(0, 0, 0); if (invoer.Atik) { dr.glas = "valt"; dr.gp.copy(glas.position); dr.gv = 0; dr.over--; } }
   else if (dr.glas === "valt") { dr.gv -= 9.8 * dt; dr.gp.y += dr.gv * dt; glas.position.copy(dr.gp); glas.rotation.x += dt * 5;
-    const l = huis.naarBinnen(dr.gp), binnen = Math.abs(l.x) < huis.BX / 2 && Math.abs(l.z) < huis.BZ / 2 && dr.gp.y > huis.pos.y + 2.6, grond = binnen ? huis.pos.y + 3.0 : Math.max(0, W.hoogte(dr.gp.x, dr.gp.z)) + 0.05, opBed = binnen && Math.hypot(dr.gp.x - huis.bed.x, dr.gp.z - huis.bed.z) < 1.05;
+    const l = huis.naarBinnen(dr.gp), binnen = Math.abs(l.x) < huis.BX / 2 && Math.abs(l.z) < huis.BZ / 2 && dr.gp.y > huis.vloerY - 0.2, grond = binnen ? huis.vloerY + 0.15 : Math.max(0, W.hoogte(dr.gp.x, dr.gp.z)) + 0.05, opBed = binnen && Math.hypot(dr.gp.x - huis.bed.x, dr.gp.z - huis.bed.z) < 1.05;
     if (dr.gp.y <= (opBed ? huis.bed.y + 0.25 : grond)) { dr.glas = "weg"; spetter(dr.gp.clone(), opBed ? 40 : 14, opBed ? 0.9 : 0.5); geluid.plons(opBed ? 0.8 : 0.3); geluid.toon({ freq: 3200, freq2: 900, duur: 0.18, type: "triangle", gain: 0.05 });
       if (opBed) { legCocks(true); geluid.toon({ freq: 300, freq2: 520, duur: 0.5, type: "sawtooth", gain: 0.07, start: 0.2 }); einde(true, "Raak! Cocks zit rechtop in bed, drijfnat."); }
       else if (dr.over > 0) { meld(`Mis! Nog ${dr.over} ${dr.over === 1 ? "glas" : "glazen"}.`); setTimeout(() => { if (spel.modus === "drone" && !spel.klaar) dr.glas = "hangt"; }, 1500); } else einde(false, "Alle glazen zijn op. Cocks slaapt rustig verder."); } }
@@ -284,7 +306,7 @@ const kooi = new THREE.Group(); { const m = new THREE.Mesh(new THREE.BoxGeometry
 const rat = { lijst: [], n: 0, tijd: 0, zwaai: 0, gevangen: [] };
 function nieuweRat(r = {}) { const kant_ = Math.random() < 0.5 ? 1 : -1; Object.assign(r, { langs: -kant_ * tussen(22, 40), uit: tussen(0.8, 10.5), v: kant_ * tussen(0.7, 1.5), duik: 0, f: Math.random() * 6 }); r.m ??= maakRat(); r.m.visible = true; return r; }
 function beginRat() { for (const r of rat.lijst) r.m.visible = false; for (const g of rat.gevangen) scene.remove(g); rat.gevangen = []; rat.lijst = [0, 1, 2, 3, 4].map((i) => nieuweRat(rat.lijst[i] ?? {})); Object.assign(rat, { n: 0, tijd: 120, zwaai: 0 });
-  loop.pos.copy(W.steiger.begin).addScaledVector(u, 4); loop.yaw = huis.yaw; cam.yaw = huis.yaw + Math.PI; cam.afstand = 5.5; cam.pitch = 0.4; kooi.visible = true; kooi.position.copy(W.steiger.begin).addScaledVector(u, 1.2).setY(W.steiger.dek); kooi.rotation.y = huis.yaw;
+  loop.pos.copy(W.steiger.midden); loop.yaw = huis.yaw; cam.yaw = huis.yaw + Math.PI; cam.afstand = 5.5; cam.pitch = 0.4; kooi.visible = true; kooi.position.copy(W.steiger.begin).addScaledVector(u, 1.2).setY(W.steiger.dek); kooi.rotation.y = huis.yaw;
   hud.missie.textContent = "Schep vijf beverratten vanaf de steiger. Loop rustig, anders duiken ze onder."; }
 function stapRat(dt) {
   stapLopen(dt, 3); peppie.m.zet(loop.v > 0.3 ? "lopen" : "staan"); peppie.m.mixer.update(dt); rat.tijd -= dt; rat.zwaai = Math.max(0, rat.zwaai - dt * 2.4);
@@ -325,11 +347,12 @@ function lus() {
   if (spel.modus === "menu") { // een rustig rondje boven de rivier
     menuT += dt * 0.06; const c = W.oeverPunt.clone().addScaledVector(u, 25); camera.position.set(c.x + Math.sin(menuT) * 70, 26, c.z + Math.cos(menuT) * 70); camera.lookAt(c.x, 2, c.z); zon.target.position.copy(c); zon.position.copy(c).add(V(40, 70, 25));
     peppie.g.position.copy(W.steiger.eind).addScaledVector(u, -1).setY(W.steiger.dek); peppie.g.rotation.set(0, huis.yaw, 0); peppie.m.zet("staan"); peppie.m.mixer.update(dt);
-  } else if (!spel.klaar || spel.modus === "drone") MISSIES[spel.modus][1](dt);
+  } else if (spel.modus === "kijk") { /* camera van buitenaf (tools/kijk.cjs) */ } else if (!spel.klaar || spel.modus === "drone") MISSIES[spel.modus][1](dt);
   if (meldT > 0 && (meldT -= dt) <= 0) hud.melding.hidden = true;
+  kippen.stap(dt, spel.modus === "kant" || spel.modus === "rat" ? { x: loop.pos.x, z: loop.pos.z, v: loop.v } : null);
   invoer.Atik = invoer.Btik = false; fx.stap(dt); W.water.position.y = Math.sin(spel.t * 0.6) * 0.012;
   renderer.render(scene, camera); requestAnimationFrame(lus);
 }
 $("#laden").hidden = true; $("#menu").hidden = false;
-window.__spel = { spel, W, start, belly, dr, rat, kant, loop, cam, invoer, dril, peppie, cocks, scope, camera, stapDril, MISSIES };
+window.__spel = { kippen, zon, THREE, spel, W, start, belly, dr, rat, kant, loop, cam, invoer, dril, peppie, cocks, scope, camera, stapDril, MISSIES };
 requestAnimationFrame(lus);

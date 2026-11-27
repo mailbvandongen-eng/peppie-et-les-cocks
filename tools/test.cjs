@@ -36,8 +36,8 @@ const T = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javasc
   await beeld("9-wakker", 3000);
   // beverratten
   await p.evaluate(() => window.__spel.start("rat")); await beeld("10-rat");
-  console.log("rat:", await p.evaluate(() => { const s = window.__spel, st = s.MISSIES.rat[1], W = s.W, r = s.rat; s.loop.pos.copy(W.steiger.eind).addScaledVector(W.huis.u, -3); s.loop.yaw = W.huis.yaw + Math.PI / 2; let t = 0;
-    while (r.n < 5 && t < 119) { const f = { x: Math.sin(s.loop.yaw), z: Math.cos(s.loop.yaw) }, nx = s.loop.pos.x + f.x * 2.5, nz = s.loop.pos.z + f.z * 2.5; s.invoer.Atik = r.lijst.some((q) => q.duik <= 0 && Math.hypot(q.m.position.x - nx, q.m.position.z - nz) < 1.4); st(0.05); s.invoer.Atik = false; t += 0.05; if (t % 20 < 0.05) s.loop.yaw += Math.PI; }
+  console.log("rat:", await p.evaluate(() => { const s = window.__spel, st = s.MISSIES.rat[1], W = s.W, r = s.rat; s.loop.pos.copy(W.steiger.midden); s.loop.yaw = W.huis.yaw; let t = 0;
+    while (r.n < 5 && t < 119) { const f = { x: Math.sin(s.loop.yaw), z: Math.cos(s.loop.yaw) }, nx = s.loop.pos.x + f.x * 2.5, nz = s.loop.pos.z + f.z * 2.5; s.invoer.Atik = r.lijst.some((q) => q.duik <= 0 && Math.hypot(q.m.position.x - nx, q.m.position.z - nz) < 1.4); st(0.05); s.invoer.Atik = false; t += 0.05; if (t % 20 < 0.05) s.loop.yaw = W.huis.yaw + (Math.random() - 0.5); }
     return `${r.n} gevangen in ${t.toFixed(0)} s, klaar: ${s.spel.klaar}`; }));
   await beeld("11-rat-na");
   console.log(fout.join("\n") || "geen fouten");
