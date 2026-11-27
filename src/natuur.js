@@ -35,12 +35,12 @@ export async function laadBomen(renderer, scene, lijst, { telefoon = false } = {
     const bomen = lijst.filter((b) => b.soort === soortNaam); if (!bomen.length) continue;
     const per = S.varianten.map(() => []); for (const b of bomen) per[Math.floor(hash(b.x, b.z) * S.varianten.length)].push(b);
     S.varianten.forEach((va, i) => { const mijn = per[i]; if (!mijn.length) return;
-      const pak = (re) => { const uit = []; sc.traverse((o) => { if (o.isMesh && re.test(o.name)) { const mat = o.material.clone(); if (mat.alphaTest || mat.transparent || mat.alphaMode === "MASK" || /leaf|Cluster|branch|Billboard|lf/i.test(mat.name)) Object.assign(mat, { alphaTest: 0.45, transparent: false, side: THREE.DoubleSide }); mat.metalness = 0; mat.roughness = 0.9; uit.push({ geo: o.geometry.clone().applyMatrix4(o.matrixWorld), mat }); } }); return uit; };
+      const pak = (re) => { const uit = []; sc.traverse((o) => { if (o.isMesh && re.test(o.name)) { const mat = o.material.clone(); if (mat.alphaTest || mat.transparent || mat.alphaMode === "MASK" || /leaf|Cluster|branch|Billboard|lf/i.test(mat.name)) Object.assign(mat, { alphaTest: 0.45, transparent: false, side: THREE.DoubleSide }); mat.metalness = 0; mat.roughness = 0.9; const geo = o.geometry.clone(); geo.morphAttributes = {}; uit.push({ geo: geo.applyMatrix4(o.matrixWorld), mat }); } }); return uit; };
       const dicht = pak(va.dicht); if (!dicht.length) return;
       // op de grond zetten: stamvoet in de oorsprong, hoogte 1
       const b = new THREE.Box3(); for (const d of dicht) { d.geo.computeBoundingBox(); b.union(d.geo.boundingBox); }
       const c = b.getCenter(new THREE.Vector3()), h = b.max.y - b.min.y, zet = (g) => g.translate(-c.x, -b.min.y, -c.z).scale(1 / h, 1 / h, 1 / h);
-      for (const d of dicht) zet(d.geo); let ver = va.ver ? pak(va.ver)[0] : null; if (ver) zet(ver.geo);
+      for (const d of dicht) zet(d.geo); let ver = null; // ook voor de esdoorns een eigen plaatje: hun meegeleverde kruisjes tonen strepen
       const maat = new THREE.Box3(); for (const d of dicht) { d.geo.computeBoundingBox(); maat.union(d.geo.boundingBox); }
       if (!ver) ver = maakPlaatje(renderer, dicht, maat);
       const n = mijn.length, dm = dicht.map((d) => { const m = new THREE.InstancedMesh(d.geo, d.mat, n); m.castShadow = true; m.receiveShadow = false; m.count = 0; m.frustumCulled = false; scene.add(m); return m; });

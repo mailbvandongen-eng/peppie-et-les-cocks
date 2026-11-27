@@ -73,3 +73,12 @@ export function maakWater(renderer, scene, camera, W, { maat = 1080, telefoon = 
   }
   return { mesh, mat, stap };
 }
+
+/** Maak een materiaal "onder water": hoe dieper onder het oppervlak, hoe meer het opgaat in het groene water.
+ *  Zulke dingen worden ná het water getekend, zodat je ze door het heldere water heen ziet. */
+export function onderWater(mat) {
+  mat.onBeforeCompile = (sh) => {
+    sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nvarying float vOnder;").replace("#include <fog_vertex>", "#include <fog_vertex>\n#ifdef USE_INSTANCING\nvOnder = -(modelMatrix * instanceMatrix * vec4(transformed, 1.0)).y;\n#else\nvOnder = -(modelMatrix * vec4(transformed, 1.0)).y;\n#endif");
+    sh.fragmentShader = sh.fragmentShader.replace("#include <common>", "#include <common>\nvarying float vOnder;").replace("#include <fog_fragment>", "{ float o = max(vOnder, 0.0), f = 1.0 - exp(-o * 0.42); gl_FragColor.rgb = mix(gl_FragColor.rgb * vec3(0.85, 0.97, 0.9), vec3(0.16, 0.28, 0.22), f); gl_FragColor.a *= exp(-o * 0.22); }\n#include <fog_fragment>"); };
+  mat.transparent = true; mat.depthWrite = true; mat.customProgramCacheKey = () => "onderwater"; return mat;
+}

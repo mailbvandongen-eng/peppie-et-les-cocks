@@ -37,7 +37,9 @@ canvas{display:block}
 #stick i{position:absolute;left:45px;top:45px;width:60px;height:60px;border-radius:50%;background:#fffd;box-shadow:0 2px 8px #0008;pointer-events:none}
 #stick::before,#stick::after{content:"";position:absolute;left:50%;top:50%;background:#fff4;transform:translate(-50%,-50%)}#stick::before{width:2px;height:70%}#stick::after{width:70%;height:2px}
 #stick.zacht{opacity:.5}
-#wissel{position:absolute;right:max(12px,env(safe-area-inset-right));top:max(8px,env(safe-area-inset-top));padding:10px 16px;border-radius:12px;background:#1f5f8be6;font-weight:800;font-size:16px;box-shadow:0 0 0 2px #fff5}
+#weergave{position:absolute;right:max(10px,env(safe-area-inset-right));top:max(8px,env(safe-area-inset-top));display:flex;border-radius:12px;overflow:hidden;box-shadow:0 0 0 2px #fff5;z-index:3}
+#weergave button{padding:9px 12px;background:#0d2230d9;font-weight:800;font-size:15px}#weergave button.aan{background:#1f6fa8}
+#scope.vol{border:0;border-radius:0}
 #scope{touch-action:none;pointer-events:auto;z-index:1}
 #span{position:absolute;left:50%;bottom:34px;transform:translateX(-50%);width:min(44vw,300px);height:14px;border-radius:8px;background:#0008;overflow:hidden;box-shadow:inset 0 0 0 2px #fff4}
 #span i{display:block;height:100%;width:40%;background:#57c26a}
@@ -66,7 +68,7 @@ canvas{display:block}
 </div>
 <div id="hud" hidden>
   <canvas id="scope" width="960" height="540" hidden></canvas>
-  <div id="missie"></div><div id="tel"></div><button id="stop">Menu</button><button id="wissel" hidden>Livescope</button>
+  <div id="missie"></div><div id="tel"></div><button id="stop">Menu</button><div id="weergave" hidden><button data-w="varen">Varen</button><button data-w="scope">Scope</button><button data-w="vol">Vol</button></div>
   <div id="melding" hidden></div>
   <div id="meter" hidden></div><div id="span" hidden><i></i></div>
   <div id="stick" hidden><i></i></div>
@@ -76,9 +78,9 @@ canvas{display:block}
 <div id="uitslag" hidden><div><h2 id="uitslagKop"></h2><p id="uitslagTekst"></p><button id="opnieuw">Nog een keer</button><button id="terug">Menu</button></div></div>
 <div id="versie"></div>
 <!-- versie -->
-<script>window.VERSIE = "8a559bf138"; window.VERSIE_DATUM = "27-11, 20:49"; document.getElementById("versie").textContent = "versie 27-11, 20:49";</script>
-<script type="importmap">{"imports":{"three":"./lib/three.module.js?v=8a559bf138","./lib/three.module.js":"./lib/three.module.js?v=8a559bf138","./lib/meshopt_decoder.mjs":"./lib/meshopt_decoder.mjs?v=8a559bf138","./lib/three-addons.js":"./lib/three-addons.js?v=8a559bf138","./src/bellyboat.js":"./src/bellyboat.js?v=8a559bf138","./src/domein.js":"./src/domein.js?v=8a559bf138","./src/effecten.js":"./src/effecten.js?v=8a559bf138","./src/grond.js":"./src/grond.js?v=8a559bf138","./src/hengel.js":"./src/hengel.js?v=8a559bf138","./src/kippen.js":"./src/kippen.js?v=8a559bf138","./src/livescope.js":"./src/livescope.js?v=8a559bf138","./src/main.js":"./src/main.js?v=8a559bf138","./src/mensen.js":"./src/mensen.js?v=8a559bf138","./src/natuur.js":"./src/natuur.js?v=8a559bf138","./src/water.js":"./src/water.js?v=8a559bf138","./src/wereld.js":"./src/wereld.js?v=8a559bf138"}}</script>
-<script type="module" src="./src/main.js?v=8a559bf138"></script>
+<script>window.VERSIE = "49fea96ef5"; window.VERSIE_DATUM = "27-11, 21:22"; document.getElementById("versie").textContent = "versie 27-11, 21:22";</script>
+<script type="importmap">{"imports":{"three":"./lib/three.module.js?v=49fea96ef5","./lib/three.module.js":"./lib/three.module.js?v=49fea96ef5","./lib/meshopt_decoder.mjs":"./lib/meshopt_decoder.mjs?v=49fea96ef5","./lib/three-addons.js":"./lib/three-addons.js?v=49fea96ef5","./src/bellyboat.js":"./src/bellyboat.js?v=49fea96ef5","./src/domein.js":"./src/domein.js?v=49fea96ef5","./src/effecten.js":"./src/effecten.js?v=49fea96ef5","./src/grond.js":"./src/grond.js?v=49fea96ef5","./src/hengel.js":"./src/hengel.js?v=49fea96ef5","./src/kippen.js":"./src/kippen.js?v=49fea96ef5","./src/livescope.js":"./src/livescope.js?v=49fea96ef5","./src/main.js":"./src/main.js?v=49fea96ef5","./src/mensen.js":"./src/mensen.js?v=49fea96ef5","./src/natuur.js":"./src/natuur.js?v=49fea96ef5","./src/planten.js":"./src/planten.js?v=49fea96ef5","./src/vissen.js":"./src/vissen.js?v=49fea96ef5","./src/water.js":"./src/water.js?v=49fea96ef5","./src/wereld.js":"./src/wereld.js?v=49fea96ef5"}}</script>
+<script type="module" src="./src/main.js?v=49fea96ef5"></script>
 <!-- /versie -->
 </body>
 </html>

@@ -9,5 +9,5 @@ const re = q.get("n") ? new RegExp(q.get("n")) : null; if (re) g.scene.traverse(
 const kids = []; g.scene.traverse((o) => { if (o.isMesh && o.visible) kids.push(o); });
 // naast elkaar zetten als er meerdere bomen zijn
 s.add(g.scene); g.scene.updateMatrixWorld(true); const b = new THREE.Box3(); for (const k of kids) b.expandByObject(k); const m = b.getSize(new THREE.Vector3()), mid = b.getCenter(new THREE.Vector3());
-c.position.set(mid.x, mid.y, mid.z + Math.max(m.x, m.y) * 1.5); c.lookAt(mid); r.render(s, c); window.KLAAR = JSON.stringify({ maat: m.toArray().map((v) => +v.toFixed(2)), namen: kids.map((k) => k.name).slice(0, 40) });
+if (q.get("zij")) c.position.set(mid.x + Math.max(m.z, m.y) * 1.5, mid.y + m.y * 0.4, mid.z); else c.position.set(mid.x, mid.y, mid.z + Math.max(m.x, m.y) * 1.5); c.lookAt(mid); r.render(s, c); window.KLAAR = JSON.stringify({ maat: m.toArray().map((v) => +v.toFixed(2)), namen: kids.map((k) => k.name).slice(0, 40) });
 </script></body></html>

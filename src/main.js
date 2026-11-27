@@ -11,6 +11,8 @@ import { Kippen } from "./kippen.js";
 import { maakBellyboat } from "./bellyboat.js";
 import { maakWater } from "./water.js";
 import { laadBomen } from "./natuur.js";
+import { maakVisbestand } from "./vissen.js";
+import { maakWaterplanten } from "./planten.js";
 
 const $ = (q) => document.querySelector(q);
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -56,9 +58,11 @@ const W = bouwWereld(data, scene);
 W.water.visible = false;
 const water = maakWater(renderer, scene, camera, W, { telefoon });
 const bomen = await laadBomen(renderer, scene, W.bomenLijst, { telefoon });
+const planten = maakWaterplanten(scene, W, { telefoon });
 await laadMensen((v) => $("#laden").style.setProperty("--v", v));
 const spul = await laadVisspullen(scene);
 const fx = new Effecten(scene);
+const vb = await maakVisbestand(scene, W, { telefoon, fx: (p, n) => spetter(p, n, 0.7), geluid: (afst) => { if (afst < 60) geluid.plons(Math.max(0.1, 0.6 - afst / 100)); } });
 const mens = (rol) => { const m = maakMens(rol), g = new THREE.Group(); m.object.position.set(0, 0, 0); m.object.rotation.set(0, 0, 0); m.object.visible = true; g.add(m.object); scene.add(g); m.detail(true, true); return { m, g }; };
 const peppie = mens("rooie"), cocks = mens("visser");
 { const s = cocks.m.object.scale; s.set(s.x * 1.2, s.y, s.z * 1.28); }
@@ -219,26 +223,12 @@ const scopeTex = new THREE.CanvasTexture(hud.scope); scopeTex.colorSpace = THREE
 const bb = maakBellyboat("paul", { scherm: scopeTex }), boot = bb.g; boot.visible = false; scene.add(boot);
 // de bellyboten van de anderen liggen bij de linker steiger, zoals op Bobs video
 const aangemeerd = [["wim", 19.6, 2.9, 0.25], ["dave", 21.4, 3.3, -0.15], ["bob", 12.4, 3.0, 0.4]].map(([soort, lx, lz, r]) => { const b = maakBellyboat(soort).g, p = dom.wereld(lx, 0, dom.oeverZ(lx) + lz); b.position.set(p.x, 0.02, p.z); b.rotation.y = huis.yaw + Math.PI / 2 + r; scene.add(b); return { b, f: Math.random() * 6 }; });
-const belly = { pos: V(0, 0, 0), yaw: 0, sonar: 0, aas: 1, tik: 0, vissen: [], school: [], vis: null, klok: 0, scopeT: 0, top: V(0, 0, 0) };
+const belly = { pos: V(0, 0, 0), yaw: 0, sonar: 0, aas: 1, tik: 0, vis: null, klok: 0, scopeT: 0, top: V(0, 0, 0) };
 const scope = new Livescope(hud.scope);
-const VISDIEPTE = (v) => { const bodem = W.diepte(v.x, v.z); return v.soort === "Meerval" ? Math.max(0.5, bodem - v.boven) : Math.min(bodem - 0.4, v.diep); };
 function beginBelly() {
   belly.pos.copy(W.steiger.eind).addScaledVector(u, 32); belly.yaw = huis.yaw; belly.sonar = 0; belly.aas = 1; belly.vis = null; belly.v = 0; belly.w = 0; cam.yaw = huis.yaw + Math.PI; cam.afstand = 6.5; cam.pitch = 0.3; zetWeergave("varen");
-  belly.vissen = []; const zet = (soort, x, z, lengte, straal, extra = {}) => belly.vissen.push({ soort, x, z, tx: x, tz: z, x0: x, z0: z, straal, lengte, h: Math.random() * 6, boven: tussen(0.25, 1.0), diep: tussen(1.2, 4), zin: 0, ...extra });
-  const ergens = (min = 2.5) => { for (let i = 0; i < 30; i++) { const p = belly.pos.clone().addScaledVector(u, tussen(4, 150)).addScaledVector(t, tussen(-170, 170)); if (W.diepte(p.x, p.z) > min) return p; } return belly.pos.clone().addScaledVector(u, 30); };
-  // in elke diepe kolk één echte reus, daarnaast middelgrote meervallen, veel meervalletjes, groepjes karpers
-  for (const [x, z, r] of W.kolken) zet("Meerval", x + tussen(-4, 4), z + tussen(-4, 4), tussen(2.04, 2.45), r * 0.45);
-  for (let i = 0; i < 16; i++) { const p = ergens(3); zet("Meerval", p.x, p.z, tussen(0.95, 1.85), 16); }
-  for (let i = 0; i < 34; i++) { const p = ergens(1.8); zet("Meerval", p.x, p.z, tussen(0.35, 0.85), 10); }
-  for (let i = 0; i < 9; i++) { const p = ergens(2); for (let k = 0; k < 2 + ((Math.random() * 3) | 0); k++) zet("Karper", p.x + tussen(-3, 3), p.z + tussen(-3, 3), tussen(0.45, 0.95), 14, { diep: tussen(1.2, 3.2) }); }
-  // een paar dicht bij de start, zodat je meteen iets ziet
-  for (let i = 0; i < 4; i++) { const p = belly.pos.clone().addScaledVector(u, tussen(5, 14)).addScaledVector(t, tussen(-8, 8)); if (W.diepte(p.x, p.z) > 1.5) zet(i % 2 ? "Karper" : "Meerval", p.x, p.z, tussen(0.4, 0.8), 6); }
-  // scholen witvis die voorbij trekken
-  belly.school = []; for (let s = 0; s < 14; s++) belly.school.push(nieuweSchool({}, true));
   hud.missie.textContent = "Zoek een grote meerval op de livescope (dikke kop, dunne staart) en vang er een van 2 meter of meer"; hud.tel.textContent = "";
 }
-function nieuweSchool(q, overal = false) { const a = Math.random() * 6.28, p = belly.pos.clone().addScaledVector(u, tussen(3, overal ? 120 : 40)).addScaledVector(t, overal ? tussen(-120, 120) : tussen(-30, 30));
-  return Object.assign(q, { x: p.x, z: p.z, vx: Math.sin(a) * tussen(0.35, 0.9), vz: Math.cos(a) * tussen(0.35, 0.9), d: tussen(0.8, 3.5), n: 10 + ((Math.random() * 14) | 0), r: tussen(0.8, 2), zaad: Math.random() * 100 }); }
 function stapBelly(dt) {
   const b = belly, s = stuur(), f = voor(b.yaw), rechts = V(-f.z, 0, f.x); b.klok += dt;
   // varen met de motor: gas geven en sturen, met wat traagheid zoals een bellyboat op een elektromotor
@@ -251,24 +241,20 @@ function stapBelly(dt) {
   boot.updateMatrixWorld(true);
   peppie.m.zet("zitten"); peppie.m.mixer.update(dt); peppie.g.position.copy(boot.localToWorld(bb.zit.clone())).add(V(0, -peppie.m.zithoogte() + 0.02, 0)); peppie.g.rotation.set(0, b.yaw, 0);
   const bodem = W.diepte(b.pos.x, b.pos.z);
-  // de vissen: meervallen traag rond boven de bodem, karpers in het midden, scholen trekken voorbij
-  for (const v of b.vissen) { if (v === b.vis) continue; if (Math.hypot(v.tx - v.x, v.tz - v.z) < 1) { const a = Math.random() * 6.28, r = Math.random() * v.straal; v.tx = v.x0 + Math.cos(a) * r; v.tz = v.z0 + Math.sin(a) * r; }
-    const dx = v.tx - v.x, dz = v.tz - v.z, l = Math.hypot(dx, dz) || 1, sn = (v.soort === "Karper" ? 0.4 : 0.22) + (v.zin > 0 ? 0.4 : 0); v.x += (dx / l) * sn * dt; v.z += (dz / l) * sn * dt; let dh = Math.atan2(dx, dz) - v.h; dh = Math.atan2(Math.sin(dh), Math.cos(dh)); v.h += dh * Math.min(1, dt * 2); }
-  for (const q of b.school) { q.x += q.vx * dt; q.z += q.vz * dt; if (Math.hypot(q.x - b.pos.x, q.z - b.pos.z) > 70 || W.diepte(q.x, q.z) < q.d + 0.3) nieuweSchool(q); }
   // de bundel: vanaf de transducer rechts voorin, in de richting van de stang; ± 20 graden breed
   const bron = boot.localToWorld(V(0.6, 0, 0.66)), sy = b.yaw + b.sonar, fb = voor(sy), rb = V(-fb.z, 0, fb.x);
-  const zie = (x, z) => { const rx = x - bron.x, rz = z - bron.z, v = rx * fb.x + rz * fb.z, lat = rx * rb.x + rz * rb.z; return Math.abs(lat) < 0.35 + Math.abs(v) * 0.18 ? v : null; };
+  const zie = (x, z) => { const rx = x - bron.x, rz = z - bron.z, v = rx * fb.x + rz * fb.z, lat = rx * rb.x + rz * rb.z; return Math.abs(lat) < 0.5 + Math.abs(v) * 0.2 ? v : null; };
   // de hengel recht vooruit, de top 1,3 m voor de boot; de lijn hangt recht omlaag
   const top = houdHengel(b.yaw, dril.aan ? 0.8 : 0.06, dril.aan ? 0.3 + dril.span * 0.2 : 0.02 + b.tik * 0.06); b.top.copy(top);
-  const inBeeld = []; for (const v of b.vissen) { const a = zie(v.x, v.z); if (a === null) continue; const d = v === b.vis ? klem(dril.afstand * 0.8, 0.6, W.diepte(v.x, v.z) - 0.2) : VISDIEPTE(v) - v.zin * (VISDIEPTE(v) - b.aas) * 0.9; inBeeld.push({ v: a, d, lengte: v.lengte, hoek: v.h - sy, soort: v.soort, vis: v }); }
+  const inBeeld = []; for (const v of vb.alle()) { const a = zie(v.x, v.z); if (a === null) continue; const d = v === b.vis ? klem(dril.afstand * 0.8, 0.6, W.diepte(v.x, v.z) - 0.2) : v.d; inBeeld.push({ v: a, d, lengte: v.lengte, hoek: v.h - sy, soort: v.soort, vis: v }); }
   if (!dril.aan) {
     if (invoer.neer) b.aas += 1.5 * dt; if (invoer.op) b.aas -= 1.5 * dt; b.aas = klem(b.aas, 0.3, Math.max(0.4, W.diepte(top.x, top.z) - 0.1));
     if (invoer.Atik) { b.tik = 1; geluid.toon({ freq: 180, duur: 0.05, gain: 0.03 }); } b.tik = Math.max(0, b.tik - dt * 1.4);
     // een vis die vlak bij het aas zwemt, wordt nieuwsgierig; tikken maakt hem gretig
-    for (const v of b.vissen) { const afst = Math.hypot(v.x - top.x, v.z - top.z), dd = Math.abs(VISDIEPTE(v) - b.aas), bij = afst < 0.9 + v.lengte * 0.35 && dd < 1.1 + v.zin * 3;
-      if (bij) { v.zin = Math.min(1.05, v.zin + dt * (0.06 + b.tik * 0.5)); v.tx = top.x; v.tz = top.z; } else v.zin = Math.max(0, v.zin - dt * 0.2);
-      if (v.zin >= 1 && afst < 0.8) { b.vis = v; v.zin = 0; beginDril(v, VISDIEPTE(v) + 2 + v.lengte); meld("Beet! Houd de spanning in het groen", 3); geluid.piep(); spetter(top.clone().setY(0), 14, 0.6); break; } }
-    if (belly.weergave === "scope") knoppen({ A: "Tik", hoogte: true }); else knoppen({});
+    for (const v of vb.alle()) { const afst = Math.hypot(v.x - top.x, v.z - top.z), dd = Math.abs(v.d - b.aas), bij = afst < 0.9 + v.lengte * 0.35 && dd < 1.4 + v.zin * 3;
+      if (bij) { v.zin = Math.min(1.05, v.zin + dt * (0.06 + b.tik * 0.5)); v.tx = top.x; v.tz = top.z; v.lok = b.aas; } else { v.zin = Math.max(0, v.zin - dt * 0.2); if (v.zin <= 0) v.lok = null; }
+      if (v.zin >= 1 && afst < 0.8) { b.vis = v; v.zin = 0; v.lok = null; v.vast = true; beginDril(v, v.d + 2 + v.lengte); meld("Beet! Houd de spanning in het groen", 3); geluid.piep(); spetter(top.clone().setY(0), 14, 0.6); break; } }
+    if (belly.weergave !== "varen") knoppen({ A: "Tik", hoogte: true }); else knoppen({});
     zetLijn(top, V(top.x, -Math.min(b.aas, 2.5), top.z), 0);
   } else {
     // de dril: een grote meerval sleept de bellyboat mee
@@ -278,27 +264,30 @@ function stapBelly(dt) {
     if (ren && Math.random() < dt * 6) spetter(b.pos.clone().addScaledVector(voor(v.h), 1.2), 4, 0.5);
     knoppen({ A: "Draai" }); zetLijn(top, V(v.x, -0.1, v.z), 0.1);
     if (uit !== "bezig") { b.vis = null;
-      if (uit === "binnen") { const tekst = vangst(v); b.vissen.splice(b.vissen.indexOf(v), 1); spetter(b.pos.clone().addScaledVector(f, 0.9), 40, 1.2); if (v.soort === "Meerval" && v.lengte >= 2) einde(true, `${tekst}. Een echte reus!`); else meld(v.soort === "Meerval" ? `${tekst}. Nog geen twee meter…` : tekst, 4); }
+      v.vast = false; if (uit === "binnen") { const tekst = vangst(v); vb.weg(v); spetter(b.pos.clone().addScaledVector(f, 0.9), 40, 1.2); if (v.soort === "Meerval" && v.lengte >= 2) einde(true, `${tekst}. Een echte reus!`); else meld(v.soort === "Meerval" ? `${tekst}. Nog geen twee meter…` : tekst, 4); }
       else { meld(uit === "breuk" ? "Lijnbreuk! Laat hem lopen als hij trekt." : "Los… houd de lijn strak.", 4); geluid.fout(); v.x0 += tussen(-6, 6); } }
   }
   // het scherm: tien keer per seconde een nieuw beeld, ook op het toestel op de arm
   if ((b.scopeT -= dt) <= 0) { b.scopeT = 0.1; const nu = new Date(), av = zie(top.x, top.z);
     scope.teken({ bodem: (v) => W.diepte(bron.x + fb.x * v, bron.z + fb.z * v), vissen: inBeeld, aas: dril.aan || av === null ? null : { v: av, d: b.aas - b.tik * 0.3 },
-      school: b.school.flatMap((q) => { const out = []; for (let i = 0; i < q.n; i++) { const a = q.zaad + i * 2.4, x = q.x + Math.sin(a) * q.r * ((i * 0.37) % 1), z = q.z + Math.cos(a * 1.3) * q.r * ((i * 0.61) % 1), v = zie(x, z); if (v !== null) out.push({ v, d: q.d + Math.sin(a * 0.7) * 0.4 }); } return out; }),
+      school: vb.scholen.flatMap((q) => { const out = []; for (let i = 0; i < q.n; i++) { const o = vb.schoolPunt(q, i), v = zie(o.x, o.z); if (v !== null) out.push({ v, d: o.d }); } return out; }), planten: planten.inBundel(zie),
       richting: b.sonar, temp: 27.46 + Math.sin(b.klok * 0.4) * 0.012, tijd: `${String(nu.getHours()).padStart(2, "0")}:${String(nu.getMinutes()).padStart(2, "0")}` });
     scopeTex.needsUpdate = true; }
   hud.tel.textContent = `${bodem.toFixed(1)} m diep · aas ${b.aas.toFixed(1)} m`;
   // de camera volgt de boot vanzelf (tenzij je net zelf rondkeek); bij varen hoog achter de boot met zicht over de rivier
-  cam.sleep = Math.max(0, cam.sleep - dt * 0.4); if (cam.sleep <= 0) { let d = b.yaw + Math.PI - cam.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); cam.yaw += d * Math.min(1, dt * 1.6); cam.pitch += ((belly.weergave === "scope" ? 0.42 : 0.26) - cam.pitch) * Math.min(1, dt * 2); }
-  cam.afstand += ((belly.weergave === "scope" ? 3.4 : 6.5) - cam.afstand) * Math.min(1, dt * 2);
-  volg(b.pos.clone().add(V(0, belly.weergave === "scope" ? 0.8 : 1.6, 0)).addScaledVector(f, belly.weergave === "scope" ? 0.4 : 3));
+  cam.sleep = Math.max(0, cam.sleep - dt * 0.4); if (cam.sleep <= 0) { let d = b.yaw + Math.PI - cam.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); cam.yaw += d * Math.min(1, dt * 1.6); cam.pitch += ((belly.weergave !== "varen" ? 0.42 : 0.26) - cam.pitch) * Math.min(1, dt * 2); }
+  cam.afstand += ((belly.weergave !== "varen" ? 3.4 : 6.5) - cam.afstand) * Math.min(1, dt * 2);
+  volg(b.pos.clone().add(V(0, belly.weergave !== "varen" ? 0.8 : 1.6, 0)).addScaledVector(f, belly.weergave !== "varen" ? 0.4 : 3));
 }
 /** Varen (uitzicht over de rivier, geen scherm) of livescope (het hele scherm is de Garmin). */
-function zetWeergave(w) { belly.weergave = w; $("#stick").classList.toggle("zacht", w === "scope"); $("#wissel").textContent = w === "scope" ? "Varen" : "Livescope"; hud.scope.hidden = w !== "scope"; plaatsScope(); }
-function plaatsScope() { const sc = hud.scope, staand = innerHeight > innerWidth; let b, h;
-  if (staand) { b = innerWidth - 12; h = (b * 9) / 16; sc.style.left = "6px"; sc.style.top = "calc(max(8px, env(safe-area-inset-top)) + 88px)"; }
-  else { h = innerHeight - 64; b = (h * 16) / 9; const max = innerWidth - 250; if (b > max) { b = max; h = (b * 9) / 16; } sc.style.left = "max(8px, env(safe-area-inset-left))"; sc.style.top = `${Math.max(50, (innerHeight - h) / 2 + 20)}px`; }
-  sc.style.width = `${b}px`; sc.style.height = `${h}px`; }
+function zetWeergave(w) { belly.weergave = w; $("#stick").classList.toggle("zacht", w !== "varen"); for (const k of document.querySelectorAll("#weergave button")) k.classList.toggle("aan", k.dataset.w === w); hud.scope.hidden = w === "varen"; plaatsScope(); }
+function plaatsScope() { const sc = hud.scope, staand = innerHeight > innerWidth, vol = belly.weergave === "vol"; let b, h, l, tp;
+  if (vol) { b = innerWidth; h = innerHeight; l = 0; tp = 0; }
+  else if (staand) { b = innerWidth - 12; h = (b * 9) / 16; l = 6; tp = 96; }
+  else { h = innerHeight - 64; b = (h * 16) / 9; const max = innerWidth - 250; if (b > max) { b = max; h = (b * 9) / 16; } l = 8; tp = Math.max(50, (innerHeight - h) / 2 + 20); }
+  sc.style.left = `${l}px`; sc.style.top = `${tp}px`; sc.style.width = `${b}px`; sc.style.height = `${h}px`; sc.classList.toggle("vol", vol);
+  // het canvas zelf in de juiste verhouding (scherp op het hele scherm)
+  const k = Math.min(devicePixelRatio, 1.5), cw = vol ? Math.round(b * k) : 960, ch = vol ? Math.round(h * k) : 540; if (sc.width !== cw || sc.height !== ch) { sc.width = cw; sc.height = ch; } }
 addEventListener("resize", () => { if (spel.modus === "belly") plaatsScope(); });
 
 // ---------- missie 3: de drone en het glas water ----------
@@ -378,11 +367,11 @@ function start(modus) { geluid.start(); Object.assign(spel, { modus, klaar: fals
   boot.visible = drone.visible = glas.visible = net.visible = kooi.visible = dobber.visible = lijn.visible = hengel.g.visible = false; hud.scope.hidden = true; hud.span.hidden = hud.meter.hidden = true; dril.aan = false; peppie.g.visible = modus !== "drone"; if (modus !== "drone") legCocks(false); for (const r of rat.lijst) r.m.visible = false;
   hud.melding.hidden = true; meldT = 0; hud.missie.style.opacity = 1; clearTimeout(start.vervaag); start.vervaag = setTimeout(() => { hud.missie.style.opacity = 0; }, 6000);
   // met de livescope in beeld schuift het beeld naar rechtsonder, zodat de belly boat naast het scherm te zien is
-  camera.clearViewOffset(); $("#stick").hidden = false; $("#wissel").hidden = modus !== "belly";
+  camera.clearViewOffset(); $("#stick").hidden = false; $("#weergave").hidden = modus !== "belly";
   MISSIES[modus][0](); }
 function naarMenu() { camera.clearViewOffset(); spel.modus = "menu"; $("#menu").hidden = false; $("#uitslag").hidden = true; $("#hud").hidden = true; }
 for (const k of document.querySelectorAll("#menu [data-missie]")) k.addEventListener("click", () => start(k.dataset.missie));
-$("#opnieuw").addEventListener("click", () => start(spel.modus)); $("#wissel").addEventListener("click", () => zetWeergave(belly.weergave === "scope" ? "varen" : "scope")); $("#terug").addEventListener("click", naarMenu); $("#stop").addEventListener("click", naarMenu);
+$("#opnieuw").addEventListener("click", () => start(spel.modus)); for (const k of document.querySelectorAll("#weergave button")) k.addEventListener("click", () => zetWeergave(k.dataset.w)); $("#terug").addEventListener("click", naarMenu); $("#stop").addEventListener("click", naarMenu);
 const klok = new THREE.Clock(); let menuT = 0;
 function lus() {
   const dt = Math.min(klok.getDelta(), 0.05); spel.t += dt;
@@ -393,9 +382,9 @@ function lus() {
   if (meldT > 0 && (meldT -= dt) <= 0) hud.melding.hidden = true;
   for (const a of aangemeerd) { a.f += dt; a.b.position.y = 0.02 + Math.sin(a.f * 1.5) * 0.015; }
   kippen.stap(dt, spel.modus === "kant" || spel.modus === "rat" ? { x: loop.pos.x, z: loop.pos.z, v: loop.v } : null);
-  invoer.Atik = invoer.Btik = false; fx.stap(dt); bomen.stap(dt, camera); water.stap(dt);
+  invoer.Atik = invoer.Btik = false; fx.stap(dt); bomen.stap(dt, camera); water.stap(dt); vb.stap(dt, spel.modus === "belly" ? belly.pos : spel.modus === "kant" || spel.modus === "rat" ? loop.pos.clone().addScaledVector(u, 20) : W.steiger.eind.clone().addScaledVector(u, 25), camera);
   renderer.render(scene, camera); requestAnimationFrame(lus);
 }
 $("#laden").hidden = true; $("#menu").hidden = false;
-window.__spel = { kippen, zon, THREE, spel, W, start, belly, dr, rat, kant, loop, cam, invoer, dril, peppie, cocks, scope, camera, stapDril, MISSIES };
+window.__spel = { vb, kippen, zon, THREE, spel, W, start, belly, dr, rat, kant, loop, cam, invoer, dril, peppie, cocks, scope, camera, stapDril, MISSIES };
 requestAnimationFrame(lus);

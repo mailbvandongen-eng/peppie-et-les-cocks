@@ -15,8 +15,8 @@ const T = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javasc
     // even varen
     await p.evaluate(() => { const s = window.__spel; s.invoer.y = 0.8; s.invoer.x = 0.2; }); await p.waitForTimeout(2500); await p.evaluate(() => { const s = window.__spel; s.invoer.y = 0; s.invoer.x = 0; });
     await p.waitForTimeout(1500); await p.screenshot({ path: `${UIT}/${naam}-varen.png` });
-    await p.evaluate(() => document.querySelector("#wissel").click()); await p.waitForTimeout(2500); await p.screenshot({ path: `${UIT}/${naam}-scope.png` });
-    console.log(naam, await p.evaluate(() => { const s = window.__spel; return JSON.stringify({ diepte: +s.W.diepte(s.belly.pos.x, s.belly.pos.z).toFixed(1), weergave: s.belly.weergave }); }));
+    for (const w of ["scope", "vol"]) { await p.evaluate((w) => document.querySelector(`#weergave [data-w=${w}]`).click(), w); await p.waitForTimeout(2500); await p.screenshot({ path: `${UIT}/${naam}-${w}.png` }); }
+    console.log(naam, await p.evaluate(() => { const s = window.__spel; return JSON.stringify({ diepte: +s.W.diepte(s.belly.pos.x, s.belly.pos.z).toFixed(1), weergave: s.belly.weergave, vissen: s.vb.lijst.length, scholen: s.vb.scholen.length }); }));
     await p.close();
   }
   await b.close();

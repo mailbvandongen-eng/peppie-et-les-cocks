@@ -17,14 +17,20 @@ export function bouwWereld(d, scene) {
   const stukken = []; for (let i = 0; i < ring.length; i++) { const a = ring[i], b = ring[(i + 1) % ring.length]; if (Math.min(Math.hypot(a[0], a[1]), Math.hypot(b[0], b[1])) < 900) stukken.push([a[0], a[1], b[0] - a[0], b[1] - a[1]]); }
   /** Afstand tot de oever: positief in het water, negatief op het land. */
   const totOever = (x, z) => { let m = 1e9; for (const [ax, az, dx, dz] of stukken) { const t = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz || 1))), q = (x - ax - dx * t) ** 2 + (z - az - dz * t) ** 2; if (q < m) m = q; } return Math.sqrt(m) * (inRing(x, z, ring) ? 1 : -1); };
-  // diepe kolken waar de grote meervallen liggen (x, z, straal, extra diepte)
-  W.kolken = [[-55, -95, 26, 2.6], [95, -120, 30, 3.2], [-150, -60, 24, 2.2], [170, -70, 22, 2.4]];
+  /** Ligt de dichtstbijzijnde oever aan onze kant (de kant van het huis, zuid)? */
+  const UHUIS = [0.299, -0.954];
+  const onzeKant = (x, z) => { let m = 1e9, bx = 0, bz = 0; for (const [ax, az, dx, dz] of stukken) { const t = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz || 1))), px = ax + dx * t, pz = az + dz * t, q = (x - px) ** 2 + (z - pz) ** 2; if (q < m) { m = q; bx = px; bz = pz; } } return (bx - x) * UHUIS[0] + (bz - z) * UHUIS[1] < 0; };
+  // de Lot is een badkuip: aan onze kant snel steil naar beneden, dan bijna overal 10 meter; aan de overkant loopt het
+  // langzaam op, met waterplanten in het ondiepe. Hier en daar een kuil van een paar meter extra (daar liggen de reuzen).
+  W.kolken = [[-55, -95, 22, 1.8], [95, -120, 26, 2.2], [-150, -60, 20, 1.6], [170, -70, 20, 1.7]];
   const hoogteUit = (x, z, s) => {
     if (s <= 0) return 0.85 * zacht(0, 7, -s) + 0.25 * zacht(20, 120, -s) * (0.5 + golf(x, z) * 0.5) + 0.05; // land: een oeverwal en dan zacht glooiend
-    let h = -(0.3 + 7.6 * zacht(0, 42, s)) - golf(x, z) * 0.7 - ruis(Math.round(x / 6), Math.round(z / 6)) * 0.35;
+    const ons = onzeKant(x, z), vlak = 10 + golf(x * 0.6, z * 0.6) * 0.35 + (ruis(Math.round(x / 9), Math.round(z / 9)) - 0.5) * 0.3;
+    let h = -(0.3 + (vlak - 0.3) * (ons ? zacht(0, 7, s) ** 0.7 : zacht(0, 45, s) ** 1.3)) - ruis(Math.round(x / 4), Math.round(z / 4)) * 0.15;
     for (const [kx, kz, kr, kd] of W.kolken) h -= kd * zacht(kr, 0, Math.hypot(x - kx, z - kz));
     return Math.min(-0.25, h);
   };
+  W.onzeKant = onzeKant;
   // het hoogteveld
   const MAAT = 1080, N = 360, CEL = MAAT / N, H = new Float32Array((N + 1) * (N + 1)), S = new Float32Array((N + 1) * (N + 1));
   for (let j = 0; j <= N; j++) for (let i = 0; i <= N; i++) { const x = -MAAT / 2 + i * CEL, z = -MAAT / 2 + j * CEL, s = totOever(x, z); S[j * (N + 1) + i] = s; H[j * (N + 1) + i] = hoogteUit(x, z, s); }
