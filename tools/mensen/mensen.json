@@ -1,0 +1,62 @@
+{
+ "_uitleg": "De vier Cocks. Gebouwd met tools/mensen/bouw.sh (MakeHuman CC0 + Universal Animation Library CC0). Petten en hoeden zet het spel erop (src/mensen.js).",
+ "mensen": [
+  {
+   "naam": "paul",
+   "geslacht": "male",
+   "afkomst": "caucasian",
+   "oud": 0.28,
+   "spier": 0.3,
+   "gewicht": 0.15,
+   "pak": "male_casualsuit06",
+   "shirtTint": "#9a9da2",
+   "schoenen": "shoes04",
+   "haar": "short04",
+   "haarTint": "#b4521e",
+   "huid": "#e8b49a",
+   "ogen": "blue"
+  },
+  {
+   "naam": "dave",
+   "geslacht": "male",
+   "afkomst": "caucasian",
+   "oud": 0.5,
+   "spier": 0.2,
+   "gewicht": 0.3,
+   "pak": "male_casualsuit06",
+   "shirtTint": "#cfc43a",
+   "schoenen": "shoes05",
+   "huid": "#e2a98c",
+   "ogen": "brown"
+  },
+  {
+   "naam": "bob",
+   "geslacht": "male",
+   "afkomst": "caucasian",
+   "oud": 0.55,
+   "spier": 0.1,
+   "gewicht": 0.6,
+   "pak": "male_casualsuit05",
+   "schoenen": "shoes01",
+   "huid": "#e6b29a",
+   "ogen": "blue",
+   "pakTint": "#2b2d31"
+  },
+  {
+   "naam": "wim",
+   "geslacht": "male",
+   "afkomst": "caucasian",
+   "oud": 0.85,
+   "spier": -0.1,
+   "gewicht": 0.35,
+   "pak": "male_casualsuit06",
+   "shirtTint": "#1d1e21",
+   "schoenen": "shoes01",
+   "haar": "short02",
+   "haarTint": "#c4c0b8",
+   "randje": 0.075,
+   "huid": "#e9b8a3",
+   "ogen": "grey"
+  }
+ ]
+}

@@ -2,7 +2,7 @@
 // Vier missies: vissen vanaf de kant, met de belly boat en de livescope op meerval, met de drone een glas water
 // op de slapende Cocks laten vallen, en beverratten scheppen vanaf de steiger.
 import * as THREE from "three";
-import { laadMensen, maakMens } from "./mensen.js";
+import { laadMensen, maakMens, zetPet } from "./mensen.js";
 import { Effecten } from "./effecten.js";
 import { Livescope } from "./livescope.js";
 import { bouwWereld } from "./wereld.js";
@@ -64,11 +64,18 @@ const spul = await laadVisspullen(scene);
 const fx = new Effecten(scene);
 const vb = await maakVisbestand(scene, W, { telefoon, fx: (p, n) => spetter(p, n, 0.7), geluid: (afst) => { if (afst < 60) geluid.plons(Math.max(0.1, 0.6 - afst / 100)); } });
 const mens = (rol) => { const m = maakMens(rol), g = new THREE.Group(); m.object.position.set(0, 0, 0); m.object.rotation.set(0, 0, 0); m.object.visible = true; g.add(m.object); scene.add(g); m.detail(true, true); return { m, g }; };
-const peppie = mens("rooie"), cocks = mens("visser");
-{ const s = cocks.m.object.scale; s.set(s.x * 1.2, s.y, s.z * 1.28); }
-const huis = W.huis, u = huis.u, t = huis.t; // u = naar de rivier, t = langs de oever
-// de kippen lopen over het gras tussen het huis en de oever, en soms over de steigers
 const dom = W.domein;
+const huis = W.huis, u = huis.u, t = huis.t; // u = naar de rivier, t = langs de oever
+// de vier Cocks: Paul (koperrood haar) speel jij; Bob slaapt zijn roes uit in de toren; Dave (witte pet) en Wim (randje, Fristi) zijn in de tuin
+const peppie = mens("paul"), cocks = mens("bob"), dave = mens("dave"), wim = mens("wim");
+zetPet(dave.m);
+{ const zet = (w, lx, lz, rot, houding) => { const p = dom.wereld(lx, 0, lz); w.g.position.set(p.x, W.opSteiger(p.x, p.z) ?? W.hoogte(p.x, p.z), p.z); w.g.rotation.y = huis.yaw + rot; w.m.zet(houding); };
+  zet(dave, -2.4, dom.oeverZ(-2.4) + 0.9, 0.3, "staan"); zet(wim, -6.4, dom.oeverZ(-6.5) - 5.25, Math.PI, "zitten"); wim.m.mixer.update(0.01); wim.g.position.y += 0.44 - wim.m.zithoogte() + 0.02;
+  // Wim drinkt alleen Fristi: een pak naast hem op de picknicktafel
+  const pak = new THREE.Group(), roze = new THREE.MeshStandardMaterial({ color: "#e8e2d4", roughness: 0.6 }), band = new THREE.MeshStandardMaterial({ color: "#d8357a", roughness: 0.6 });
+  const romp = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.19, 0.07), roze); romp.position.y = 0.095; const st = new THREE.Mesh(new THREE.BoxGeometry(0.072, 0.07, 0.072), band); st.position.y = 0.1; const nok = new THREE.Mesh(new THREE.CylinderGeometry(0.0, 0.05, 0.04, 4), roze); nok.position.y = 0.21; nok.rotation.y = Math.PI / 4; pak.add(romp, st, nok);
+  const pp = dom.wereld(-6.0, 0, dom.oeverZ(-6.5) - 6); pak.position.set(pp.x, W.hoogte(pp.x, pp.z) + 0.76, pp.z); scene.add(pak); W.fristi = pak; }
+// de kippen lopen over het gras tussen het huis en de oever, en soms over de steigers
 const kippen = new Kippen(scene, {
   grond: (x, z) => W.opSteiger(x, z) ?? W.hoogte(x, z),
   mag: (x, z) => (W.opSteiger(x, z) !== null || W.oever(x, z) < -0.6) && !W.inHuis(x, z, 0.15) && (() => { const l = dom.lokaal(V(x, 0, z)); return l.x > -24 && l.x < 34 && l.z > -1; })(),
@@ -388,10 +395,11 @@ function lus() {
   } else if (spel.modus === "kijk") { /* camera van buitenaf (tools/kijk.cjs) */ } else if (!spel.klaar || spel.modus === "drone") MISSIES[spel.modus][1](dt);
   if (meldT > 0 && (meldT -= dt) <= 0) hud.melding.hidden = true;
   for (const a of aangemeerd) { a.f += dt; a.b.position.y = 0.02 + Math.sin(a.f * 1.5) * 0.015; }
+  for (const w of [dave, wim]) { w.m.mixer.update(dt); w.m.pet?.userData.pas?.(); }
   kippen.stap(dt, spel.modus === "kant" || spel.modus === "rat" ? { x: loop.pos.x, z: loop.pos.z, v: loop.v } : null);
   invoer.Atik = invoer.Btik = false; fx.stap(dt); bomen.stap(dt, camera); water.stap(dt); vb.stap(dt, spel.modus === "belly" ? belly.pos : spel.modus === "kant" || spel.modus === "rat" ? loop.pos.clone().addScaledVector(u, 20) : W.steiger.eind.clone().addScaledVector(u, 25), camera);
   renderer.render(scene, camera); requestAnimationFrame(lus);
 }
 $("#laden").hidden = true; $("#menu").hidden = false;
-window.__spel = { vb, kippen, zon, THREE, spel, W, start, belly, dr, rat, kant, loop, cam, invoer, dril, peppie, cocks, scope, camera, stapDril, MISSIES };
+window.__spel = { dave, wim, vb, kippen, zon, THREE, spel, W, start, belly, dr, rat, kant, loop, cam, invoer, dril, peppie, cocks, scope, camera, stapDril, MISSIES };
 requestAnimationFrame(lus);

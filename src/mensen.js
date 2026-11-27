@@ -4,7 +4,7 @@ import * as THREE from "three";
 import { GLTFLoader, SkeletonUtils } from "../lib/three-addons.js";
 import { MeshoptDecoder } from "../lib/meshopt_decoder.mjs";
 
-const ROLLEN = { visser: ["visser"], rooie: ["rooie"] };
+const ROLLEN = { visser: ["visser"], rooie: ["rooie"], paul: ["paul"], dave: ["dave"], bob: ["bob"], wim: ["wim"] };
 // houding in het spel -> beweging uit de bibliotheek
 const CLIP = {
   staan: "Idle_Loop", praten: "Idle_Talking_Loop", bellen: "Idle_TalkingPhone_Loop", armenOver: "Idle_FoldArms_Loop",
@@ -77,7 +77,7 @@ export function maakMens(rol = "voetganger") {
   const object = SkeletonUtils.clone(modellen[naam]);
   let hoog = null, laag = null;
   object.traverse((o) => { if (o.isMesh) { if (o.name.includes("Laag")) laag = o; else hoog = o; } });
-  const schaal = rol === "kind" ? 0.74 : rol === "tiener" ? 0.84 : rol === "schutter" || rol === "karateka" || rol === "heks" ? 1 : 0.94 + Math.random() * 0.12;
+  const schaal = ["paul", "dave", "bob", "wim"].includes(rol) ? 1 : rol === "kind" ? 0.74 : rol === "tiener" ? 0.84 : rol === "schutter" || rol === "karateka" || rol === "heks" ? 1 : 0.94 + Math.random() * 0.12;
   object.scale.setScalar(schaal);
   if (rol === "kind") object.scale.set(schaal * 1.12, schaal * 0.95, schaal * 1.12); // een kind van acht: kleiner en steviger
   const mixer = new THREE.AnimationMixer(object);
@@ -315,3 +315,18 @@ function uniform(m, rol) {
   zet(hoofd[0], klep, new THREE.Vector3(hp.x, top - 0.035 * s, hp.z + 0.125 * s));
 }
 export const mensenGeladen = () => Object.keys(modellen).length > 0;
+
+/** Een witte pet (Dave): op het hoofdbot, klep naar voren. */
+export function zetPet(m, kleur = "#f2f2ee") {
+  let hoofd = null; m.object.traverse((b) => { if (b.isBone && b.name === "DEF-head") hoofd = b; }); if (!hoofd) return;
+  const g = new THREE.Group(), mat = new THREE.MeshStandardMaterial({ color: kleur, roughness: 0.8 });
+  const bol = new THREE.Mesh(new THREE.SphereGeometry(0.105, 20, 10, 0, Math.PI * 2, 0, Math.PI * 0.5), mat); bol.scale.set(1.0, 0.55, 1.08); g.add(bol);
+  const klep = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.085, 0.008, 20, 1, false, -Math.PI / 2, Math.PI), mat); klep.scale.set(0.95, 1, 1.15); klep.position.set(0, 0.006, 0.1); klep.rotation.x = 0.18; g.add(klep);
+  const knoop = new THREE.Mesh(new THREE.SphereGeometry(0.01, 8, 6), mat); knoop.position.y = 0.075; g.add(knoop);
+  // drie zwarte strepen (Adidas) aan de zijkant
+  const zw = new THREE.MeshStandardMaterial({ color: "#111" }); for (let i = 0; i < 3; i++) { const st = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.05, 0.008), zw); st.position.set(0.1, 0.03, -0.02 + i * 0.016); st.rotation.z = -0.5; g.add(st); }
+  g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+  // het bot heeft zijn eigen schaal en draaiing: de pet in wereldmaat op de kruin zetten
+  hoofd.add(g); g.userData.pas = () => { m.object.updateMatrixWorld(true); const s = new THREE.Vector3(); hoofd.getWorldScale(s); g.scale.setScalar(1 / s.x); };
+  g.position.set(0, 0.112, 0.006); g.userData.pas(); m.pet = g; return g;
+}
