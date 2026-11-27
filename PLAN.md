@@ -18,6 +18,10 @@ Gezichten: 3D-hoofd per persoon gevormd naar de foto's, met de foto als gezichts
 Uitwerking van eigenschappen volgt later van Bob.
 
 ## 2. Bellyboten (zo exact mogelijk)
+**Wie heeft welke** (video `ref/drie-bellyboten.mp4`, drie naast elkaar op de Lot):
+- **Wim**: groen-grijze/kaki bellyboat met lichte neuzen en opdruk (de linker in de video). Eerder ook de zwarte 12BB.eu (meervalfoto).
+- **Dave**: gifgroene bellyboat met zwarte band en zwarte stoel (CATFISH-opdruk).
+- **Paul**: zwarte/donkergrijze bellyboat met hoge stoel, fishfinder voor op een arm, motor achter, twee hengels in houders. **Bob heeft dezelfde.**
 - Zwarte U-vormige bellyboat van Wim (12BB.eu-sticker), staartmotor links achter, hengelhouder en scherm rechts, opvouwbare stoel, twee pontons met spitse neus.
 - Groen/zwarte bellyboat met "CATFISH"-opdruk (Dave).
 - Elektrische motor achter (staartmotor met helmstok/accu).
@@ -59,7 +63,10 @@ Uitwerking van eigenschappen volgt later van Bob.
 - Ze **wachten tot je weg bent** (bijv. op het water) en dan **vreten ze het huis kaal**: vuilniszakken open, eten uit de kast, rommel op de tegelvloer (zie video).
 - **Minigame: jacht maken op alle 5 de tekkels.** Details volgen van Bob.
 ### Kippen
-- **Veel kippen** op het terrein. Rol nog uitwerken.
+- **Veel kippen**, lopen los over het gras én op de steigers (pikken in de voerbak/aasemmer, lopen tussen de hengels door).
+- Soorten: witte kippen (rode kam), bruine/roodbruine, lavendelgrijze, zwarte, patrijskleurige, **zwarte met een witte krullenbol** (kuifkip), en een **haan** (roodbruin met zwarte staart, grote rode kam).
+- Ze zijn gek op verrassingen: af en toe verschijnt er een roze rubberen dildo in het gras en dan stormt de hele troep erop af (grap, zie `ref/kippen-*.jpg`).
+- Rol in het spel verder uitwerken.
 
 ## 7. Nog van Bob
 - Details tekkeljacht, kippen, missies groene boot.
