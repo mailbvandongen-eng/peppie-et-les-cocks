@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1d3a36">
+<title>Peppie et le Cocks</title>
+<style>
+:root{--geel:#f2c230;--donker:#14201ee8}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#1d3a36;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;-webkit-user-select:none;user-select:none;touch-action:none}
+canvas{display:block}
+[hidden]{display:none!important}
+#laden{position:fixed;inset:0;display:grid;place-content:center;gap:14px;text-align:center;background:#1d3a36;z-index:20}
+#laden b{font-size:26px}#laden span{display:block;width:220px;height:6px;border-radius:4px;background:#fff3;overflow:hidden}
+#laden span::after{content:"";display:block;height:100%;width:calc(var(--v,0)*100%);background:var(--geel)}
+#menu{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px;background:linear-gradient(#0c1a18cc,#0c1a1855 55%,#0c1a18cc);z-index:10;overflow:auto}
+#menu h1{margin:0;font-size:clamp(26px,6vw,46px);letter-spacing:.02em}#menu h1 i{color:var(--geel);font-style:normal}
+#menu p{margin:0 0 6px;opacity:.85}
+#missies{display:grid;grid-template-columns:repeat(2,minmax(150px,260px));gap:10px}
+#missies button{font:inherit;color:#fff;text-align:left;padding:12px 14px;border-radius:14px;border:1px solid #fff3;background:#16302ccc;cursor:pointer}
+#missies b{display:block;font-size:17px;color:var(--geel)}#missies small{opacity:.85;line-height:1.3;display:block;margin-top:3px}
+#hud{position:fixed;inset:0;pointer-events:none;z-index:5}
+#hud button{pointer-events:auto;font:inherit;color:#fff;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#missie{position:absolute;left:50%;top:max(8px,env(safe-area-inset-top));transform:translateX(-50%);max-width:min(70vw,560px);padding:7px 14px;border-radius:12px;background:#0009;font-size:14px;text-align:center}
+#tel{position:absolute;right:max(12px,env(safe-area-inset-right));top:max(8px,env(safe-area-inset-top));padding:7px 12px;border-radius:12px;background:#0009;font-weight:700}
+#stop{position:absolute;left:max(12px,env(safe-area-inset-left));top:max(8px,env(safe-area-inset-top));padding:7px 12px;border-radius:12px;background:#0009}
+#knopA{position:absolute;right:max(22px,env(safe-area-inset-right));bottom:28px;width:104px;height:104px;border-radius:50%;background:#1f6f43e6;box-shadow:0 0 0 3px #fff5;font-weight:800;font-size:17px}
+#knopB{position:absolute;right:max(140px,env(safe-area-inset-right));bottom:28px;width:78px;height:78px;border-radius:50%;background:#35506ee6;box-shadow:0 0 0 3px #fff4;font-weight:700}
+#knopOp,#knopNeer{position:absolute;right:max(140px,env(safe-area-inset-right));width:66px;height:66px;border-radius:50%;background:#35506ee6;box-shadow:0 0 0 3px #fff4;font-size:26px}
+#knopOp{bottom:104px}#knopNeer{bottom:28px}
+#hud button.in{transform:scale(.93);filter:brightness(1.25)}
+#stick{position:absolute;width:120px;height:120px;border-radius:50%;background:#fff2;border:2px solid #fff5}
+#stick i{position:absolute;left:35px;top:35px;width:50px;height:50px;border-radius:50%;background:#fffb}
+#span{position:absolute;left:50%;bottom:34px;transform:translateX(-50%);width:min(44vw,300px);height:14px;border-radius:8px;background:#0008;overflow:hidden;box-shadow:inset 0 0 0 2px #fff4}
+#span i{display:block;height:100%;width:40%;background:#57c26a}
+#meter{position:absolute;left:50%;bottom:54px;transform:translateX(-50%);font-weight:800;text-shadow:0 1px 3px #000}
+#melding{position:absolute;left:50%;top:26%;transform:translateX(-50%);padding:10px 18px;border-radius:14px;background:#000b;font-size:20px;font-weight:700;text-align:center;max-width:80vw}
+#scope{position:absolute;left:max(10px,env(safe-area-inset-left));top:52px;width:min(50vw,640px);aspect-ratio:16/9;border-radius:8px;border:3px solid #15181c;box-shadow:0 4px 18px #0009;background:#000}
+#uitslag{position:fixed;inset:0;display:grid;place-content:center;background:#0008;z-index:12}
+#uitslag div{background:var(--donker);border-radius:18px;padding:22px 28px;text-align:center;max-width:86vw}
+#uitslag h2{margin:0 0 6px;color:var(--geel)}#uitslag p{margin:0 0 16px;opacity:.9}
+#uitslag button{font:inherit;color:#fff;border:0;padding:12px 24px;margin:0 6px;border-radius:12px;background:#2f7dd1;font-weight:700;cursor:pointer}#uitslag #terug{background:#4a525a}
+#versie{position:fixed;right:8px;bottom:4px;font-size:10px;opacity:.5;z-index:11}
+</style>
+</head>
+<body>
+<div id="laden"><b>Peppie et le Cocks</b><span></span>laden…</div>
+<div id="menu" hidden>
+  <h1>Peppie <i>et le</i> Cocks</h1>
+  <p>Vissen op de Lot · Le Temple-sur-Lot</p>
+  <div id="missies">
+    <button data-missie="belly"><b>De reus van de Lot</b><small>Belly boat met livescope: vang een meerval van 2 meter of meer</small></button>
+    <button data-missie="kant"><b>Vanaf de kant</b><small>Werp in vanaf de oever of de steiger en vang drie vissen</small></button>
+    <button data-missie="drone"><b>Wakker worden!</b><small>Vlieg met de drone door het slaapkamerraam en laat een glas water vallen</small></button>
+    <button data-missie="rat"><b>Beverratten</b><small>Schep er vijf vanaf de steiger voordat de tijd om is</small></button>
+  </div>
+</div>
+<div id="hud" hidden>
+  <canvas id="scope" width="960" height="540" hidden></canvas>
+  <div id="missie"></div><div id="tel"></div><button id="stop">Menu</button>
+  <div id="melding" hidden></div>
+  <div id="meter" hidden></div><div id="span" hidden><i></i></div>
+  <div id="stick" hidden><i></i></div>
+  <button id="knopOp" hidden>▲</button><button id="knopNeer" hidden>▼</button>
+  <button id="knopB" hidden></button><button id="knopA" hidden></button>
+</div>
+<div id="uitslag" hidden><div><h2 id="uitslagKop"></h2><p id="uitslagTekst"></p><button id="opnieuw">Nog een keer</button><button id="terug">Menu</button></div></div>
+<div id="versie"></div>
+<!-- versie -->
+<script>window.VERSIE = "27f41704f8"; window.VERSIE_DATUM = "27-11, 11:03"; document.getElementById("versie").textContent = "versie 27-11, 11:03";</script>
+<script type="importmap">{"imports":{"three":"./lib/three.module.js?v=27f41704f8","./lib/three.module.js":"./lib/three.module.js?v=27f41704f8","./lib/meshopt_decoder.mjs":"./lib/meshopt_decoder.mjs?v=27f41704f8","./lib/three-addons.js":"./lib/three-addons.js?v=27f41704f8","./src/effecten.js":"./src/effecten.js?v=27f41704f8","./src/hengel.js":"./src/hengel.js?v=27f41704f8","./src/livescope.js":"./src/livescope.js?v=27f41704f8","./src/main.js":"./src/main.js?v=27f41704f8","./src/mensen.js":"./src/mensen.js?v=27f41704f8","./src/wereld.js":"./src/wereld.js?v=27f41704f8"}}</script>
+<script type="module" src="./src/main.js?v=27f41704f8"></script>
+<!-- /versie -->
+</body>
+</html>
