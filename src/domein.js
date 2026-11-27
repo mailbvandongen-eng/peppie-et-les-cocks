@@ -4,6 +4,7 @@
 // de bakstenen schuur met het rode dak. Voor de toren het zwembad. Langs de oever drie steigers: de rechter onder de bomen
 // (oost), de middelste, en de linker bij de toren met de groene boot (links en rechts zoals je ze vanaf het huis ziet).
 import * as THREE from "three";
+import { grondMat, natUit } from "./grond.js";
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 function ruis(x, z) { const s = Math.sin(x * 12.9898 + z * 78.233) * 43758.5453; return s - Math.floor(s); }
@@ -57,20 +58,20 @@ export function bouwDomein(W, scene) {
     sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nvarying vec3 vWp;").replace("#include <fog_vertex>", "#include <fog_vertex>\nvWp = (modelMatrix * vec4(transformed, 1.0)).xyz;");
     sh.fragmentShader = sh.fragmentShader.replace("#include <common>", `#include <common>\nvarying vec3 vWp; uniform vec2 uO, uT, uU; uniform vec4 uKnip[${rects.length}];`).replace("void main() {", "void main() {\n  { vec2 d = vWp.xz - uO; float lx = -dot(d, uT), lz = dot(d, uU); for (int i = 0; i < " + rects.length + "; i++) { vec4 r = uKnip[i]; if (lx > r.x && lx < r.z && lz > r.y && lz < r.w) discard; } }"); };
     m.needsUpdate = true; };
-  if (W.grond) knip(W.grond.material, [[VK.x0 + 0.3, VK.z0 + 0.3, VK.x1 - 0.3, VK.z1 - 0.3]]);
+  if (W.grond) W.grond.material = grondMat({ O, t, u, rects: [[VK.x0 + 0.3, VK.z0 + 0.3, VK.x1 - 0.3, VK.z1 - 0.3]] });
   /** Waar begint het water, recht voor x? */
   const oeverZ = (x) => { let z = 0; while (z < 90) { const p = wereld(x, 0, z); if (W.inWater(p.x, p.z)) return z; z += 0.2; } return z; };
 
   const ZBgat = [6, 5.5, 16, 10.5];
-  { const nx = Math.round((VK.x1 - VK.x0) / VK.stap), nz = Math.round((VK.z1 - VK.z0) / VK.stap), pos = new Float32Array((nx + 1) * (nz + 1) * 3), kl = new Float32Array(pos.length), idx = [], c = new THREE.Color();
+  { const nx = Math.round((VK.x1 - VK.x0) / VK.stap), nz = Math.round((VK.z1 - VK.z0) / VK.stap), pos = new Float32Array((nx + 1) * (nz + 1) * 3), kl = new Float32Array(pos.length), nat = new Float32Array((nx + 1) * (nz + 1)), idx = [], c = new THREE.Color();
     for (let j = 0; j <= nz; j++) for (let i = 0; i <= nx; i++) { const lx = VK.x0 + i * VK.stap, lz = VK.z0 + j * VK.stap, p = wereld(lx, 0, lz), h = W.hoogte(p.x, p.z), s = W.oever(p.x, p.z), k = (j * (nx + 1) + i) * 3;
       pos.set([lx, h - 0.005, lz], k);
       if (s > 0) c.set("#5b5a44").lerp(new THREE.Color("#2a3328"), zacht(0, 5, -h)); else if (s > -0.5) c.set("#6a6142"); else if (s > -2.4) c.set("#5f8a3c").lerp(new THREE.Color("#4f7a34"), ruis(i, j));
-      else { c.set(Math.floor(lx / 1.6) % 2 ? "#79a64a" : "#6f9c44").lerp(new THREE.Color("#8cae55"), ruis(Math.round(lx / 3), Math.round(lz / 3)) * 0.5); }
-      kl.set([c.r, c.g, c.b], k); }
+      else { c.set(Math.floor(lx / 1.6) % 2 ? "#6b8f45" : "#638840").lerp(new THREE.Color("#8d9a50"), ruis(Math.round(lx / 3), Math.round(lz / 3)) * 0.6); }
+      kl.set([c.r, c.g, c.b], k); nat[k / 3] = s > 0 ? natUit(s) : Math.max(0, 1 + s / 0.7); }
     for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const x = VK.x0 + (i + 0.5) * VK.stap, z = VK.z0 + (j + 0.5) * VK.stap; if (x > ZBgat[0] && x < ZBgat[2] && z > ZBgat[1] && z < ZBgat[3]) continue; const a = j * (nx + 1) + i, b = a + nx + 1; idx.push(a, b, a + 1, b, b + 1, a + 1); }
-    const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.BufferAttribute(pos, 3)); g.setAttribute("color", new THREE.BufferAttribute(kl, 3)); g.setIndex(idx); g.computeVertexNormals();
-    const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 })); m.receiveShadow = true; D.add(m); }
+    const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.BufferAttribute(pos, 3)); g.setAttribute("color", new THREE.BufferAttribute(kl, 3)); g.setAttribute("nat", new THREE.BufferAttribute(nat, 1)); g.setIndex(idx); g.computeVertexNormals();
+    const m = new THREE.Mesh(g, grondMat()); m.receiveShadow = true; D.add(m); }
 
   const M = {}; const mat = (naam, o) => (M[naam] ??= new THREE.MeshStandardMaterial({ roughness: 0.85, ...o }));
   const tx = {}; const T = (n, ...a) => (tx[n + a.join()] ??= TEX[n](...a));
@@ -255,14 +256,11 @@ export function bouwDomein(W, scene) {
   const boot = maakGroeneBoot(mat, cil, doos, zet);
   boot.position.set(SL.x - 0.6, 0.02, SL.z0 + 2.4); boot.rotation.y = Math.PI / 2 + 0.06; D.add(boot);
 
-  // ---------- bomen: populieren achter het huis, grote bomen in het oosten en rond de rechter steiger ----------
+  // ---------- bomen: populieren achter het huis, grote bomen in het oosten en rond de rechter steiger (echte modellen: src/natuur.js) ----------
   const bomen = [];
-  { const stam = mat("stam", { color: "#4d3d2c", roughness: 0.95 }), loof = (h) => mat("loof" + h, { color: new THREE.Color().setHSL(0.26 + h * 0.04, 0.42, 0.22 + h * 0.06), roughness: 0.9, flatShading: true });
-    const boom = (x, z, h, breed, soort = 0) => { const y = gy(x, z); cil(x, y + h * 0.3, z, 0.12 + h * 0.012, 0.2 + h * 0.016, h * 0.6, stam, 7);
-      const n = soort === 1 ? 2 : 4; for (let i = 0; i < n; i++) { const r = breed * (0.65 + ruis(x + i, z) * 0.4), k = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 1), loof(i % 3)); k.scale.set(r, soort === 1 ? h * 0.42 : r * 0.85, r); zet(k, x + Math.sin(i * 2.1) * breed * 0.45, y + h * (soort === 1 ? 0.55 : 0.62 + i * 0.07), z + Math.cos(i * 2.1) * breed * 0.45); }
-      bomen.push([x, z]); };
-    for (let x = -34; x <= 36; x += 3.2) boom(x + Math.sin(x) * 0.8, -27 + Math.cos(x) * 1.5, 19 + ruis(x, 1) * 5, 1.6, 1);
-    for (const [x, z, h, b] of [[-17, 4, 14, 4.5], [-24, 9, 16, 5], [-30, 3, 15, 5.5], [-27, 16, 17, 4.5], [-17, 13, 12, 3.5], [-35, 12, 14, 5], [-22, -8, 13, 4.5], [33, 6, 12, 4], [36, -6, 14, 5], [-14, -20, 12, 4.5], [24, -18, 11, 4]]) boom(x, Math.min(z, oeverZ(x) - 2.5), h, b); }
+  { const boom = (x, z, h, soort) => { const p = wereld(x, 0, z); bomen.push({ x: p.x, z: p.z, y: gy(x, z), h, soort }); };
+    for (let x = -34; x <= 36; x += 3.0) boom(x + Math.sin(x) * 0.6, -27 + Math.cos(x) * 1.2, 21 + ruis(x, 1) * 5, "populier");
+    for (const [x, z, h, soort] of [[-17, 4, 13, "esdoorn"], [-24, 9, 15, "esdoorn"], [-30, 3, 15, "esdoorn"], [-27, 16, 10, "wilg"], [-17, 13, 9, "wilg"], [-35, 12, 14, "esdoorn"], [-22, -8, 13, "esdoorn"], [33, 6, 12, "esdoorn"], [36, -6, 14, "esdoorn"], [-14, -20, 12, "esdoorn"], [24, -18, 11, "esdoorn"], [29, 15, 9, "wilg"], [-40, 18, 10, "wilg"]]) boom(x, Math.min(z, oeverZ(x) - 2.5), h, soort); }
 
   // ---------- de wereld laten weten wat waar is ----------
   D.updateMatrixWorld(true);

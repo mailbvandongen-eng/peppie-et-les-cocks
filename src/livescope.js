@@ -23,7 +23,7 @@ export class Livescope {
    * aas = { v, d } (waar je aas hangt: v meter voor de transducer, d diep) of null; school = [{ v, d }] (kleine visjes).
    * vissen: soort Meerval / Karper / anders; hoek = zwemrichting ten opzichte van de bundel.
    */
-  teken({ bodem, vissen = [], aas = null, school = [], temp = 27.4, tijd = "10:23" }) {
+  teken({ bodem, vissen = [], aas = null, school = [], temp = 27.4, tijd = "10:23", richting = null }) {
     this.t += 1; const px = this.beeld.data, t = this.t;
     const bod = new Float32Array(BW); for (let i = 0; i < BW; i++) bod[i] = bodem(X0 + ((i + 0.5) / BW) * (X1 - X0));
     for (let j = 0; j < BH; j++) {
@@ -74,6 +74,10 @@ export class Livescope {
     x.textAlign = "left"; x.textBaseline = "middle"; for (let d = 1; d <= 10; d++) { x.beginPath(); x.moveTo(0, sy(d)); x.lineTo(W, sy(d)); x.stroke(); x.fillText(String(d), 3, sy(d)); }
     x.strokeStyle = "#fff"; x.lineWidth = 1.5; x.beginPath(); x.moveTo(sx(X0), sy(-X0 * 1.32)); x.lineTo(sx(0), sy(0.12)); x.lineTo(sx(3.3), 0); x.stroke(); // de rand van de bundel
     x.font = `bold ${Math.round(H * 0.058)}px sans-serif`; x.textBaseline = "top"; x.fillText(`${temp.toFixed(2)}°c`, W * 0.045, H * 0.03); x.fillText(tijd, W * 0.045, H * 0.085);
+    // waar kijkt de transducer heen? Een bellyboat van boven met de bundel
+    if (richting !== null) { const cx = W * 0.9, cy = H * 0.2, r = H * 0.11; x.save(); x.fillStyle = "rgba(10,14,20,0.65)"; x.beginPath(); x.arc(cx, cy, r * 1.25, 0, 6.3); x.fill();
+      x.fillStyle = "rgba(255,230,60,0.55)"; x.beginPath(); x.moveTo(cx + r * 0.25, cy - r * 0.3); x.arc(cx + r * 0.25, cy - r * 0.3, r * 1.05, -Math.PI / 2 - richting - 0.2, -Math.PI / 2 - richting + 0.2); x.closePath(); x.fill();
+      x.strokeStyle = "#fff"; x.lineWidth = 2; x.beginPath(); x.moveTo(cx - r * 0.3, cy - r * 0.5); x.lineTo(cx - r * 0.3, cy + r * 0.3); x.quadraticCurveTo(cx, cy + r * 0.65, cx + r * 0.3, cy + r * 0.3); x.lineTo(cx + r * 0.3, cy - r * 0.5); x.stroke(); x.restore(); }
     // de knoppen van het toestel (alleen voor het beeld)
     x.font = `${Math.round(H * 0.05)}px sans-serif`; x.textAlign = "center"; x.textBaseline = "middle";
     const knop = (kx_, ky, tekst, klein) => { const bw = W * 0.062, bh = H * 0.085; x.fillStyle = "rgba(70,78,90,0.82)"; x.fillRect(kx_ - bw / 2, ky - bh / 2, bw, bh); x.fillStyle = "#fff"; if (klein) { x.font = `${Math.round(H * 0.026)}px sans-serif`; } x.fillText(tekst, kx_, ky); x.font = `${Math.round(H * 0.05)}px sans-serif`; };

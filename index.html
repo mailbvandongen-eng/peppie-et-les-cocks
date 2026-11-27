@@ -23,28 +23,33 @@ canvas{display:block}
 #missies b{display:block;font-size:17px;color:var(--geel)}#missies small{opacity:.85;line-height:1.3;display:block;margin-top:3px}
 #hud{position:fixed;inset:0;pointer-events:none;z-index:5}
 #hud button{pointer-events:auto;font:inherit;color:#fff;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
-#missie{position:absolute;left:50%;top:max(8px,env(safe-area-inset-top));transform:translateX(-50%);max-width:min(70vw,560px);padding:7px 14px;border-radius:12px;background:#0009;font-size:14px;text-align:center}
-#tel{position:absolute;right:max(12px,env(safe-area-inset-right));top:max(8px,env(safe-area-inset-top));padding:7px 12px;border-radius:12px;background:#0009;font-weight:700}
+#missie{transition:opacity 1s;position:absolute;left:50%;top:calc(max(8px,env(safe-area-inset-top)) + 40px);transform:translateX(-50%);max-width:min(70vw,560px);padding:7px 14px;border-radius:12px;background:#0009;font-size:14px;text-align:center}
+#tel{position:absolute;left:50%;transform:translateX(-50%);white-space:nowrap;top:max(8px,env(safe-area-inset-top));padding:7px 12px;border-radius:12px;background:#0009;font-weight:700}
 #stop{position:absolute;left:max(12px,env(safe-area-inset-left));top:max(8px,env(safe-area-inset-top));padding:7px 12px;border-radius:12px;background:#0009}
-#knopA{position:absolute;right:max(22px,env(safe-area-inset-right));bottom:28px;width:104px;height:104px;border-radius:50%;background:#1f6f43e6;box-shadow:0 0 0 3px #fff5;font-weight:800;font-size:17px}
+#knopA{z-index:2;position:absolute;right:max(22px,env(safe-area-inset-right));bottom:28px;width:104px;height:104px;border-radius:50%;background:#1f6f43e6;box-shadow:0 0 0 3px #fff5;font-weight:800;font-size:17px}
 #knopB{position:absolute;right:max(140px,env(safe-area-inset-right));bottom:28px;width:78px;height:78px;border-radius:50%;background:#35506ee6;box-shadow:0 0 0 3px #fff4;font-weight:700}
-#knopOp,#knopNeer{position:absolute;right:max(140px,env(safe-area-inset-right));width:66px;height:66px;border-radius:50%;background:#35506ee6;box-shadow:0 0 0 3px #fff4;font-size:26px}
+#knopOp,#knopNeer{z-index:2;position:absolute;right:max(140px,env(safe-area-inset-right));width:66px;height:66px;border-radius:50%;background:#35506ee6;box-shadow:0 0 0 3px #fff4;font-size:26px}
 #knopOp{bottom:104px}#knopNeer{bottom:28px}
 #knopLinks,#knopRechts{position:absolute;right:max(214px,env(safe-area-inset-right));width:60px;height:60px;border-radius:50%;background:#5a4a2ee6;box-shadow:0 0 0 3px #fff4;font-size:26px}
 #knopLinks{bottom:104px}#knopRechts{bottom:31px}
 #hud button.in{transform:scale(.93);filter:brightness(1.25)}
-#stick{position:absolute;width:120px;height:120px;border-radius:50%;background:#fff2;border:2px solid #fff5}
-#stick i{position:absolute;left:35px;top:35px;width:50px;height:50px;border-radius:50%;background:#fffb}
+#stick{position:absolute;left:max(18px,env(safe-area-inset-left));bottom:max(18px,env(safe-area-inset-bottom));width:150px;height:150px;border-radius:50%;background:radial-gradient(#0003,#0005);border:2px solid #fff6;pointer-events:auto;touch-action:none;z-index:2}
+#stick i{position:absolute;left:45px;top:45px;width:60px;height:60px;border-radius:50%;background:#fffd;box-shadow:0 2px 8px #0008;pointer-events:none}
+#stick::before,#stick::after{content:"";position:absolute;left:50%;top:50%;background:#fff4;transform:translate(-50%,-50%)}#stick::before{width:2px;height:70%}#stick::after{width:70%;height:2px}
+#stick.zacht{opacity:.5}
+#wissel{position:absolute;right:max(12px,env(safe-area-inset-right));top:max(8px,env(safe-area-inset-top));padding:10px 16px;border-radius:12px;background:#1f5f8be6;font-weight:800;font-size:16px;box-shadow:0 0 0 2px #fff5}
+#scope{touch-action:none;pointer-events:auto;z-index:1}
 #span{position:absolute;left:50%;bottom:34px;transform:translateX(-50%);width:min(44vw,300px);height:14px;border-radius:8px;background:#0008;overflow:hidden;box-shadow:inset 0 0 0 2px #fff4}
 #span i{display:block;height:100%;width:40%;background:#57c26a}
 #meter{position:absolute;left:50%;bottom:54px;transform:translateX(-50%);font-weight:800;text-shadow:0 1px 3px #000}
 #melding{position:absolute;left:50%;top:26%;transform:translateX(-50%);padding:10px 18px;border-radius:14px;background:#000b;font-size:20px;font-weight:700;text-align:center;max-width:80vw}
-#scope{position:absolute;left:max(10px,env(safe-area-inset-left));top:52px;width:min(50vw,640px);aspect-ratio:16/9;border-radius:8px;border:3px solid #15181c;box-shadow:0 4px 18px #0009;background:#000}
+#scope{position:absolute;left:8px;top:52px;width:50vw;height:28vw;border-radius:8px;border:3px solid #15181c;box-shadow:0 4px 18px #0009;background:#000}
 #uitslag{position:fixed;inset:0;display:grid;place-content:center;background:#0008;z-index:12}
 #uitslag div{background:var(--donker);border-radius:18px;padding:22px 28px;text-align:center;max-width:86vw}
 #uitslag h2{margin:0 0 6px;color:var(--geel)}#uitslag p{margin:0 0 16px;opacity:.9}
 #uitslag button{font:inherit;color:#fff;border:0;padding:12px 24px;margin:0 6px;border-radius:12px;background:#2f7dd1;font-weight:700;cursor:pointer}#uitslag #terug{background:#4a525a}
 #versie{position:fixed;right:8px;bottom:4px;font-size:10px;opacity:.5;z-index:11}
+@media (orientation:portrait){#tel{top:calc(max(8px,env(safe-area-inset-top)) + 46px);font-size:15px}#missie{top:calc(max(8px,env(safe-area-inset-top)) + 88px)}}
 </style>
 </head>
 <body>
@@ -61,19 +66,19 @@ canvas{display:block}
 </div>
 <div id="hud" hidden>
   <canvas id="scope" width="960" height="540" hidden></canvas>
-  <div id="missie"></div><div id="tel"></div><button id="stop">Menu</button>
+  <div id="missie"></div><div id="tel"></div><button id="stop">Menu</button><button id="wissel" hidden>Livescope</button>
   <div id="melding" hidden></div>
   <div id="meter" hidden></div><div id="span" hidden><i></i></div>
   <div id="stick" hidden><i></i></div>
-  <button id="knopLinks" hidden>⟲</button><button id="knopRechts" hidden>⟳</button><button id="knopOp" hidden>▲</button><button id="knopNeer" hidden>▼</button>
+  <button id="knopLinks" hidden></button><button id="knopRechts" hidden></button><button id="knopOp" hidden>▲</button><button id="knopNeer" hidden>▼</button>
   <button id="knopB" hidden></button><button id="knopA" hidden></button>
 </div>
 <div id="uitslag" hidden><div><h2 id="uitslagKop"></h2><p id="uitslagTekst"></p><button id="opnieuw">Nog een keer</button><button id="terug">Menu</button></div></div>
 <div id="versie"></div>
 <!-- versie -->
-<script>window.VERSIE = "42195a9476"; window.VERSIE_DATUM = "27-11, 17:41"; document.getElementById("versie").textContent = "versie 27-11, 17:41";</script>
-<script type="importmap">{"imports":{"three":"./lib/three.module.js?v=42195a9476","./lib/three.module.js":"./lib/three.module.js?v=42195a9476","./lib/meshopt_decoder.mjs":"./lib/meshopt_decoder.mjs?v=42195a9476","./lib/three-addons.js":"./lib/three-addons.js?v=42195a9476","./src/bellyboat.js":"./src/bellyboat.js?v=42195a9476","./src/domein.js":"./src/domein.js?v=42195a9476","./src/effecten.js":"./src/effecten.js?v=42195a9476","./src/hengel.js":"./src/hengel.js?v=42195a9476","./src/kippen.js":"./src/kippen.js?v=42195a9476","./src/livescope.js":"./src/livescope.js?v=42195a9476","./src/main.js":"./src/main.js?v=42195a9476","./src/mensen.js":"./src/mensen.js?v=42195a9476","./src/wereld.js":"./src/wereld.js?v=42195a9476"}}</script>
-<script type="module" src="./src/main.js?v=42195a9476"></script>
+<script>window.VERSIE = "8a559bf138"; window.VERSIE_DATUM = "27-11, 20:49"; document.getElementById("versie").textContent = "versie 27-11, 20:49";</script>
+<script type="importmap">{"imports":{"three":"./lib/three.module.js?v=8a559bf138","./lib/three.module.js":"./lib/three.module.js?v=8a559bf138","./lib/meshopt_decoder.mjs":"./lib/meshopt_decoder.mjs?v=8a559bf138","./lib/three-addons.js":"./lib/three-addons.js?v=8a559bf138","./src/bellyboat.js":"./src/bellyboat.js?v=8a559bf138","./src/domein.js":"./src/domein.js?v=8a559bf138","./src/effecten.js":"./src/effecten.js?v=8a559bf138","./src/grond.js":"./src/grond.js?v=8a559bf138","./src/hengel.js":"./src/hengel.js?v=8a559bf138","./src/kippen.js":"./src/kippen.js?v=8a559bf138","./src/livescope.js":"./src/livescope.js?v=8a559bf138","./src/main.js":"./src/main.js?v=8a559bf138","./src/mensen.js":"./src/mensen.js?v=8a559bf138","./src/natuur.js":"./src/natuur.js?v=8a559bf138","./src/water.js":"./src/water.js?v=8a559bf138","./src/wereld.js":"./src/wereld.js?v=8a559bf138"}}</script>
+<script type="module" src="./src/main.js?v=8a559bf138"></script>
 <!-- /versie -->
 </body>
 </html>

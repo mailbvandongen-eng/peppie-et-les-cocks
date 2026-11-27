@@ -2,7 +2,7 @@
 const { chromium } = require("/root/tools/pw/node_modules/playwright-core");
 const fs = require("fs"), path = require("path");
 const ROOT = path.resolve(__dirname, ".."), UIT = "/tmp/lot/kijk"; fs.mkdirSync(UIT, { recursive: true });
-const T = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".json": "application/json", ".glb": "model/gltf-binary" };
+const T = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".json": "application/json", ".glb": "model/gltf-binary", ".jpg": "image/jpeg", ".webp": "image/webp" };
 // [naam, oog (x, y, z), doel (x, y, z)] — y boven de grond/water
 const STANDPUNTEN = [
   ["water-huis", [8, 1.2, 48], [8, 3, 0]],
@@ -21,7 +21,7 @@ const STANDPUNTEN = [
   const b = await chromium.launch({ executablePath: "/usr/bin/chromium", args: ["--no-sandbox", "--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"] });
   const p = await b.newPage({ viewport: { width: 1100, height: 620 } });
   await p.route("http://spel.test/**", (r) => { let f = new URL(r.request().url()).pathname; if (f.endsWith("/")) f += "index.html"; f = path.join(ROOT, f); r.fulfill(fs.existsSync(f) ? { body: fs.readFileSync(f), contentType: T[path.extname(f)] ?? "application/octet-stream" } : { status: 404 }); });
-  p.on("pageerror", (e) => console.log("FOUT", e.message));
+  p.on("pageerror", (e) => console.log("FOUT", e.message)); p.on("console", (m) => { if (m.type() === "error" || m.type() === "warning") console.log("C", m.text().slice(0, 400)); });
   await p.goto("http://spel.test/"); await p.waitForSelector("#menu:not([hidden])", { timeout: 240000 });
   await p.evaluate(() => { document.querySelector("#menu").hidden = true; window.__spel.spel.modus = "kijk"; });
   for (const [naam, oog, doel] of STANDPUNTEN) { if (kies.length && !kies.includes(naam)) continue;

@@ -2,6 +2,7 @@
 // Alles komt uit data/lot.json (IGN BD TOPO); de bodem van de rivier is een hoogteveld, zodat de livescope echte dieptes ziet.
 import * as THREE from "three";
 import { bouwDomein } from "./domein.js";
+import { grondMat, natUit } from "./grond.js";
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const zacht = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
@@ -36,8 +37,8 @@ export function bouwWereld(d, scene) {
     for (let k = 0; k < p.count; k++) { const h = H[k], s = S[k]; p.setY(k, h);
       if (s > 0) c.set("#5b5a44").lerp(new THREE.Color("#2a3328"), zacht(0, 5, -h)); else if (s > -1.2) c.set("#6d6a48"); else c.set("#6f9a4a").lerp(new THREE.Color("#8aa856"), ruis(Math.round(p.getX(k) / 9), Math.round(p.getZ(k) / 9)));
       kleur.set([c.r, c.g, c.b], k * 3); }
-    g.setAttribute("color", new THREE.BufferAttribute(kleur, 3)); g.computeVertexNormals();
-    const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 })); m.receiveShadow = true; scene.add(m); W.grond = m; }
+    g.setAttribute("color", new THREE.BufferAttribute(kleur, 3)); g.setAttribute("nat", new THREE.BufferAttribute(Float32Array.from(S, natUit), 1)); g.computeVertexNormals();
+    const m = new THREE.Mesh(g, null); m.receiveShadow = true; scene.add(m); W.grond = m; }
   // het water: groenbruin en een beetje doorzichtig, zoals de Lot in de zomer
   { const m = new THREE.Mesh(new THREE.PlaneGeometry(MAAT, MAAT).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ color: "#4d6f5e", roughness: 0.12, metalness: 0.3, transparent: true, opacity: 0.86 })); m.position.y = 0; scene.add(m); W.water = m; }
 
@@ -75,12 +76,7 @@ export function bouwWereld(d, scene) {
     const strooi = (r, per, hMin, hMax) => { const x0 = Math.min(...r.map((p) => p[0])), x1 = Math.max(...r.map((p) => p[0])), z0 = Math.min(...r.map((p) => p[1])), z1 = Math.max(...r.map((p) => p[1])), n = Math.min(260, ((x1 - x0) * (z1 - z0)) / per);
       for (let i = 0; i < n; i++) { const x = x0 + Math.random() * (x1 - x0), z = z0 + Math.random() * (z1 - z0); if (Math.hypot(x, z) > 520 || !inRing(x, z, r) || W.oever(x, z) > -1.5) continue; if (binnenDomein(x, z)) continue; plek.push([x, z, hMin + Math.random() * (hMax - hMin)]); } };
     for (const r of d.bos) strooi(r, 85, 8, 16); for (const r of d.heg) strooi(r, 30, 5, 9);
-    const stam = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.16, 0.26, 1, 6).translate(0, 0.5, 0), new THREE.MeshStandardMaterial({ color: "#5a4632", roughness: 0.95 }), plek.length);
-    const kruin = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1, 1), new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 0.9, flatShading: true }), plek.length * 2);
-    const m = new THREE.Matrix4(), q = new THREE.Quaternion(), c = new THREE.Color();
-    plek.forEach(([x, z, h], i) => { const y = W.hoogte(x, z);
-      stam.setMatrixAt(i, m.compose(V(x, y, z), q.identity(), V(h * 0.07 + 0.6, h * 0.55, h * 0.07 + 0.6)));
-      for (let k = 0; k < 2; k++) { const r = h * (k ? 0.24 : 0.32); kruin.setMatrixAt(i * 2 + k, m.compose(V(x + (k ? Math.sin(i) * r * 0.5 : 0), y + h * (k ? 0.86 : 0.62), z + (k ? Math.cos(i) * r * 0.5 : 0)), q.setFromEuler(new THREE.Euler(i, i * 2, 0)), V(r, r * 1.15, r))); kruin.setColorAt(i * 2 + k, c.setHSL(0.27 + ruis(i, k) * 0.07, 0.42 + ruis(k, i) * 0.15, 0.24 + ruis(i + 3, k) * 0.1)); } });
-    stam.castShadow = kruin.castShadow = true; scene.add(stam, kruin); W.bomen = plek; }
+    // welke soort: langs het water treurwilgen (soms), verder esdoorns (src/natuur.js maakt er echte bomen van)
+    W.bomen = plek; W.bomenLijst = [...dom.bomen, ...plek.map(([x, z, h]) => { const nat = W.oever(x, z) > -14 && ruis(x * 0.37, z * 0.71) < 0.45; return { x, z, y: W.hoogte(x, z), h: nat ? Math.min(h, 10) : h * 1.15, soort: nat ? "wilg" : "esdoorn" }; })]; }
   return W;
 }

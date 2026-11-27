@@ -21,6 +21,8 @@ Bediening: links op het scherm slepen = sturen, rechts slepen = rondkijken, knop
 - Kaart: IGN BD TOPO® (gebouwen, water, wegen, vegetatie), licence ouverte Etalab 2.0.
 - Mensen: MakeHuman (CC0), bewegingen Quaternius Universal Animation Library (CC0).
 - Modellen via Sketchfab (CC BY 4.0): hengel “Fishing Rod” (emelyarules), molen “Spinning Reel” (SiBeRiEIIIkA), stoel “Camping Chair” (lpfeffer), blikje “Beer can” (Arte Hexe), krat “Beer crate” (3DDomino), karper “Carp Fish” (huykhoi2407).
+- Bomen via Sketchfab (CC BY 4.0): “Realistic HD Lombardy poplar (16/75)” (PlantCatalog), “Maple trees pack (lowpoly, game ready, LODs)” (lolipop_1707), “Willow” (evolveduk); verkleind voor de telefoon.
+- Lucht en texturen van Poly Haven (CC0): HDRI *Kloofendal 48d Partly Cloudy (Pure Sky)*, texturen *sparse_grass*, *river_small_rocks*, *brown_mud_rocks_01*.
 - three.js (MIT).
 
 Zelf gebouwd en nog grof: de belly boat, de drone, de beverratten, het schepnet, het huis en de bomen.

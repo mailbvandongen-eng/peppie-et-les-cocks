@@ -9,6 +9,8 @@ import { bouwWereld } from "./wereld.js";
 import { laadVisspullen } from "./hengel.js";
 import { Kippen } from "./kippen.js";
 import { maakBellyboat } from "./bellyboat.js";
+import { maakWater } from "./water.js";
+import { laadBomen } from "./natuur.js";
 
 const $ = (q) => document.querySelector(q);
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -21,9 +23,9 @@ const telefoon = matchMedia("(pointer: coarse)").matches;
 const renderer = new THREE.WebGLRenderer({ antialias: !telefoon, powerPreference: "high-performance" });
 renderer.setPixelRatio(Math.min(devicePixelRatio, telefoon ? 1.5 : 2)); renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05; document.body.prepend(renderer.domElement);
-const scene = new THREE.Scene(); scene.background = new THREE.Color("#a9cfe8"); scene.fog = new THREE.Fog("#b9d6e6", 180, 620);
+const scene = new THREE.Scene(); scene.background = new THREE.Color("#a9cfe8"); scene.fog = new THREE.Fog("#c4d6e2", 220, 700);
 const camera = new THREE.PerspectiveCamera(58, 1, 0.08, 900);
-scene.add(new THREE.HemisphereLight("#dcefff", "#6f7a4e", 1.5));
+scene.add(new THREE.HemisphereLight("#dcefff", "#6f7a4e", 0.9));
 const zon = new THREE.DirectionalLight("#fff2d8", 2.6); zon.castShadow = true; zon.shadow.mapSize.set(2048, 2048); Object.assign(zon.shadow.camera, { left: -45, right: 45, top: 45, bottom: -45, near: 1, far: 260 }); zon.shadow.bias = -0.0006; scene.add(zon, zon.target);
 function pasAan() { renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
 addEventListener("resize", pasAan); pasAan();
@@ -48,13 +50,12 @@ const geluid = { ctx: null,
 // ---------- laden ----------
 const data = await (await fetch(`data/lot.json?v=${window.VERSIE ?? ""}`)).json();
 const W = bouwWereld(data, scene);
-// een lucht om in te spiegelen: de rivier en het zwembad weerkaatsen de hemel en de groene oevers
-{ const lucht = new THREE.Scene(), g = new THREE.SphereGeometry(50, 32, 16), kl = [], c = new THREE.Color(), p = g.attributes.position;
-  for (let i = 0; i < p.count; i++) { const y = p.getY(i) / 50; if (y > 0.12) c.set("#e4eef4").lerp(new THREE.Color("#8fbde0"), Math.min(1, (y - 0.12) * 1.6)); else if (y > -0.02) c.set("#7f9a6a").lerp(new THREE.Color("#e4eef4"), (y + 0.02) / 0.14); else c.set("#4c6040"); kl.push(c.r, c.g, c.b); }
-  g.setAttribute("color", new THREE.Float32BufferAttribute(kl, 3)); lucht.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide })));
-  const env = new THREE.PMREMGenerator(renderer).fromScene(lucht, 0.01).texture;
-  Object.assign(W.water.material, { envMap: env, envMapIntensity: 0.38, color: new THREE.Color("#466149"), metalness: 0.3, roughness: 0.1, opacity: 0.95 }); W.water.material.needsUpdate = true;
-  W.domein.groep.traverse((o) => { if (o.isMesh && o.material.transparent && o.material.color?.getHexString() === "5fd0f2") { o.material.envMap = env; o.material.needsUpdate = true; } }); }
+// de lucht: een echte foto-lucht (Poly Haven, CC0), ook als licht en weerkaatsing voor alles in de wereld
+{ const lucht = await new THREE.TextureLoader().loadAsync(`assets/lucht.jpg?v=${window.VERSIE ?? ""}`); lucht.mapping = THREE.EquirectangularReflectionMapping; lucht.colorSpace = THREE.SRGBColorSpace;
+  scene.background = lucht; scene.backgroundRotation.y = 1.2; const pm = new THREE.PMREMGenerator(renderer); scene.environment = pm.fromEquirectangular(lucht).texture; scene.environmentIntensity = 0.55; scene.environmentRotation.y = 1.2; pm.dispose(); }
+W.water.visible = false;
+const water = maakWater(renderer, scene, camera, W, { telefoon });
+const bomen = await laadBomen(renderer, scene, W.bomenLijst, { telefoon });
 await laadMensen((v) => $("#laden").style.setProperty("--v", v));
 const spul = await laadVisspullen(scene);
 const fx = new Effecten(scene);
@@ -89,18 +90,24 @@ legCocks();
   for (let i = 0; i < 14; i++) { const b = spul.vorm("blik", 0.066); b.scale.setScalar(1.9); b.traverse((o) => { if (o.isMesh) o.material = blikGroen; }); zet(b, 4 + tussen(-1.2, 1.2), 10 + tussen(-1.6, 1.6), Math.random() * 6); if (i % 2) { b.rotation.z = Math.PI / 2; b.position.y += 0.035; } } }
 
 // ---------- bediening ----------
-const invoer = { links: false, rechts: false, x: 0, y: 0, A: false, Atik: false, B: false, Btik: false, op: false, neer: false, toets: {} };
-const cam = { yaw: huis.yaw + Math.PI, pitch: 0.28, afstand: 5 };
-{ const stick = $("#stick"), dop = $("#stick i"); let sid = null, kid = null, sx = 0, sy = 0, lx = 0, ly = 0;
+const invoer = { sonarSleep: 0, links: false, rechts: false, x: 0, y: 0, A: false, Atik: false, B: false, Btik: false, op: false, neer: false, toets: {} };
+const cam = { yaw: huis.yaw + Math.PI, pitch: 0.28, afstand: 5, sleep: 0 };
+// De stuurknop staat vast linksonder (altijd op dezelfde plek, ook boven de livescope); slepen over het beeld = rondkijken;
+// in de livescope-stand is slepen over het scherm de transducer draaien.
+{ const stick = $("#stick"), dop = $("#stick i"); let sid = null, kid = null, lx = 0, ly = 0, scid = null, scx = 0;
+  const beweeg = (e) => { const r = stick.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, R = r.width * 0.36; let dx = (e.clientX - cx) / R, dy = (e.clientY - cy) / R; const l = Math.hypot(dx, dy); if (l > 1) { dx /= l; dy /= l; } invoer.x = Math.abs(dx) < 0.12 ? 0 : dx; invoer.y = Math.abs(dy) < 0.12 ? 0 : -dy; dop.style.transform = `translate(${dx * R}px,${dy * R}px)`; };
+  stick.addEventListener("pointerdown", (e) => { e.preventDefault(); geluid.start(); sid = e.pointerId; stick.setPointerCapture(sid); beweeg(e); });
+  stick.addEventListener("pointermove", (e) => { if (e.pointerId === sid) beweeg(e); });
+  for (const ev of ["pointerup", "pointercancel"]) stick.addEventListener(ev, (e) => { if (e.pointerId === sid) { sid = null; invoer.x = invoer.y = 0; dop.style.transform = ""; } });
   const vlak = renderer.domElement;
-  vlak.addEventListener("pointerdown", (e) => { geluid.start();
-    if (e.clientX < innerWidth * 0.42 && sid === null && spel.modus !== "menu") { sid = e.pointerId; sx = e.clientX; sy = e.clientY; stick.style.left = `${sx - 60}px`; stick.style.top = `${sy - 60}px`; stick.hidden = false; }
-    else if (kid === null) { kid = e.pointerId; lx = e.clientX; ly = e.clientY; } vlak.setPointerCapture(e.pointerId); });
-  vlak.addEventListener("pointermove", (e) => {
-    if (e.pointerId === sid) { const dx = klem((e.clientX - sx) / 50, -1, 1), dy = klem((e.clientY - sy) / 50, -1, 1); invoer.x = dx; invoer.y = -dy; dop.style.transform = `translate(${dx * 34}px,${dy * 34}px)`; }
-    else if (e.pointerId === kid) { cam.yaw -= (e.clientX - lx) * 0.0055; cam.pitch = klem(cam.pitch + (e.clientY - ly) * 0.004, -0.5, 1.2); lx = e.clientX; ly = e.clientY; } });
-  const los = (e) => { if (e.pointerId === sid) { sid = null; invoer.x = invoer.y = 0; stick.hidden = true; dop.style.transform = ""; } if (e.pointerId === kid) kid = null; };
+  vlak.addEventListener("pointerdown", (e) => { geluid.start(); if (kid === null) { kid = e.pointerId; lx = e.clientX; ly = e.clientY; cam.sleep = 1; vlak.setPointerCapture(e.pointerId); } });
+  vlak.addEventListener("pointermove", (e) => { if (e.pointerId === kid) { cam.yaw -= (e.clientX - lx) * 0.0055; cam.pitch = klem(cam.pitch + (e.clientY - ly) * 0.004, -0.3, 1.2); lx = e.clientX; ly = e.clientY; cam.sleep = 1; } });
+  const los = (e) => { if (e.pointerId === kid) kid = null; };
   vlak.addEventListener("pointerup", los); vlak.addEventListener("pointercancel", los);
+  const sc = $("#scope");
+  sc.addEventListener("pointerdown", (e) => { e.preventDefault(); geluid.start(); scid = e.pointerId; scx = e.clientX; sc.setPointerCapture(scid); });
+  sc.addEventListener("pointermove", (e) => { if (e.pointerId === scid) { invoer.sonarSleep += (e.clientX - scx) / sc.clientWidth; scx = e.clientX; } });
+  for (const ev of ["pointerup", "pointercancel"]) sc.addEventListener(ev, (e) => { if (e.pointerId === scid) scid = null; });
   for (const [id, naam] of [["#knopA", "A"], ["#knopB", "B"], ["#knopOp", "op"], ["#knopNeer", "neer"], ["#knopLinks", "links"], ["#knopRechts", "rechts"]]) { const k = $(id);
     k.addEventListener("pointerdown", (e) => { e.preventDefault(); geluid.start(); invoer[naam] = true; if (naam === "A") invoer.Atik = true; if (naam === "B") invoer.Btik = true; k.classList.add("in"); });
     for (const ev of ["pointerup", "pointercancel", "pointerleave"]) k.addEventListener(ev, () => { invoer[naam] = false; k.classList.remove("in"); }); }
@@ -216,7 +223,7 @@ const belly = { pos: V(0, 0, 0), yaw: 0, sonar: 0, aas: 1, tik: 0, vissen: [], s
 const scope = new Livescope(hud.scope);
 const VISDIEPTE = (v) => { const bodem = W.diepte(v.x, v.z); return v.soort === "Meerval" ? Math.max(0.5, bodem - v.boven) : Math.min(bodem - 0.4, v.diep); };
 function beginBelly() {
-  belly.pos.copy(W.steiger.eind).addScaledVector(u, 3.5); belly.yaw = huis.yaw; belly.sonar = 0; belly.aas = 1; belly.vis = null; cam.yaw = huis.yaw + Math.PI; cam.afstand = 3.6; cam.pitch = 0.38;
+  belly.pos.copy(W.steiger.eind).addScaledVector(u, 32); belly.yaw = huis.yaw; belly.sonar = 0; belly.aas = 1; belly.vis = null; belly.v = 0; belly.w = 0; cam.yaw = huis.yaw + Math.PI; cam.afstand = 6.5; cam.pitch = 0.3; zetWeergave("varen");
   belly.vissen = []; const zet = (soort, x, z, lengte, straal, extra = {}) => belly.vissen.push({ soort, x, z, tx: x, tz: z, x0: x, z0: z, straal, lengte, h: Math.random() * 6, boven: tussen(0.25, 1.0), diep: tussen(1.2, 4), zin: 0, ...extra });
   const ergens = (min = 2.5) => { for (let i = 0; i < 30; i++) { const p = belly.pos.clone().addScaledVector(u, tussen(4, 150)).addScaledVector(t, tussen(-170, 170)); if (W.diepte(p.x, p.z) > min) return p; } return belly.pos.clone().addScaledVector(u, 30); };
   // in elke diepe kolk één echte reus, daarnaast middelgrote meervallen, veel meervalletjes, groepjes karpers
@@ -228,16 +235,18 @@ function beginBelly() {
   for (let i = 0; i < 4; i++) { const p = belly.pos.clone().addScaledVector(u, tussen(5, 14)).addScaledVector(t, tussen(-8, 8)); if (W.diepte(p.x, p.z) > 1.5) zet(i % 2 ? "Karper" : "Meerval", p.x, p.z, tussen(0.4, 0.8), 6); }
   // scholen witvis die voorbij trekken
   belly.school = []; for (let s = 0; s < 14; s++) belly.school.push(nieuweSchool({}, true));
-  hud.missie.textContent = "Zoek een grote meerval op de livescope (dikke kop, dunne staart) en vang er een van 2 meter of meer"; hud.scope.hidden = false; hud.tel.textContent = "";
+  hud.missie.textContent = "Zoek een grote meerval op de livescope (dikke kop, dunne staart) en vang er een van 2 meter of meer"; hud.tel.textContent = "";
 }
 function nieuweSchool(q, overal = false) { const a = Math.random() * 6.28, p = belly.pos.clone().addScaledVector(u, tussen(3, overal ? 120 : 40)).addScaledVector(t, overal ? tussen(-120, 120) : tussen(-30, 30));
   return Object.assign(q, { x: p.x, z: p.z, vx: Math.sin(a) * tussen(0.35, 0.9), vz: Math.cos(a) * tussen(0.35, 0.9), d: tussen(0.8, 3.5), n: 10 + ((Math.random() * 14) | 0), r: tussen(0.8, 2), zaad: Math.random() * 100 }); }
 function stapBelly(dt) {
   const b = belly, s = stuur(), f = voor(b.yaw), rechts = V(-f.z, 0, f.x); b.klok += dt;
-  // varen met de motor: vooruit/achteruit en draaien
-  let vaart = 0; if (!dril.aan) { b.yaw -= s.x * 1.1 * dt; vaart = s.y * 1.1; const nx = b.pos.x + f.x * vaart * dt, nz = b.pos.z + f.z * vaart * dt; if (W.diepte(nx, nz) > 0.7) b.pos.set(nx, 0, nz); }
-  // de transducer draaien met de stang
-  const kn = invoer.toets; if (invoer.links || kn.KeyQ || kn.KeyZ) b.sonar += 1.4 * dt; if (invoer.rechts || kn.KeyC) b.sonar -= 1.4 * dt; b.sonar = klem(b.sonar, -2.6, 2.6);
+  // varen met de motor: gas geven en sturen, met wat traagheid zoals een bellyboat op een elektromotor
+  if (!dril.aan) { b.v += (s.y * 1.5 - b.v) * Math.min(1, dt * 1.2); b.w += (-s.x * 0.85 - b.w) * Math.min(1, dt * 3); b.yaw += b.w * dt;
+    const nx = b.pos.x + f.x * b.v * dt, nz = b.pos.z + f.z * b.v * dt; if (W.diepte(nx, nz) > 0.7) b.pos.set(nx, 0, nz); else b.v = 0; }
+  const vaart = b.v;
+  // de transducer draaien: vegen over het scherm (of Q/C)
+  const kn = invoer.toets; b.sonar -= invoer.sonarSleep * 2.2; invoer.sonarSleep = 0; if (kn.KeyQ || kn.KeyZ) b.sonar += 1.4 * dt; if (kn.KeyC) b.sonar -= 1.4 * dt; b.sonar = klem(b.sonar, -2.6, 2.6);
   boot.visible = true; boot.position.set(b.pos.x, 0.0 + Math.sin(b.klok * 1.7) * 0.02, b.pos.z); boot.rotation.set(Math.sin(b.klok * 1.3) * 0.025, b.yaw, Math.sin(b.klok * 1.1) * 0.025); bb.stang.rotation.y = b.sonar; bb.schroef.rotation.z += dt * (Math.abs(vaart) * 30 + (dril.aan ? 4 : 0)); bb.motor.rotation.y = -s.x * 0.5;
   boot.updateMatrixWorld(true);
   peppie.m.zet("zitten"); peppie.m.mixer.update(dt); peppie.g.position.copy(boot.localToWorld(bb.zit.clone())).add(V(0, -peppie.m.zithoogte() + 0.02, 0)); peppie.g.rotation.set(0, b.yaw, 0);
@@ -259,11 +268,10 @@ function stapBelly(dt) {
     for (const v of b.vissen) { const afst = Math.hypot(v.x - top.x, v.z - top.z), dd = Math.abs(VISDIEPTE(v) - b.aas), bij = afst < 0.9 + v.lengte * 0.35 && dd < 1.1 + v.zin * 3;
       if (bij) { v.zin = Math.min(1.05, v.zin + dt * (0.06 + b.tik * 0.5)); v.tx = top.x; v.tz = top.z; } else v.zin = Math.max(0, v.zin - dt * 0.2);
       if (v.zin >= 1 && afst < 0.8) { b.vis = v; v.zin = 0; beginDril(v, VISDIEPTE(v) + 2 + v.lengte); meld("Beet! Houd de spanning in het groen", 3); geluid.piep(); spetter(top.clone().setY(0), 14, 0.6); break; } }
-    knoppen({ A: "Tik", hoogte: true }); hud.links.hidden = hud.rechts.hidden = false;
+    if (belly.weergave === "scope") knoppen({ A: "Tik", hoogte: true }); else knoppen({});
     zetLijn(top, V(top.x, -Math.min(b.aas, 2.5), top.z), 0);
   } else {
     // de dril: een grote meerval sleept de bellyboat mee
-    hud.links.hidden = hud.rechts.hidden = true;
     const v = b.vis, uit = stapDril(dt, invoer.A), ren = dril.ren > 0, sleep = (0.15 + v.lengte * 0.45) * (ren ? 1 : 0.25);
     v.h += Math.sin(b.klok * 0.6) * 0.5 * dt; const nx = b.pos.x + Math.sin(v.h) * sleep * dt, nz = b.pos.z + Math.cos(v.h) * sleep * dt; if (W.diepte(nx, nz) > 1) b.pos.set(nx, 0, nz); else v.h += Math.PI * 0.6;
     v.x = b.pos.x + Math.sin(v.h) * Math.min(3, dril.afstand * 0.4); v.z = b.pos.z + Math.cos(v.h) * Math.min(3, dril.afstand * 0.4); let d = v.h - b.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); b.yaw += d * Math.min(1, dt * 1.5);
@@ -277,11 +285,21 @@ function stapBelly(dt) {
   if ((b.scopeT -= dt) <= 0) { b.scopeT = 0.1; const nu = new Date(), av = zie(top.x, top.z);
     scope.teken({ bodem: (v) => W.diepte(bron.x + fb.x * v, bron.z + fb.z * v), vissen: inBeeld, aas: dril.aan || av === null ? null : { v: av, d: b.aas - b.tik * 0.3 },
       school: b.school.flatMap((q) => { const out = []; for (let i = 0; i < q.n; i++) { const a = q.zaad + i * 2.4, x = q.x + Math.sin(a) * q.r * ((i * 0.37) % 1), z = q.z + Math.cos(a * 1.3) * q.r * ((i * 0.61) % 1), v = zie(x, z); if (v !== null) out.push({ v, d: q.d + Math.sin(a * 0.7) * 0.4 }); } return out; }),
-      temp: 27.46 + Math.sin(b.klok * 0.4) * 0.012, tijd: `${String(nu.getHours()).padStart(2, "0")}:${String(nu.getMinutes()).padStart(2, "0")}` });
+      richting: b.sonar, temp: 27.46 + Math.sin(b.klok * 0.4) * 0.012, tijd: `${String(nu.getHours()).padStart(2, "0")}:${String(nu.getMinutes()).padStart(2, "0")}` });
     scopeTex.needsUpdate = true; }
-  hud.tel.textContent = `diepte ${bodem.toFixed(1)} m · aas ${b.aas.toFixed(1)} m`;
-  volg(b.pos.clone().add(V(0, 0.9, 0)));
+  hud.tel.textContent = `${bodem.toFixed(1)} m diep · aas ${b.aas.toFixed(1)} m`;
+  // de camera volgt de boot vanzelf (tenzij je net zelf rondkeek); bij varen hoog achter de boot met zicht over de rivier
+  cam.sleep = Math.max(0, cam.sleep - dt * 0.4); if (cam.sleep <= 0) { let d = b.yaw + Math.PI - cam.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); cam.yaw += d * Math.min(1, dt * 1.6); cam.pitch += ((belly.weergave === "scope" ? 0.42 : 0.26) - cam.pitch) * Math.min(1, dt * 2); }
+  cam.afstand += ((belly.weergave === "scope" ? 3.4 : 6.5) - cam.afstand) * Math.min(1, dt * 2);
+  volg(b.pos.clone().add(V(0, belly.weergave === "scope" ? 0.8 : 1.6, 0)).addScaledVector(f, belly.weergave === "scope" ? 0.4 : 3));
 }
+/** Varen (uitzicht over de rivier, geen scherm) of livescope (het hele scherm is de Garmin). */
+function zetWeergave(w) { belly.weergave = w; $("#stick").classList.toggle("zacht", w === "scope"); $("#wissel").textContent = w === "scope" ? "Varen" : "Livescope"; hud.scope.hidden = w !== "scope"; plaatsScope(); }
+function plaatsScope() { const sc = hud.scope, staand = innerHeight > innerWidth; let b, h;
+  if (staand) { b = innerWidth - 12; h = (b * 9) / 16; sc.style.left = "6px"; sc.style.top = "calc(max(8px, env(safe-area-inset-top)) + 88px)"; }
+  else { h = innerHeight - 64; b = (h * 16) / 9; const max = innerWidth - 250; if (b > max) { b = max; h = (b * 9) / 16; } sc.style.left = "max(8px, env(safe-area-inset-left))"; sc.style.top = `${Math.max(50, (innerHeight - h) / 2 + 20)}px`; }
+  sc.style.width = `${b}px`; sc.style.height = `${h}px`; }
+addEventListener("resize", () => { if (spel.modus === "belly") plaatsScope(); });
 
 // ---------- missie 3: de drone en het glas water ----------
 const drone = new THREE.Group(); const rotors = []; { const zwart = new THREE.MeshStandardMaterial({ color: "#1c1e22", roughness: 0.5 }), grijs = new THREE.MeshStandardMaterial({ color: "#c9ccd0", roughness: 0.4 });
@@ -358,13 +376,13 @@ function volg(doel) { const p = doel.clone().add(V(Math.sin(cam.yaw) * Math.cos(
 const MISSIES = { kant: [beginKant, stapKant], belly: [beginBelly, stapBelly], drone: [beginDrone, stapDrone], rat: [beginRat, stapRat] };
 function start(modus) { geluid.start(); Object.assign(spel, { modus, klaar: false, t: 0 }); $("#menu").hidden = $("#uitslag").hidden = true; $("#hud").hidden = false;
   boot.visible = drone.visible = glas.visible = net.visible = kooi.visible = dobber.visible = lijn.visible = hengel.g.visible = false; hud.scope.hidden = true; hud.span.hidden = hud.meter.hidden = true; dril.aan = false; peppie.g.visible = modus !== "drone"; if (modus !== "drone") legCocks(false); for (const r of rat.lijst) r.m.visible = false;
-  hud.melding.hidden = true; meldT = 0;
+  hud.melding.hidden = true; meldT = 0; hud.missie.style.opacity = 1; clearTimeout(start.vervaag); start.vervaag = setTimeout(() => { hud.missie.style.opacity = 0; }, 6000);
   // met de livescope in beeld schuift het beeld naar rechtsonder, zodat de belly boat naast het scherm te zien is
-  if (modus === "belly") camera.setViewOffset(innerWidth, innerHeight, -innerWidth * 0.2, -innerHeight * 0.14, innerWidth, innerHeight); else camera.clearViewOffset();
+  camera.clearViewOffset(); $("#stick").hidden = false; $("#wissel").hidden = modus !== "belly";
   MISSIES[modus][0](); }
 function naarMenu() { camera.clearViewOffset(); spel.modus = "menu"; $("#menu").hidden = false; $("#uitslag").hidden = true; $("#hud").hidden = true; }
 for (const k of document.querySelectorAll("#menu [data-missie]")) k.addEventListener("click", () => start(k.dataset.missie));
-$("#opnieuw").addEventListener("click", () => start(spel.modus)); $("#terug").addEventListener("click", naarMenu); $("#stop").addEventListener("click", naarMenu);
+$("#opnieuw").addEventListener("click", () => start(spel.modus)); $("#wissel").addEventListener("click", () => zetWeergave(belly.weergave === "scope" ? "varen" : "scope")); $("#terug").addEventListener("click", naarMenu); $("#stop").addEventListener("click", naarMenu);
 const klok = new THREE.Clock(); let menuT = 0;
 function lus() {
   const dt = Math.min(klok.getDelta(), 0.05); spel.t += dt;
@@ -375,7 +393,7 @@ function lus() {
   if (meldT > 0 && (meldT -= dt) <= 0) hud.melding.hidden = true;
   for (const a of aangemeerd) { a.f += dt; a.b.position.y = 0.02 + Math.sin(a.f * 1.5) * 0.015; }
   kippen.stap(dt, spel.modus === "kant" || spel.modus === "rat" ? { x: loop.pos.x, z: loop.pos.z, v: loop.v } : null);
-  invoer.Atik = invoer.Btik = false; fx.stap(dt); W.water.position.y = Math.sin(spel.t * 0.6) * 0.012;
+  invoer.Atik = invoer.Btik = false; fx.stap(dt); bomen.stap(dt, camera); water.stap(dt);
   renderer.render(scene, camera); requestAnimationFrame(lus);
 }
 $("#laden").hidden = true; $("#menu").hidden = false;

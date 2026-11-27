@@ -2,7 +2,7 @@
 const { chromium } = require("/root/tools/pw/node_modules/playwright-core");
 const fs = require("fs"), path = require("path");
 const ROOT = path.resolve(__dirname, ".."), UIT = "/tmp/lot/test"; fs.mkdirSync(UIT, { recursive: true });
-const T = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".json": "application/json", ".glb": "model/gltf-binary" };
+const T = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".json": "application/json", ".glb": "model/gltf-binary", ".jpg": "image/jpeg", ".webp": "image/webp" };
 (async () => {
   const b = await chromium.launch({ executablePath: "/usr/bin/chromium", args: ["--no-sandbox", "--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"] });
   const p = await b.newPage({ viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true });

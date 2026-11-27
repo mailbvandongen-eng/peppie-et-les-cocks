@@ -1,0 +1,13 @@
+<!doctype html><html><body style="margin:0;background:#9cc6e6"><script type="importmap">{"imports":{"three":"../lib/three.module.js"}}</script>
+<script type="module">
+import * as THREE from "three"; import { GLTFLoader } from "../lib/three-addons.js"; import { MeshoptDecoder } from "../lib/meshopt_decoder.mjs";
+const r = new THREE.WebGLRenderer({ antialias: true }); r.setSize(innerWidth, innerHeight); r.toneMapping = THREE.ACESFilmicToneMapping; document.body.append(r.domElement);
+const s = new THREE.Scene(); s.add(new THREE.HemisphereLight("#dcefff", "#6f7a4e", 1.4)); const z = new THREE.DirectionalLight("#fff", 2.4); z.position.set(5, 10, 6); s.add(z);
+const c = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.1, 500);
+const q = new URLSearchParams(location.search); const g = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync(q.get("m"));
+const re = q.get("n") ? new RegExp(q.get("n")) : null; if (re) g.scene.traverse((o) => { if (o.isMesh && !re.test(o.name)) o.visible = false; });
+const kids = []; g.scene.traverse((o) => { if (o.isMesh && o.visible) kids.push(o); });
+// naast elkaar zetten als er meerdere bomen zijn
+s.add(g.scene); g.scene.updateMatrixWorld(true); const b = new THREE.Box3(); for (const k of kids) b.expandByObject(k); const m = b.getSize(new THREE.Vector3()), mid = b.getCenter(new THREE.Vector3());
+c.position.set(mid.x, mid.y, mid.z + Math.max(m.x, m.y) * 1.5); c.lookAt(mid); r.render(s, c); window.KLAAR = JSON.stringify({ maat: m.toArray().map((v) => +v.toFixed(2)), namen: kids.map((k) => k.name).slice(0, 40) });
+</script></body></html>
