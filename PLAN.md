@@ -8,9 +8,9 @@ Elk karakter moet direct herkenbaar zijn en een eigen kenmerk hebben.
 
 | Naam | Uiterlijk (uit foto's) | Eigenschap |
 |------|------------------------|------------|
-| **Paul** | blond, kort haar, oorbel, rood gezicht; zwarte hoodie; groen T-shirt in de groene boot | drinkt ("lazarus") |
-| **Dave** | kaalgeschoren, stoppels, grote grijns; zwart T-shirt; in zijn bellyboat geel/groen poloshirt, witte pet, zonnebril, groen/zwarte "CATFISH"-bellyboat | drinkt ("lazarus") |
-| **Bob** | kaal, rond hoofd, lichte wenkbrauwen; zwarte North Face-jas | drinkt ("lazarus") |
+| **Paul** | jongste; rossig-blond warrig haar, rossige stoppelbaard, oorbel, rood gezicht; grijs T-shirt; zwarte hoodie; groen T-shirt in de groene boot | drinkt ("lazarus") |
+| **Dave** | kort geschoren hoofd, grijzende stoppels, lachrimpels, gekke bekken trekken; lichtblauwe polo, zwart T-shirt; in zijn bellyboat geel/groen poloshirt, witte pet, zonnebril, groen/zwarte "CATFISH"-bellyboat | drinkt ("lazarus") |
+| **Bob** | helemaal kaal, groot rond hoofd, lichte wenkbrauwen; pilotenzonnebril met bruine glazen; donker bodywarmer/jas (North Face), donker T-shirt | drinkt ("lazarus") |
 | **Wim** | ouder, kaal met grijze rand; bruine cowboyhoed met hoofdlamp, bril, brede glimlach; donker T-shirt met opdruk, korte broek; zwarte 12BB-bellyboat; ook zwart "I'm Yorkshire"-shirt, grijs vest | drinkt alleen **Fristi** — nog uitwerken wat dat in het spel doet |
 
 Nog onzeker: wie de man met de witte Adidas-pet en oranje portofoon in de zwarte bellyboat is.
@@ -39,7 +39,9 @@ Uitwerking van eigenschappen volgt later van Bob.
 - Missies, o.a. **lijnen uitvaren** (aas met boei uitvaren, lijn naar de kant). Meer missies volgen.
 
 ## 5. Het terrein (exact naar foto's)
+- **Zwembad (video)**: rechthoekig, helder blauw, lichte tegelrand, turquoise kunststof kuipstoelen, terracotta potten met palmpjes en planten, grijze ligbedden en stoelen aan de kant van het huis. Rij populieren achter het huis.
 - **Indeling (luchtfoto)**: huis met toren links, bijgebouwen rechts, oprit in een boog erachter, schuur rechts. Zwembad tussen huis en rivier, gazon tot de oever met bomen links en rechts. **Drie steigers** langs de oever.
+- **Linker steiger** (vanaf de kant gezien, video): houten vlonder schuin het water in, stenen traptreden vanaf het gazon, RVS-trapje, grijze parasol op ronde voet, hier liggen de groene boot en de bellyboten aan. Hengels met beetverklikkers en lampjes in het gras ernaast. Ochtendmist op de Lot, spiegelglad water.
 - **Middelste steiger**: twee delen in een hoek, RVS-trapje links, autoband met parasolvoet, drie grijze kuipstoelen, emmers, bak, hengels op steunen, prullenbak rechts.
 - **Steiger bij de toren**: lage houten steiger met autobanden als stootrand, stenen trap omhoog het talud op, twee zwarte stoeltjes en tafeltje, rode parasol. Hier ligt de groene boot aan.
 - **Huis**: toren van rode baksteen met kleine gaten en wit kozijn, lichtgroene luiken; wit gepleisterd bijgebouw met witte schoorsteen en groene luiken; grijze parasol, ligstoelen, zwarte stoel bij de deur.
