@@ -316,14 +316,14 @@
  {
   "bestand": "kamperen/trakker-tempest.glb",
   "map": "kamperen",
-  "naam": "Trakker Tempest RS Brolly (Full System), karpertent",
+  "naam": "Trakker Tempest RS Brolly, karpertent (open voorkant)",
   "bron": "Zelf gebouwd in Blender naar de productfoto's en maten van Trakker, met stofsimulatie (tools/tent/trakker-tempest.py); doek: “Fabric082A” — ambientCG (CC0)",
   "licentie": "eigen werk + CC0",
-  "kb": 393,
+  "kb": 580,
   "nieuw": true,
   "oud": false,
-  "driehoeken": 18812,
-  "texturen": 3,
+  "driehoeken": 28072,
+  "texturen": 4,
   "maxpx": 512,
   "voorbeeld": "assets/_voorbeeld/kamperen_trakker-tempest.glb.jpg"
  },

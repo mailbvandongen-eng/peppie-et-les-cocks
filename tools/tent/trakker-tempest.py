@@ -3,8 +3,8 @@
 # buiten 255 cm breed, 215 cm diep, 145 cm hoog. Een paraplu-shelter: bovenop zit het scharnierblok ("Rapid Knuckle") met twee
 # stangen naar voren (het afdak). Vanuit het blok lopen gebogen armen naar zwarte knikstukken op ± 1,05 m, daaronder rechte poten
 # naar de grond: twee voorhoeken, twee achterhoeken en één achter in het midden. Het doek hangt ertussen (Blender-stofsimulatie,
-# zodat het echt doorzakt en spant), met grote gaasramen en opgerolde flappen in de zij- en achterwanden, een los voorpaneel
-# met deur (node "voorpaneel": weglaten = open voorkant) en twee stormstokken.
+# zodat het echt doorzakt en spant), met grote gaasramen en opgerolde flappen in de zij- en achterwanden, en twee stormstokken.
+# De voorkant is open (er moet een stretcher in kunnen). Met VOORPANEEL = True komt het voorpaneel met deur erbij (node "voorpaneel").
 # Doek: "Fabric082A" van ambientCG (CC0), olijfgroen getint naar de kleur op de foto's.
 # Assen: spel-assen (x rechts, y omhoog, z naar voren) -> Blender (x, -z, y); de glTF-export maakt er weer Y-omhoog van.
 import bpy, bmesh, sys, os, math
@@ -12,6 +12,7 @@ import numpy as np
 from mathutils import Vector
 
 OUT = sys.argv[sys.argv.index('--') + 1]
+VOORPANEEL = False                         # open voorkant, zoals op de foto met het bedchair
 HIER = os.path.dirname(os.path.abspath(__file__))
 for o in list(bpy.data.objects): bpy.data.objects.remove(o)
 for m in list(bpy.data.meshes): bpy.data.meshes.remove(m)
@@ -59,7 +60,9 @@ RAND = mat('rand', (1, 1, 1), 0.85, beeld=getint(os.path.join(HIER, 'stof/kleur.
 GAAS = mat('gaas', (0.028, 0.03, 0.026), 0.95)
 STOK = mat('stok', (0.03, 0.032, 0.03), 0.45, 0.4)
 ZWART = mat('zwart', (0.008, 0.008, 0.008), 0.5)
-for m in (DOEK, RAND, GAAS): m.use_backface_culling = False
+BINNEN = mat('binnen', (1, 1, 1), 0.9, beeld=getint(os.path.join(HIER, 'stof/kleur.jpg'), (0.2, 0.195, 0.155), 'binnen-kleur'))
+for m in (RAND, GAAS): m.use_backface_culling = False
+for m in (DOEK, BINNEN): m.use_backface_culling = True     # buiten: olijf; binnen (in de schaduw): donkerder
 
 def obj(naam, bm, m, ouder=None):
     me = bpy.data.meshes.new(naam); bm.to_mesh(me); bm.free(); o = bpy.data.objects.new(naam, me); sc.collection.objects.link(o)
@@ -103,7 +106,7 @@ def bak(o):                                # stofsimulatie doorrekenen en het re
     oud = o.data; o.modifiers.clear(); o.data = me; bpy.data.meshes.remove(oud)
 
 wortel = bpy.data.objects.new('trakker-tempest', None); sc.collection.objects.link(wortel)
-voorp = bpy.data.objects.new('voorpaneel', None); sc.collection.objects.link(voorp); voorp.parent = wortel
+if VOORPANEEL: voorp = bpy.data.objects.new('voorpaneel', None); sc.collection.objects.link(voorp); voorp.parent = wortel
 NU, NV = 26, 34
 panelen = []
 for (a, b, naam) in [('vl', 'al', 'zij-links'), ('al', 'a', 'achter-links'), ('a', 'ar', 'achter-rechts'), ('ar', 'vr', 'zij-rechts')]:
@@ -119,12 +122,54 @@ L, R = lijn(NAAF, VIZ['l'], 12)[1:], lijn(NAAF, VIZ['r'], 12)[1:]
 panelen.append(('afdak', *paneel('afdak', coons(L, R, lijn(L[0], R[0], 4), lijn(VIZ['l'], VIZ['r'], 8), 14, 10), krimp=-0.01, ouder=wortel), 0, 0))
 # voorpaneel: voorrand van het afdak, langs de voorknikken naar de voeten
 Lv = lijn(VIZ['l'], knie('vl'), 10) + lijn(knie('vl'), VOET['vl'], 14)[1:]; Rv = lijn(VIZ['r'], knie('vr'), 10) + lijn(knie('vr'), VOET['vr'], 14)[1:]
-Gv = coons(Lv, Rv, lijn(VIZ['l'], VIZ['r'], 10), lijn(VOET['vl'], VOET['vr'], 10), 30, 30)
-voor, vnu, vnv = paneel('voor', [[p + P(0, 0, -0.03) for p in rij] for rij in Gv], krimp=0.004, ouder=voorp)
+# voorkant open: alleen de twee vleugels naast de boogvormige opening (zoals op de foto met het bedchair)
+BOOG_B, BOOG_H = 0.92, 1.3
+def zvoor(y):                               # diepte van het voorvlak op hoogte y: voet (y=0) -> voorknik (y=KH) -> afdakrand (y=1.42)
+    kz = -knie('vl').y; return lerp(0.0, kz, y / KH) if y <= KH else lerp(kz, 0.14, (y - KH) / (1.42 - KH))
+def boogpunt(t, kant):                      # t 0..1 van de grond tot de top van de boog
+    h = t * math.pi / 2; x, y = BOOG_B * math.cos(h) * kant, BOOG_H * math.sin(h); return P(x, y, zvoor(y) - 0.02)
+def langs(pts, n):                          # n+1 punten gelijk verdeeld over de lengte van een lijn van punten
+    d = [0];
+    for i in range(1, len(pts)): d.append(d[-1] + (pts[i] - pts[i - 1]).length)
+    uit = []
+    for k in range(n + 1):
+        t = d[-1] * k / n; i = max(1, next((j for j in range(1, len(d)) if d[j] >= t), len(d) - 1)); f = (t - d[i - 1]) / max(d[i] - d[i - 1], 1e-9)
+        uit.append(lerp(pts[i - 1], pts[i], f))
+    return uit
+if not VOORPANEEL:
+    N, M = 40, 8
+    for kant, k, z in ((-1, 'vl', 'l'), (1, 'vr', 'r')):
+        buiten = lijn(VOET[k], knie(k), 12) + lijn(knie(k), VIZ[z], 8)[1:] + lijn(VIZ[z], P(0, 1.42, 0.14), 6)[1:]
+        buiten = [Vector((p.x, p.y, p.z)) for p in buiten]
+        binnen_ = [boogpunt(i / 60, kant) for i in range(61)]
+        A, B_ = langs(buiten, N), langs(binnen_, N)
+        G = [[lerp(A[i], B_[i], j / M) for j in range(M + 1)] for i in range(N + 1)]
+        for laag, m in (('vleugel-' + z, DOEK), ('vleugel-' + z + '-binnen', BINNEN)):
+            bm = bmesh.new(); V = [[bm.verts.new(p) for p in rij] for rij in G]; uv = bm.loops.layers.uv.new('UV')
+            for i in range(N):
+                for j in range(M):
+                    q = (V[i][j], V[i + 1][j], V[i + 1][j + 1], V[i][j + 1])
+                    if (kant > 0) == (laag.endswith('binnen')): q = q[::-1]
+                    f = bm.faces.new(q)
+                    for l, vv in zip(f.loops, f.verts): l[uv].uv = (vv.co.x / 0.5, vv.co.z / 0.5)
+            obj(laag, bm, m, wortel)
+if VOORPANEEL:
+  Gv = coons(Lv, Rv, lijn(VIZ['l'], VIZ['r'], 10), lijn(VOET['vl'], VOET['vr'], 10), 30, 30)
+  voor, vnu, vnv = paneel('voor', [[p + P(0, 0, -0.03) for p in rij] for rij in Gv], krimp=0.004, ouder=voorp)
 
 for f in range(1, 61): sc.frame_set(f)
 for (_, o, *_r) in panelen: bak(o)
-bak(voor)
+def binnenkant(o):                         # kopie met omgedraaide normalen en het donkere binnendoek
+    me = o.data.copy(); bm = bmesh.new(); bm.from_mesh(me); bmesh.ops.reverse_faces(bm, faces=bm.faces); bm.to_mesh(me); bm.free()
+    me.materials.clear(); me.materials.append(BINNEN); b = bpy.data.objects.new(o.name + '-binnen', me); sc.collection.objects.link(b); b.parent = o.parent
+# welke kant is buiten? de normalen van elk paneel naar buiten zetten (weg van het midden van de tent)
+MIDDEN = P(0, 0.5, -1.0)
+for (_, o, *_r) in panelen:
+    me = o.data; me.update(); n = sum((p.normal for p in me.polygons), Vector()); c = sum((p.center for p in me.polygons), Vector()) / len(me.polygons)
+    if n.dot(c - MIDDEN) < 0:
+        bm = bmesh.new(); bm.from_mesh(me); bmesh.ops.reverse_faces(bm, faces=bm.faces); bm.to_mesh(me); bm.free()
+    binnenkant(o)
+if VOORPANEEL: bak(voor)
 
 # ---------- ramen, flappen en randen op de gebakken panelen ----------
 def raster_van(o, nu, nv): return [[o.data.vertices[j * (nu + 1) + i].co.copy() for i in range(nu + 1)] for j in range(nv + 1)]
@@ -162,27 +207,31 @@ for (naam, o, nu, nv, kn, _n) in panelen:
         # naad langs de onderkant van het dak (op knikhoogte)
         buis(naam + '-naad', [G[jk][i] + normaal(G, i, jk) * 0.004 for i in range(nu + 1)], 0.005, RAND, wortel, 6)
 # deur in het voorpaneel: ritsen en een gaasvenster bovenin
-Gv = raster_van(voor, vnu, vnv); i0, i1, j0, j1 = 10, 20, 4, vnv
-for i in (i0, i1): buis('rits', [Gv[j][i] + normaal(Gv, i, j) * 0.004 for j in range(j0, j1 + 1)], 0.0045, ZWART, voorp, 6)
-buis('rits', [Gv[j0][i] + normaal(Gv, i, j0) * 0.004 for i in range(i0, i1 + 1)], 0.0045, ZWART, voorp, 6)
-vlak('deurraam', stuk(Gv, i0 + 1, i1 - 1, j0 + 1, j0 + 6, 0.004), GAAS, voorp)
+if VOORPANEEL:
+  Gv = raster_van(voor, vnu, vnv); i0, i1, j0, j1 = 10, 20, 4, vnv
+  for i in (i0, i1): buis('rits', [Gv[j][i] + normaal(Gv, i, j) * 0.004 for j in range(j0, j1 + 1)], 0.0045, ZWART, voorp, 6)
+  buis('rits', [Gv[j0][i] + normaal(Gv, i, j0) * 0.004 for i in range(i0, i1 + 1)], 0.0045, ZWART, voorp, 6)
+  vlak('deurraam', stuk(Gv, i0 + 1, i1 - 1, j0 + 1, j0 + 6, 0.004), GAAS, voorp)
 
 # ---------- frame: armen in doekhoezen, zwarte knikstukken, poten, afdakstangen, blok, stormstokken, haringen ----------
 for k in VOET:
     arm = boog(NAAF, knie(k), 0.05, 18); buis('hoes-' + k, [p + Vector((0, 0, 0.012)) for p in arm], 0.016, DOEK, wortel, 10)
     kn = knie(k); r = (kn - arm[-3]).normalized(); buis('knik-' + k, [kn - r * 0.07, kn + Vector((0, 0, -0.02)), kn + Vector((0, 0, -0.1))], 0.02, ZWART, wortel, 10)
     v = VOET[k]; buis('poot-' + k, [kn + Vector((0, 0, -0.08)), v + Vector((0, 0, 0.03))], 0.009, STOK, wortel)
-    buis('punt-' + k, [v + Vector((0, 0, 0.03)), v + Vector((0, 0, -0.14))], 0.005, ZWART, wortel, 6)
+    buis('punt-' + k, [v + Vector((0, 0, 0.03)), v + Vector((0, 0, -0.04))], 0.005, ZWART, wortel, 6)
 for kant in 'lr':
     buis('stang-' + kant, [NAAF + Vector((0, 0, 0.04)), VIZ[kant] + Vector((0, 0, 0.03))], 0.011, ZWART, wortel)
     x = -0.42 if kant == 'l' else 0.42   # stormstokken: vlak voor de opening, bijna rechtop, tot de voorrand van het afdak
-    buis('stormstok-' + kant, [P(x * 1.08, -0.12, 0.42), P(x, 1.43, 0.15)], 0.0065, STOK, wortel)
+    buis('stormstok-' + kant, [P(x * 1.08, -0.04, 0.42), P(x, 1.43, 0.15)], 0.0065, STOK, wortel)
 bm = bmesh.new(); bmesh.ops.create_cube(bm, size=1.0); bmesh.ops.scale(bm, vec=(0.16, 0.12, 0.06), verts=bm.verts)
 bmesh.ops.translate(bm, vec=NAAF + Vector((0, 0, 0.05)), verts=bm.verts); obj('blok', bm, ZWART, wortel)
 for k in ('vl', 'al', 'a', 'ar', 'vr'):
     for t in (0.33, 0.66):
         nxt = {'vl': 'al', 'al': 'a', 'a': 'ar', 'ar': 'vr', 'vr': None}[k]
-        if nxt: p = lerp(VOET[k], VOET[nxt], t); buis('haring', [p + Vector((0, 0, 0.02)), p + Vector((0, 0, -0.12))], 0.004, ZWART, wortel, 5)
+        if nxt: p = lerp(VOET[k], VOET[nxt], t); buis('haring', [p + Vector((0, 0, 0.025)), p + Vector((0, 0, -0.03))], 0.004, ZWART, wortel, 5)
+
+if not VOORPANEEL:                          # bies langs de opening
+    buis('bies', [boogpunt(i / 30, -1) for i in range(30)] + [boogpunt(1 - i / 30, 1) for i in range(31)], 0.012, RAND, wortel, 8)
 
 # ---------- exporteren ----------
 for o in sc.objects: o.select_set(True)
