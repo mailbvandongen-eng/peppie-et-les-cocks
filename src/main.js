@@ -9,7 +9,7 @@ import { Chirp } from "./chirp.js";
 import { bouwWereld } from "./wereld.js";
 import { laadVisspullen } from "./hengel.js";
 import { Kippen } from "./kippen.js";
-import { maakBellyboat } from "./bellyboat.js";
+import { maakBellyboat2 as maakBellyboat, laadBoten } from "./bellyboat.js";
 import { maakWater } from "./water.js";
 import { laadBomen } from "./natuur.js";
 import { maakVisbestand } from "./vissen.js";
@@ -222,11 +222,15 @@ function zetLijn(a, b, slap = 0) { const p = lijn.geometry.attributes.position, 
 /** Op de kant: de kolf van de hengel tegen de rechterheup, de hengel schuin omhoog naar het water, de molen eronder;
  *  de rechterhand om de hengel bij de molen, de linker aan de slinger van de molen (zoals in Bobs video ref/dril-kant.mp4).
  *  steil = hoek omhoog, bocht = hoe krom. Geeft de top terug. */
-function houdHengel(yaw, steil, bocht) { const m = peppie.m, f = voor(yaw), rechts = V(-f.z, 0, f.x), heup = m.plek("DEF-spine001").clone().addScaledVector(f, 0.08).addScaledVector(rechts, 0.1).add(V(0, -0.02, 0));
+function houdHengel(yaw, steil, bocht) { const m = peppie.m, f = voor(yaw), rechts = V(-f.z, 0, f.x), links = rechts.clone().negate();
   const d = f.clone().multiplyScalar(Math.cos(steil)).setY(Math.sin(steil)), onder = f.clone().multiplyScalar(Math.sin(steil)).setY(-Math.cos(steil));
-  hengel.g.visible = true; hengel.buig(bocht); const top = hengel.leg(heup, d);
-  m.arm("R", heup.clone().addScaledVector(d, 0.5).addScaledVector(onder, -0.02), V(0, -1, 0).addScaledVector(rechts, 0.6));
-  m.arm("L", heup.clone().addScaledVector(d, 0.55).addScaledVector(onder, 0.16).addScaledVector(rechts, -0.1), V(0, -1, 0).addScaledVector(rechts, -0.6)); return top; }
+  // de kolf onder de rechteronderarm langs de heup: het eind zit achter de heup, de molen hangt vlak voor de buik
+  const heup = m.plek("DEF-spine001").clone().addScaledVector(rechts, 0.11).add(V(0, -0.06, 0)), voet = heup.clone().addScaledVector(d, -0.36);
+  hengel.g.visible = true; hengel.buig(bocht); const top = hengel.leg(voet, d);
+  const molen = voet.clone().addScaledVector(d, 0.52);
+  m.arm("R", molen.clone().addScaledVector(onder, -0.035), V(0, -1, 0).addScaledVector(rechts, 0.5));               // de rechterhand om de hengel, vingers rond de molenvoet
+  m.arm("L", molen.clone().addScaledVector(onder, 0.13).addScaledVector(links, 0.07), V(0, -1, 0).addScaledVector(links, 0.6)); // de linkerhand aan de slinger
+  return top; }
 const dobber = new THREE.Group(); { const a = new THREE.Mesh(new THREE.SphereGeometry(0.07, 10, 8), new THREE.MeshStandardMaterial({ color: "#f24a2a" })); a.scale.y = 1.5; a.position.y = 0.08; const b = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.3, 5), new THREE.MeshStandardMaterial({ color: "#fafafa" })); b.position.y = 0.26; dobber.add(a, b); dobber.visible = false; scene.add(dobber); }
 const spetter = (p, n = 24, k = 1) => { for (let i = 0; i < n; i++) fx.deeltje(p.clone().add(V(tussen(-0.3, 0.3), 0.1, tussen(-0.3, 0.3))), { leven: tussen(0.4, 1), kleur: i % 3 ? "#eef7fa" : "#c5e2ea", r0: 0.1, r1: 0.45 * k, v: V(tussen(-2.5, 2.5) * k, tussen(2.5, 6.5) * k, tussen(-2.5, 2.5) * k), g: 9, a: 0.9 }); };
 
@@ -236,7 +240,7 @@ function beginKant() { Object.assign(kant, { fase: "loop", n: 0 }); loop.pos.cop
 function stapKant(dt) {
   const k = kant; k.t += dt; let top;
   if (k.fase === "loop") {
-    stapLopen(dt); peppie.m.zet(loop.v > 0.3 ? "lopen" : "staan"); peppie.m.mixer.update(dt); top = houdHengel(loop.yaw, 0.95, 0.02); lijn.visible = false; dobber.visible = false;
+    stapLopen(dt); peppie.m.zet(loop.v > 0.3 ? "lopen" : "staan"); peppie.m.mixer.update(dt); top = houdHengel(loop.yaw, 0.85, 0.02); lijn.visible = false; dobber.visible = false;
     const doel = loop.pos.clone().addScaledVector(voor(loop.yaw), 17), kan = W.inWater(doel.x, doel.z) && W.diepte(doel.x, doel.z) > 0.8;
     knoppen({ A: kan ? "Werp" : null }); hud.tel.textContent = `${k.n} / 3`;
     if (kan && invoer.Atik) { k.fase = "worp"; k.t = 0; k.doel.copy(doel).setY(0); geluid.ruis({ duur: 0.3, freq: 3000, gain: 0.15 }); }
@@ -246,7 +250,7 @@ function stapKant(dt) {
     if (f >= 1) { k.fase = "wacht"; k.t = 0; k.wacht = tussen(4, 11); geluid.plons(0.4); spetter(k.doel, 10, 0.5); }
     knoppen({});
   } else if (k.fase === "wacht" || k.fase === "beet") {
-    peppie.m.zet("staan"); peppie.m.mixer.update(dt); top = houdHengel(loop.yaw, 0.55, 0.02);
+    peppie.m.zet("staan"); peppie.m.mixer.update(dt); top = houdHengel(loop.yaw, 0.62, 0.02);
     const onder = k.fase === "beet"; dobber.position.copy(k.doel); dobber.position.y = onder ? -0.22 + Math.sin(k.t * 20) * 0.03 : Math.sin(k.t * 2.2) * 0.02; zetLijn(top, dobber.position, onder ? 0.05 : 0.6);
     knoppen({ A: onder ? "Sla aan!" : "Haal in" });
     if (!onder && k.t > k.wacht) { k.fase = "beet"; k.t = 0; geluid.piep(); spetter(k.doel, 6, 0.4); }
@@ -270,6 +274,7 @@ function stapKant(dt) {
 // de transducer rond en op het scherm zie je wat er voor de bundel zwemt — scholen witvis, meervalletjes (kikkervisjes: dikke
 // kop, pens, dunne staart), bolle karpers en in de diepe kolken de reuzen. Dan vaar je erheen tot de vis onder je hengeltop
 // hangt, laat je het aas zakken tot zijn diepte en tik je tot hij pakt.
+await laadBoten();
 const scopeTex = new THREE.CanvasTexture(hud.scope); scopeTex.colorSpace = THREE.SRGBColorSpace;
 // ieder zijn eigen bellyboat: Paul en Bob zwart met de Garmin, Wim kaki, Dave gifgroen; wie niet vaart ligt aangemeerd bij de linker steiger
 const BB = Object.fromEntries(["paul", "bob", "wim", "dave"].map((n) => { const b = maakBellyboat(n, { scherm: scopeTex }); b.g.visible = false; scene.add(b.g); return [n, b]; }));

@@ -108,3 +108,26 @@ export function maakBellyboat(soort = "paul", { scherm = null } = {}) {
   g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
   return { g, stang, motor, schroef, scherm: beeld, zit: V(0, 0.12, -0.18), hengelVoet: V(0, 0.4, 0.2), mount };
 }
+
+// ---------- de echte bellyboten, gebouwd in Blender naar Bobs foto's (tools/boten/bellyboat.py) ----------
+// Paul en Bob: Raptor 180 (zwart carbon), Wim: Black Cat Battle Boat (grijs, klein schermpje), Dave: MADCAT (zwart met groen).
+const MODELLEN = {}; const SOORT = { paul: "raptor", bob: "raptor", wim: "blackcat", dave: "madcat" };
+export async function laadBoten() {
+  const [{ GLTFLoader }, { MeshoptDecoder }] = await Promise.all([import("../lib/three-addons.js"), import("../lib/meshopt_decoder.mjs")]);
+  const L = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+  await Promise.all(["raptor", "blackcat", "madcat"].map(async (n) => { MODELLEN[n] = (await L.loadAsync(`assets/boten/${n}.glb?v=${window.VERSIE ?? ""}`)).scene; }));
+}
+const maakBellyboatOud = maakBellyboat;
+export function maakBellyboat2(soort = "paul", { scherm = null } = {}) {
+  const bron = MODELLEN[SOORT[soort]]; if (!bron) return maakBellyboatOud(soort, { scherm });
+  const g = bron.clone(true), vind = (n) => { let r = null; g.traverse((o) => { if (!r && o.name === n) r = o; }); return r; };
+  g.traverse((o) => { if (!o.isMesh) return; o.castShadow = true; o.receiveShadow = true; if (o.material?.name === "Scherm") o.material = scherm ? new THREE.MeshBasicMaterial({ map: scherm, toneMapped: false }) : new THREE.MeshBasicMaterial({ color: "#0a1a60" }); });
+  const zit = vind("zit"), stang = vind("stang"), motor = vind("motor"), schroef = vind("schroef");
+  // de drank in de bekerhouder: een biertje, bij Wim een pak Fristi
+  const houder = vind("bekerhouder"); if (houder) { g.updateMatrixWorld(true); const p = new THREE.Vector3(); houder.getWorldPosition(p); g.worldToLocal(p);
+    const d = new THREE.Group(); d.position.set(p.x, p.y + 0.03, p.z); g.add(d); const M_ = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.4, ...o });
+    if (soort === "wim") { const pak = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.16, 0.065), M_("#ece6d8")); pak.position.y = 0.06; d.add(pak); const band = new THREE.Mesh(new THREE.BoxGeometry(0.067, 0.06, 0.067), M_("#d8357a")); band.position.y = 0.07; d.add(band); }
+    else { const glas = M_("#1f7a2e", { roughness: 0.15, transparent: true, opacity: 0.92 }); const c = (r1, r2, h, y, m) => { const x = new THREE.Mesh(new THREE.CylinderGeometry(r1, r2, h, 16), m); x.position.y = y; d.add(x); };
+      c(0.032, 0.032, 0.16, 0.08, glas); c(0.013, 0.032, 0.06, 0.19, glas); c(0.013, 0.013, 0.06, 0.25, glas); c(0.015, 0.015, 0.008, 0.283, M_("#c9a33a", { metalness: 0.8 })); c(0.0335, 0.0335, 0.07, 0.1, M_("#f2f2f0")); c(0.0337, 0.0337, 0.02, 0.1, M_("#c8262b")); } }
+  return { g, stang, motor, schroef, scherm: null, zit: zit ? zit.position.clone() : new THREE.Vector3(0, 0.12, -0.18), hengelVoet: new THREE.Vector3(0, 0.4, 0.2) };
+}
