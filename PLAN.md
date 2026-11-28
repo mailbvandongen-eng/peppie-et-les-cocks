@@ -77,3 +77,15 @@ Uitwerking van eigenschappen volgt later van Bob.
 - **27-11 stap 1 (klaar):** terrein volgens de luchtfoto. Wit woonhuis, toren met de slaapkamer (drone-missie), bakstenen schuur, zwembad met rolafdekking en robot, terras, palmen in potten, picknicktafel, populieren. Drie steigers met wal en stenen treden; de groene boot ligt aan de linker steiger. Zestien tot achttien kippen met haan, kuifkippen en de roze verrassing. Code: `src/domein.js`, `src/kippen.js`; beelden: `node tools/kijk.cjs`.
 - **27-11 stap 2 (klaar):** drie bellyboten (`src/bellyboat.js`): Paul/Bob zwart met Garmin op een arm (toont de echte livescope), transducerstang en motor; Wim kaki met lichte neuzen; Dave gifgroen. Verticaal vissen: de hengel recht vooruit, de lijn recht omlaag, de transducer draaien met ⟲ ⟳ (Q/C), eerst de vis zoeken. Op het scherm scholen witvis, meervalletjes als kikkervisjes en bolle karpers.
 - **Volgende:** stap 3 de vier karakters met hun gezichten van de foto's; stap 4 de groene boot met lijnen uitvaren; stap 5 de tekkels (Pleurisbeesten) en de jacht.
+
+## 9. Uitrusting in de bellyboat (Bobs beelden 28-11, ref/uitrusting/)
+- **Fishfinder**: Garmin laag voorin op een Scotty-mount (RAM-kogel op een plaatje op de ponton), ongeveer kniehoogte, schuin naar de zitter. Kabel loopt over de ponton. Niet hoog op een paal.
+- **Transducerstang**: verticale RVS-stang rechts voorin naast de punt, met een handgreep bovenaan; laag (bij Dave te hoog, moet lager).
+- **Hengel**: korte zware meervalhengel 1,80 m, zwart, lang handvat (EVA/duplon), **multiplier (reel) bovenop**, de ogen aan de bovenkant; lijn geel/groen 60 pond. Wim draait links.
+- **Hengelsteunen**: twee verticale rodholders achter/naast de stoel met reservehengels rechtop (met reels), soms met een lichtje (rood/groen) op de top.
+- **Motor**: elektrische staartmotor achter (Rhino-achtig, helmstok), accu in een tas.
+- **Tassen**: grote tas achter de stoel, kleinere zijtassen op de pontons; drinkbeker/fles in een houder.
+- **Dave**: groen/zwarte bellyboat met **MADCAT** op de punt, hoofdlamp 's nachts, wit poloshirt.
+- **Dril-houding**: hengel vooruit over de punt, schuin omhoog; top buigt tot bijna dubbel, lijn recht omlaag; reelhand op de reel, andere hand vóór de reel; achterover leunen bij pompen. Bij een reus met de slip bijna dicht word je over het water gesleurd.
+- **Gebeurtenissen**: hengel kan breken; de haak kan uitschieten en de 60-ponds lijn klapt terug. Een vis van 250 cm gaat verticaal in het water hangen (beelden volgen).
+- **Nacht**: spel krijgt ook een nachtstand met hoofdlampen en weerspiegeling op het water.
