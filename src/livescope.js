@@ -19,8 +19,8 @@ export class Livescope {
   constructor(canvas) { this.c = canvas; this.x = canvas.getContext("2d"); this.klein = document.createElement("canvas"); this.kx = this.klein.getContext("2d"); this.t = 0; this.diepte = 12; this.vooruit = 12; this.gain = 68; this.pauze = false; this.knoppen = []; }
   /** Een tik op het scherm (in canvas-pixels): de knoppen van het toestel werken. Geeft true als er een knop geraakt is. */
   tik(px, py) { const STAP = [8, 12, 16, 20, 28, 36]; for (const k of this.knoppen) { if (px < k.x0 || px > k.x1 || py < k.y0 || py > k.y1) continue;
-      if (k.id === "bereik-") this.vooruit = STAP[Math.max(0, STAP.indexOf(this.vooruit) - 1)]; if (k.id === "bereik+") this.vooruit = STAP[Math.min(STAP.length - 1, STAP.indexOf(this.vooruit) + 1)];
-      if (k.id === "ver-") this.gain = Math.max(30, this.gain - 6); if (k.id === "ver+") this.gain = Math.min(100, this.gain + 6); if (k.id === "pauze") this.pauze = !this.pauze; if (k.id === "diep-" || k.id === "diep+" || k.id === "auto") this.autoUit = k.id !== "auto";
+      if (k.id === "bereik-") this.vooruit = Math.max(4, this.vooruit - 1); if (k.id === "bereik+") this.vooruit = Math.min(40, this.vooruit + 1); // per meter, zoals op het toestel
+      if (k.id === "ver-") this.gain = Math.max(0, this.gain - 2); if (k.id === "ver+") this.gain = Math.min(100, this.gain + 2); if (k.id === "pauze") this.pauze = !this.pauze; if (k.id === "diep-" || k.id === "diep+" || k.id === "auto") this.autoUit = k.id !== "auto";
       if (k.id === "diep-") this.diepte = Math.max(4, this.diepte - 1); if (k.id === "diep+") this.diepte = Math.min(40, this.diepte + 1); return true; } return false; }
   /**
    * bodem(v) = diepte op v meter voor de transducer (negatief = erachter); vissen = [{ v, d, lengte, hoek, soort }];
@@ -35,7 +35,7 @@ export class Livescope {
     const ref = onder ?? bodem(0); let maxB = ref; for (let v = 0; v <= this.vooruit; v += this.vooruit / 12) maxB = Math.max(maxB, bodem(v));
     if (!this.autoUit) this.diepte = Math.min(36, Math.max(6, Math.ceil((maxB + 2.5) / 6) * 6));
     const R = this.vooruit, DA = this.diepte, D1 = DA * 0.94 * Math.max(1, (H / W) * (16 / 9) * 0.85), X1 = R * 0.985, X0 = -0.4 * D1 * Math.min(1, (W / H) * (9 / 16));
-    const versterk = (this.gain / 68) ** 0.8;
+    const versterk = Math.max(0.15, this.gain / 68) ** 0.8;
     const BH = Math.max(80, Math.round((BW * H) / W)); if (this.klein.width !== BW || this.klein.height !== BH) { this.klein.width = BW; this.klein.height = BH; this.beeld = this.kx.createImageData(BW, BH); }
     const px = this.beeld.data, bod = new Float32Array(BW); for (let i = 0; i < BW; i++) bod[i] = bodem(X0 + ((i + 0.5) / BW) * (X1 - X0));
     const wig = (-0.55 * D1) / X0; // de zwarte wig linksboven komt halverwege links uit, zoals op de opnamen
