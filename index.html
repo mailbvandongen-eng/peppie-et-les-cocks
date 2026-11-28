@@ -23,6 +23,7 @@ canvas{display:block}
 #spelers button.aan{border-color:var(--geel);background:#2a4a40}#spelers img{width:min(19vw,20vh,96px);height:min(19vw,20vh,96px);border-radius:50%;box-shadow:0 2px 8px #0008;transition:transform .15s}#spelers button.aan img{transform:scale(1.08);box-shadow:0 0 0 3px var(--geel),0 2px 10px #000a}#spelers b{font-size:16px}#spelers small{font-size:11px;opacity:.8}
 #missies{display:grid;grid-template-columns:repeat(2,minmax(150px,260px));gap:10px}
 #missies button{font:inherit;color:#fff;text-align:left;padding:12px 14px;border-radius:14px;border:1px solid #fff3;background:#16302ccc;cursor:pointer}
+#missies .groot{grid-column:1/-1;background:#1f5f4acc;border-color:var(--geel)}
 #missies b{display:block;font-size:17px;color:var(--geel)}#missies small{opacity:.85;line-height:1.3;display:block;margin-top:3px}
 #hud{position:fixed;inset:0;pointer-events:none;z-index:5}
 #hud button{pointer-events:auto;font:inherit;color:#fff;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -58,6 +59,7 @@ canvas{display:block}
 #pip{position:absolute;right:max(10px,env(safe-area-inset-right));top:calc(max(8px,env(safe-area-inset-top)) + 40px);width:min(30vw,260px);aspect-ratio:4/3;border:3px solid #fff8;border-radius:10px;box-shadow:0 3px 12px #0008;pointer-events:none}#pip span{position:absolute;left:6px;bottom:4px;font-size:12px;font-weight:700;text-shadow:0 1px 3px #000}
 #knopA.rood{background:radial-gradient(circle at 40% 35%,#ff6a5a,#c0281c 70%);box-shadow:0 0 0 3px #fff6,0 4px 12px #0008}
 #slip{position:absolute;right:max(22px,env(safe-area-inset-right));bottom:150px;display:flex;flex-direction:column;align-items:center;gap:4px;background:#0009;border-radius:12px;padding:6px;z-index:2}#slip button{width:48px;height:40px;border-radius:10px;background:#35506ee6;font-size:22px}#slip span{font-size:12px;font-weight:700}
+#tel:empty,#missie:empty{display:none}
 </style>
 </head>
 <body>
@@ -72,6 +74,7 @@ canvas{display:block}
     <button data-speler="wim"><img src="assets/portret/wim.png" alt=""><b>Wim</b><small>strepenkijker, Fristi</small></button>
   </div>
   <div id="missies">
+    <button data-missie="vrij" class="groot"><b>Vrij rondlopen</b><small>Loop over het terrein, pak je bellyboat of gooi je hengel uit op de steiger</small></button>
     <button data-missie="belly"><b>De reus van de Lot</b><small>Belly boat met livescope: vang een meerval van 2 meter of meer</small></button>
     <button data-missie="kant"><b>Vanaf de kant</b><small>Werp in vanaf de oever of de steiger en vang drie vissen</small></button>
     <button data-missie="drone"><b>Wakker worden!</b><small>Vlieg met de drone door het torenraam en laat een glas water op de slaper vallen</small></button>
@@ -90,9 +93,9 @@ canvas{display:block}
 <div id="uitslag" hidden><div><h2 id="uitslagKop"></h2><p id="uitslagTekst"></p><button id="opnieuw">Nog een keer</button><button id="terug">Menu</button></div></div>
 <div id="versie"></div>
 <!-- versie -->
-<script>window.VERSIE = "6154949205"; window.VERSIE_DATUM = "28-11, 18:45"; document.getElementById("versie").textContent = "versie 28-11, 18:45";</script>
-<script type="importmap">{"imports":{"three":"./lib/three.module.js?v=6154949205","./lib/three.module.js":"./lib/three.module.js?v=6154949205","./lib/meshopt_decoder.mjs":"./lib/meshopt_decoder.mjs?v=6154949205","./lib/three-addons.js":"./lib/three-addons.js?v=6154949205","./src/bellyboat.js":"./src/bellyboat.js?v=6154949205","./src/chirp.js":"./src/chirp.js?v=6154949205","./src/domein.js":"./src/domein.js?v=6154949205","./src/effecten.js":"./src/effecten.js?v=6154949205","./src/grond.js":"./src/grond.js?v=6154949205","./src/hengel.js":"./src/hengel.js?v=6154949205","./src/kippen.js":"./src/kippen.js?v=6154949205","./src/livescope.js":"./src/livescope.js?v=6154949205","./src/main.js":"./src/main.js?v=6154949205","./src/meerval.js":"./src/meerval.js?v=6154949205","./src/meervalhengel.js":"./src/meervalhengel.js?v=6154949205","./src/mensen.js":"./src/mensen.js?v=6154949205","./src/natuur.js":"./src/natuur.js?v=6154949205","./src/planten.js":"./src/planten.js?v=6154949205","./src/structuur.js":"./src/structuur.js?v=6154949205","./src/vissen.js":"./src/vissen.js?v=6154949205","./src/water.js":"./src/water.js?v=6154949205","./src/wereld.js":"./src/wereld.js?v=6154949205"}}</script>
-<script type="module" src="./src/main.js?v=6154949205"></script>
+<script>window.VERSIE = "2392cca3bf"; window.VERSIE_DATUM = "28-11, 19:17"; document.getElementById("versie").textContent = "versie 28-11, 19:17";</script>
+<script type="importmap">{"imports":{"three":"./lib/three.module.js?v=2392cca3bf","./lib/three.module.js":"./lib/three.module.js?v=2392cca3bf","./lib/meshopt_decoder.mjs":"./lib/meshopt_decoder.mjs?v=2392cca3bf","./lib/three-addons.js":"./lib/three-addons.js?v=2392cca3bf","./src/bellyboat.js":"./src/bellyboat.js?v=2392cca3bf","./src/chirp.js":"./src/chirp.js?v=2392cca3bf","./src/domein.js":"./src/domein.js?v=2392cca3bf","./src/effecten.js":"./src/effecten.js?v=2392cca3bf","./src/grond.js":"./src/grond.js?v=2392cca3bf","./src/hengel.js":"./src/hengel.js?v=2392cca3bf","./src/kippen.js":"./src/kippen.js?v=2392cca3bf","./src/livescope.js":"./src/livescope.js?v=2392cca3bf","./src/main.js":"./src/main.js?v=2392cca3bf","./src/meerval.js":"./src/meerval.js?v=2392cca3bf","./src/meervalhengel.js":"./src/meervalhengel.js?v=2392cca3bf","./src/mensen.js":"./src/mensen.js?v=2392cca3bf","./src/natuur.js":"./src/natuur.js?v=2392cca3bf","./src/planten.js":"./src/planten.js?v=2392cca3bf","./src/structuur.js":"./src/structuur.js?v=2392cca3bf","./src/vissen.js":"./src/vissen.js?v=2392cca3bf","./src/water.js":"./src/water.js?v=2392cca3bf","./src/wereld.js":"./src/wereld.js?v=2392cca3bf"}}</script>
+<script type="module" src="./src/main.js?v=2392cca3bf"></script>
 <!-- /versie -->
 </body>
 </html>

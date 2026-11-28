@@ -1,5 +1,43 @@
 [
  {
+  "bestand": "autos/rav4.glb",
+  "map": "autos",
+  "naam": "Bobs zwarte Toyota RAV4",
+  "bron": "“2021 Toyota RAV4 Hybrid” — tonielpro520, Sketchfab (uit Fatbike Sniper)",
+  "licentie": "CC BY 4.0",
+  "kb": 1347,
+  "nieuw": true,
+  "oud": false,
+  "driehoeken": 39674,
+  "texturen": 0,
+  "maxpx": 0,
+  "voorbeeld": "assets/_voorbeeld/autos_rav4.glb.jpg"
+ },
+ {
+  "bestand": "autos/rav4.json",
+  "map": "autos",
+  "naam": "RAV4: wielen en maten",
+  "bron": "uit Fatbike Sniper",
+  "licentie": "eigen werk",
+  "kb": 0,
+  "nieuw": true,
+  "oud": false
+ },
+ {
+  "bestand": "autos/vito.glb",
+  "map": "autos",
+  "naam": "Mercedes Vito, zilvergrijs",
+  "bron": "“Mercedes-Benz Vito MK3 W447 from 2014” — szymonpasterczyk, Sketchfab; zilvergrijs gemaakt, wielen gezet, lichter",
+  "licentie": "CC BY 4.0",
+  "kb": 957,
+  "nieuw": true,
+  "oud": false,
+  "driehoeken": 152620,
+  "texturen": 0,
+  "maxpx": 0,
+  "voorbeeld": "assets/_voorbeeld/autos_vito.glb.jpg"
+ },
+ {
   "bestand": "bodem.jpg",
   "map": "texturen",
   "naam": "Rivierbodem",
@@ -314,60 +352,15 @@
   "voorbeeld": "assets/gras.jpg"
  },
  {
-  "bestand": "kamperen/fox-camolite.glb",
-  "map": "kamperen",
-  "naam": "Fox Camolite Sleep System (stretcher met slaapzak)",
-  "bron": "Zelf gebouwd in Blender naar de productfoto's en maten van Fox (tools/bed/fox-camolite.py); camo uit de productfoto van Fox, fleece: “Fabric082A” — ambientCG (CC0)",
-  "licentie": "eigen werk + CC0; camopatroon © Fox",
-  "kb": 229,
+  "bestand": "grind.jpg",
+  "map": "texturen",
+  "naam": "Grind (parkeerplaats)",
+  "bron": "“gravel_floor_02” — Poly Haven",
+  "licentie": "CC0",
+  "kb": 1211,
   "nieuw": true,
   "oud": false,
-  "driehoeken": 30232,
-  "texturen": 3,
-  "maxpx": 512,
-  "voorbeeld": "assets/_voorbeeld/kamperen_fox-camolite.glb.jpg"
- },
- {
-  "bestand": "kamperen/jbl-charge-6.glb",
-  "map": "kamperen",
-  "naam": "JBL Charge 6 bluetooth-speaker (zwart), met afneembaar handvat (node \"handvat\")",
-  "bron": "Zelf gebouwd in Blender (tools/jbl/jbl-charge-6.py) naar de productfoto's en maten van Coolblue (coolblue.nl/product/959880) en MediaMarkt; texturen (stof, logo, passieve radiator, knoppenpaneel, CHARGE 6-plaatje) uit de Coolblue-productfoto's geknipt met tools/jbl/textuur.py; op Sketchfab geen Charge 6 gevonden",
-  "licentie": "Eigen werk; texturen uit productfoto's (© JBL/Harman), het JBL-logo is een merk van Harman",
-  "kb": 233,
-  "nieuw": true,
-  "oud": false,
-  "driehoeken": 16228,
-  "texturen": 4,
-  "maxpx": 1024,
-  "voorbeeld": "assets/_voorbeeld/kamperen_jbl-charge-6.glb.jpg"
- },
- {
-  "bestand": "kamperen/ridgemonkey-emmer.glb",
-  "map": "kamperen",
-  "naam": "RidgeMonkey Perspective Collapsible Bucket 10 L (opvouwbare emmer met helder doorzichtige PVC-wand, ondersteboven als helm te gebruiken; hengsel als node \"hengsel\")",
-  "bron": "Zelf gebouwd in Blender (tools/emmer/ridgemonkey-perspective.py) naar de productfoto's van team-outdoors.nl; logo uit de productfoto",
-  "licentie": "Eigen werk; RidgeMonkey-logo is merk van RidgeMonkey",
-  "kb": 129,
-  "nieuw": true,
-  "oud": false,
-  "driehoeken": 18632,
-  "texturen": 2,
-  "maxpx": 1024,
-  "voorbeeld": "assets/_voorbeeld/kamperen_ridgemonkey-emmer.glb.jpg"
- },
- {
-  "bestand": "kamperen/trakker-tempest.glb",
-  "map": "kamperen",
-  "naam": "Trakker Tempest RS Brolly, karpertent (open, met de Fox Camolite (node \"stretcher\") en de JBL Charge 6 (node \"speaker\") erin)",
-  "bron": "Zelf gebouwd in Blender naar de productfoto's en maten van Trakker, met stofsimulatie (tools/tent/trakker-tempest.py); doek: “Fabric082A” — ambientCG (CC0)",
-  "licentie": "eigen werk + CC0",
-  "kb": 715,
-  "nieuw": true,
-  "oud": false,
-  "driehoeken": 74508,
-  "texturen": 12,
-  "maxpx": 1024,
-  "voorbeeld": "assets/_voorbeeld/kamperen_trakker-tempest.glb.jpg"
+  "voorbeeld": "assets/grind.jpg"
  },
  {
   "bestand": "lucht.jpg",
@@ -672,19 +665,5 @@
   "texturen": 1,
   "maxpx": 512,
   "voorbeeld": "assets/_voorbeeld/vis_voorn.glb.jpg"
- },
- {
-  "bestand": "vis/zonnebaars.glb",
-  "map": "vis",
-  "naam": "Zonnebaars (Henk)",
-  "bron": "“CC0 ブルーギル 🐟 Bluegill, Lepomis macrochirus” — ffishAsia-and-floraZia, Sketchfab (3D-scan, omgekleurd naar zonnebaars met tools/vis/)",
-  "licentie": "CC0",
-  "kb": 284,
-  "nieuw": true,
-  "oud": false,
-  "driehoeken": 11871,
-  "texturen": 1,
-  "maxpx": 1024,
-  "voorbeeld": "assets/_voorbeeld/vis_zonnebaars.glb.jpg"
  }
 ]

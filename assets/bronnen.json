@@ -1,56 +1,290 @@
 {
  "_uitleg": "Bron en licentie per asset. Nieuw asset? Eerst hier toevoegen, dan `node tools/assets.cjs` draaien. Zie CLAUDE.md.",
- "bomen/populier.glb": { "naam": "Italiaanse populier", "bron": "“Realistic HD Lombardy poplar (16/75)” — PlantCatalog, Sketchfab", "licentie": "CC BY 4.0" },
- "bomen/esdoorn.glb": { "naam": "Esdoorns en struiken", "bron": "“Maple trees pack (lowpoly, game ready, LODs)” — lolipop_1707, Sketchfab", "licentie": "CC BY 4.0" },
- "bomen/wilg.glb": { "naam": "Treurwilg", "bron": "“Willow” — evolveduk, Sketchfab", "licentie": "CC BY 4.0" },
- "boten/raptor.glb": { "naam": "Raptor 180 (Paul en Bob)", "bron": "Zelf gebouwd in Blender naar Bobs foto's (tools/boten/bellyboat.py)", "licentie": "eigen werk" },
- "boten/blackcat.glb": { "naam": "Black Cat Battle Boat (Wim)", "bron": "Zelf gebouwd in Blender naar Bobs foto's (tools/boten/bellyboat.py)", "licentie": "eigen werk" },
- "boten/madcat.glb": { "naam": "MADCAT (Dave)", "bron": "Zelf gebouwd in Blender naar Bobs foto's (tools/boten/bellyboat.py)", "licentie": "eigen werk" },
- "dieren/kip.glb": { "naam": "Kip (met bewegingen)", "bron": "“ANIMAL & FOOD | Chicken Model (CS2)” — kill6lucius, Sketchfab", "licentie": "CC BY 4.0" },
- "drone/drone.glb": { "naam": "DJI Mini", "bron": "“DJI 3 mini Pro” — wishmaster88, Sketchfab", "licentie": "CC BY 4.0" },
- "vis/meerval.glb": { "naam": "Meerval", "bron": "“Wels catfish” — faerbogdan99, Sketchfab", "licentie": "CC BY 4.0" },
- "vis/brasem.glb": { "naam": "Brasem", "bron": "“Bream (Abramis Brama)” — Nullifiedit, Sketchfab", "licentie": "CC BY 4.0" },
- "vis/snoekbaars.glb": { "naam": "Snoekbaars", "bron": "“Zander (Sander lucioperca)” — Nullifiedit, Sketchfab", "licentie": "CC BY 4.0" },
- "vis/voorn.glb": { "naam": "Voorn", "bron": "“Common Roach” — robert.meier.art, Sketchfab", "licentie": "CC BY 4.0" },
- "vis/karper.glb": { "naam": "Karper", "bron": "“Carp Fish” — huykhoi2407, Sketchfab", "licentie": "CC BY 4.0" },
- "vis/hengel.glb": { "naam": "Karperhengel", "bron": "“Fishing Rod” — emelyarules, Sketchfab", "licentie": "CC BY 4.0" },
- "vis/molen.glb": { "naam": "Molen", "bron": "“Spinning Reel” — SiBeRiEIIIkA, Sketchfab", "licentie": "CC BY 4.0" },
- "vis/stoel.glb": { "naam": "Campingstoel", "bron": "“Camping Chair” — lpfeffer, Sketchfab", "licentie": "CC BY 4.0" },
- "vis/blik.glb": { "naam": "Bierblikje", "bron": "“Beer can” — Arte Hexe, Sketchfab", "licentie": "CC BY 4.0" },
- "vis/krat.glb": { "naam": "Bierkrat", "bron": "“Beer crate” — 3DDomino, Sketchfab", "licentie": "CC BY 4.0" },
- "mensen/paul.glb": { "naam": "Paul", "bron": "MakeHuman (CC0) + Universal Animation Library (Quaternius, CC0), cartoonstijl (tools/mensen)", "licentie": "CC0 + eigen werk" },
- "mensen/dave.glb": { "naam": "Dave", "bron": "MakeHuman (CC0) + Universal Animation Library (Quaternius, CC0), cartoonstijl (tools/mensen)", "licentie": "CC0 + eigen werk" },
- "mensen/bob.glb": { "naam": "Bob", "bron": "MakeHuman (CC0) + Universal Animation Library (Quaternius, CC0), cartoonstijl (tools/mensen)", "licentie": "CC0 + eigen werk" },
- "mensen/wim.glb": { "naam": "Wim", "bron": "MakeHuman (CC0) + Universal Animation Library (Quaternius, CC0), cartoonstijl (tools/mensen)", "licentie": "CC0 + eigen werk" },
- "mensen/bewegingen.glb": { "naam": "Bewegingen (lopen, zitten, staan …)", "bron": "Universal Animation Library — Quaternius", "licentie": "CC0" },
- "mensen/rooie.glb": { "naam": "(oud) de rooie", "bron": "MakeHuman, uit Fatbike Sniper", "licentie": "CC0", "oud": true },
- "mensen/visser.glb": { "naam": "(oud) de visser", "bron": "MakeHuman, uit Fatbike Sniper", "licentie": "CC0", "oud": true },
- "lucht.jpg": { "naam": "Lucht", "bron": "“Kloofendal 48d Partly Cloudy (Pure Sky)” — Poly Haven", "licentie": "CC0" },
- "gras.jpg": { "naam": "Gras (detail)", "bron": "“sparse_grass” — Poly Haven", "licentie": "CC0" },
- "bodem.jpg": { "naam": "Rivierbodem", "bron": "“river_small_rocks” — Poly Haven", "licentie": "CC0" },
- "oever.jpg": { "naam": "Modderige oever", "bron": "“brown_mud_rocks_01” — Poly Haven", "licentie": "CC0" },
- "geluid/plons-meerval.mp3": { "naam": "Plons van een meerval", "bron": "Uit Bobs eigen dril-video", "licentie": "eigen opname" },
- "geluid/slip.mp3": { "naam": "Gillende slip", "bron": "Door Bob aangeleverd", "licentie": "toestemming Bob" },
- "geluid/reel.mp3": { "naam": "Indraaien", "bron": "Door Bob aangeleverd", "licentie": "toestemming Bob" },
- "geluid/rivier-vogels.mp3": { "naam": "Rivier met vogels", "bron": "“nature_river_birds.wav” — divaldo11, Freesound", "licentie": "CC0" },
- "geluid/kabbelen.mp3": { "naam": "Kabbelend water", "bron": "“The sound of a babbling brook” — hoshisato, Freesound", "licentie": "CC0" },
- "geluid/wind-bomen.mp3": { "naam": "Wind in de bomen", "bron": "“Wind in a tree, close to the foliage” — felix.blume, Freesound", "licentie": "CC0" },
- "geluid/haan.mp3": { "naam": "Haan", "bron": "“Rooster Crowing” — pooky1, Freesound", "licentie": "CC0" },
- "geluid/kippen.mp3": { "naam": "Kippen", "bron": "“Chicken Clucking” — Filmscore, Freesound", "licentie": "CC0" },
- "geluid/kip-dichtbij.mp3": { "naam": "Kip dichtbij", "bron": "“R01-58-Close Chicken Vocals.wav” — craigsmith, Freesound", "licentie": "CC0" },
- "geluid/krekels-avond.mp3": { "naam": "Krekels 's avonds", "bron": "“Crickets, very distant barks summer night” — Daphne_in_Wonderland, Freesound", "licentie": "CC0" },
- "portret/paul.png": { "naam": "Portret Paul (menu)", "bron": "Getekend uit Bobs foto (tools/mensen/cartoon.py)", "licentie": "eigen werk" },
- "portret/dave.png": { "naam": "Portret Dave (menu)", "bron": "Getekend uit Bobs foto (tools/mensen/cartoon.py)", "licentie": "eigen werk" },
- "portret/bob.png": { "naam": "Portret Bob (menu)", "bron": "Getekend uit Bobs foto (tools/mensen/cartoon.py)", "licentie": "eigen werk" },
- "portret/wim.png": { "naam": "Portret Wim (menu)", "bron": "Getekend uit Bobs foto (tools/mensen/cartoon.py)", "licentie": "eigen werk" },
- "drank/fristi.glb": { "naam": "Fristi Rood Fruit, blikje 250 ml (Wim)", "bron": "“Soda Can 250ml” — sebastian204, Sketchfab; etiket van de productfoto Fristi Rood Fruit 250 ml (FrieslandCampina, via PS in foodservice)", "licentie": "CC BY 4.0" },
- "drank/heineken-fles.glb": { "naam": "Heineken, flesje", "bron": "“Heineken Bottle” — liontrike, Sketchfab", "licentie": "CC BY 4.0" },
- "drank/heineken-blik.glb": { "naam": "Heineken, blik", "bron": "“Realistic Heineken can” — mihadshok9, Sketchfab; op maat en lichter gemaakt", "licentie": "CC BY 4.0" },
- "drank/heineken-krat.glb": { "naam": "Heineken, krat met flesjes", "bron": "“beer crate 12x750ml” — milansaman21, Sketchfab; groen met het Heineken-logo en twaalf flesjes (“Heineken Bottle”, liontrike)", "licentie": "CC BY 4.0" },
- "drank/whisky.glb": { "naam": "Jack Daniel's Old No.7", "bron": "“Jack Daniels Whiskey No.7 Bottle” — 3DDave247, Sketchfab; lichter gemaakt", "licentie": "CC BY 4.0" },
- "kamperen/trakker-tempest.glb": { "naam": "Trakker Tempest RS Brolly, karpertent (open, met de Fox Camolite (node \"stretcher\") en de JBL Charge 6 (node \"speaker\") erin)", "bron": "Zelf gebouwd in Blender naar de productfoto's en maten van Trakker, met stofsimulatie (tools/tent/trakker-tempest.py); doek: “Fabric082A” — ambientCG (CC0)", "licentie": "eigen werk + CC0" },
- "kamperen/fox-camolite.glb": { "naam": "Fox Camolite Sleep System (stretcher met slaapzak)", "bron": "Zelf gebouwd in Blender naar de productfoto's en maten van Fox (tools/bed/fox-camolite.py); camo uit de productfoto van Fox, fleece: “Fabric082A” — ambientCG (CC0)", "licentie": "eigen werk + CC0; camopatroon © Fox" },
- "kamperen/jbl-charge-6.glb": { "naam": "JBL Charge 6 bluetooth-speaker (zwart), met afneembaar handvat (node \"handvat\")", "bron": "Zelf gebouwd in Blender (tools/jbl/jbl-charge-6.py) naar de productfoto's en maten van Coolblue (coolblue.nl/product/959880) en MediaMarkt; texturen (stof, logo, passieve radiator, knoppenpaneel, CHARGE 6-plaatje) uit de Coolblue-productfoto's geknipt met tools/jbl/textuur.py; op Sketchfab geen Charge 6 gevonden", "licentie": "Eigen werk; texturen uit productfoto's (© JBL/Harman), het JBL-logo is een merk van Harman" },
- "vis/zonnebaars.glb": { "naam": "Zonnebaars (Henk)", "bron": "“CC0 ブルーギル 🐟 Bluegill, Lepomis macrochirus” — ffishAsia-and-floraZia, Sketchfab (3D-scan, omgekleurd naar zonnebaars met tools/vis/)", "licentie": "CC0" },
- "kamperen/ridgemonkey-emmer.glb": { "naam": "RidgeMonkey Perspective Collapsible Bucket 10 L (opvouwbare emmer met helder doorzichtige PVC-wand, ondersteboven als helm te gebruiken; hengsel als node \"hengsel\")", "bron": "Zelf gebouwd in Blender (tools/emmer/ridgemonkey-perspective.py) naar de productfoto's van team-outdoors.nl; logo uit de productfoto", "licentie": "Eigen werk; RidgeMonkey-logo is merk van RidgeMonkey" }
+ "bomen/populier.glb": {
+  "naam": "Italiaanse populier",
+  "bron": "“Realistic HD Lombardy poplar (16/75)” — PlantCatalog, Sketchfab",
+  "licentie": "CC BY 4.0"
+ },
+ "bomen/esdoorn.glb": {
+  "naam": "Esdoorns en struiken",
+  "bron": "“Maple trees pack (lowpoly, game ready, LODs)” — lolipop_1707, Sketchfab",
+  "licentie": "CC BY 4.0"
+ },
+ "bomen/wilg.glb": {
+  "naam": "Treurwilg",
+  "bron": "“Willow” — evolveduk, Sketchfab",
+  "licentie": "CC BY 4.0"
+ },
+ "boten/raptor.glb": {
+  "naam": "Raptor 180 (Paul en Bob)",
+  "bron": "Zelf gebouwd in Blender naar Bobs foto's (tools/boten/bellyboat.py)",
+  "licentie": "eigen werk"
+ },
+ "boten/blackcat.glb": {
+  "naam": "Black Cat Battle Boat (Wim)",
+  "bron": "Zelf gebouwd in Blender naar Bobs foto's (tools/boten/bellyboat.py)",
+  "licentie": "eigen werk"
+ },
+ "boten/madcat.glb": {
+  "naam": "MADCAT (Dave)",
+  "bron": "Zelf gebouwd in Blender naar Bobs foto's (tools/boten/bellyboat.py)",
+  "licentie": "eigen werk"
+ },
+ "dieren/kip.glb": {
+  "naam": "Kip (met bewegingen)",
+  "bron": "“ANIMAL & FOOD | Chicken Model (CS2)” — kill6lucius, Sketchfab",
+  "licentie": "CC BY 4.0"
+ },
+ "drone/drone.glb": {
+  "naam": "DJI Mini",
+  "bron": "“DJI 3 mini Pro” — wishmaster88, Sketchfab",
+  "licentie": "CC BY 4.0"
+ },
+ "vis/meerval.glb": {
+  "naam": "Meerval",
+  "bron": "“Wels catfish” — faerbogdan99, Sketchfab",
+  "licentie": "CC BY 4.0"
+ },
+ "vis/brasem.glb": {
+  "naam": "Brasem",
+  "bron": "“Bream (Abramis Brama)” — Nullifiedit, Sketchfab",
+  "licentie": "CC BY 4.0"
+ },
+ "vis/snoekbaars.glb": {
+  "naam": "Snoekbaars",
+  "bron": "“Zander (Sander lucioperca)” — Nullifiedit, Sketchfab",
+  "licentie": "CC BY 4.0"
+ },
+ "vis/voorn.glb": {
+  "naam": "Voorn",
+  "bron": "“Common Roach” — robert.meier.art, Sketchfab",
+  "licentie": "CC BY 4.0"
+ },
+ "vis/karper.glb": {
+  "naam": "Karper",
+  "bron": "“Carp Fish” — huykhoi2407, Sketchfab",
+  "licentie": "CC BY 4.0"
+ },
+ "vis/hengel.glb": {
+  "naam": "Karperhengel",
+  "bron": "“Fishing Rod” — emelyarules, Sketchfab",
+  "licentie": "CC BY 4.0"
+ },
+ "vis/molen.glb": {
+  "naam": "Molen",
+  "bron": "“Spinning Reel” — SiBeRiEIIIkA, Sketchfab",
+  "licentie": "CC BY 4.0"
+ },
+ "vis/stoel.glb": {
+  "naam": "Campingstoel",
+  "bron": "“Camping Chair” — lpfeffer, Sketchfab",
+  "licentie": "CC BY 4.0"
+ },
+ "vis/blik.glb": {
+  "naam": "Bierblikje",
+  "bron": "“Beer can” — Arte Hexe, Sketchfab",
+  "licentie": "CC BY 4.0"
+ },
+ "vis/krat.glb": {
+  "naam": "Bierkrat",
+  "bron": "“Beer crate” — 3DDomino, Sketchfab",
+  "licentie": "CC BY 4.0"
+ },
+ "mensen/paul.glb": {
+  "naam": "Paul",
+  "bron": "MakeHuman (CC0) + Universal Animation Library (Quaternius, CC0), cartoonstijl (tools/mensen)",
+  "licentie": "CC0 + eigen werk"
+ },
+ "mensen/dave.glb": {
+  "naam": "Dave",
+  "bron": "MakeHuman (CC0) + Universal Animation Library (Quaternius, CC0), cartoonstijl (tools/mensen)",
+  "licentie": "CC0 + eigen werk"
+ },
+ "mensen/bob.glb": {
+  "naam": "Bob",
+  "bron": "MakeHuman (CC0) + Universal Animation Library (Quaternius, CC0), cartoonstijl (tools/mensen)",
+  "licentie": "CC0 + eigen werk"
+ },
+ "mensen/wim.glb": {
+  "naam": "Wim",
+  "bron": "MakeHuman (CC0) + Universal Animation Library (Quaternius, CC0), cartoonstijl (tools/mensen)",
+  "licentie": "CC0 + eigen werk"
+ },
+ "mensen/bewegingen.glb": {
+  "naam": "Bewegingen (lopen, zitten, staan …)",
+  "bron": "Universal Animation Library — Quaternius",
+  "licentie": "CC0"
+ },
+ "mensen/rooie.glb": {
+  "naam": "(oud) de rooie",
+  "bron": "MakeHuman, uit Fatbike Sniper",
+  "licentie": "CC0",
+  "oud": true
+ },
+ "mensen/visser.glb": {
+  "naam": "(oud) de visser",
+  "bron": "MakeHuman, uit Fatbike Sniper",
+  "licentie": "CC0",
+  "oud": true
+ },
+ "lucht.jpg": {
+  "naam": "Lucht",
+  "bron": "“Kloofendal 48d Partly Cloudy (Pure Sky)” — Poly Haven",
+  "licentie": "CC0"
+ },
+ "gras.jpg": {
+  "naam": "Gras (detail)",
+  "bron": "“sparse_grass” — Poly Haven",
+  "licentie": "CC0"
+ },
+ "bodem.jpg": {
+  "naam": "Rivierbodem",
+  "bron": "“river_small_rocks” — Poly Haven",
+  "licentie": "CC0"
+ },
+ "oever.jpg": {
+  "naam": "Modderige oever",
+  "bron": "“brown_mud_rocks_01” — Poly Haven",
+  "licentie": "CC0"
+ },
+ "geluid/plons-meerval.mp3": {
+  "naam": "Plons van een meerval",
+  "bron": "Uit Bobs eigen dril-video",
+  "licentie": "eigen opname"
+ },
+ "geluid/slip.mp3": {
+  "naam": "Gillende slip",
+  "bron": "Door Bob aangeleverd",
+  "licentie": "toestemming Bob"
+ },
+ "geluid/reel.mp3": {
+  "naam": "Indraaien",
+  "bron": "Door Bob aangeleverd",
+  "licentie": "toestemming Bob"
+ },
+ "geluid/rivier-vogels.mp3": {
+  "naam": "Rivier met vogels",
+  "bron": "“nature_river_birds.wav” — divaldo11, Freesound",
+  "licentie": "CC0"
+ },
+ "geluid/kabbelen.mp3": {
+  "naam": "Kabbelend water",
+  "bron": "“The sound of a babbling brook” — hoshisato, Freesound",
+  "licentie": "CC0"
+ },
+ "geluid/wind-bomen.mp3": {
+  "naam": "Wind in de bomen",
+  "bron": "“Wind in a tree, close to the foliage” — felix.blume, Freesound",
+  "licentie": "CC0"
+ },
+ "geluid/haan.mp3": {
+  "naam": "Haan",
+  "bron": "“Rooster Crowing” — pooky1, Freesound",
+  "licentie": "CC0"
+ },
+ "geluid/kippen.mp3": {
+  "naam": "Kippen",
+  "bron": "“Chicken Clucking” — Filmscore, Freesound",
+  "licentie": "CC0"
+ },
+ "geluid/kip-dichtbij.mp3": {
+  "naam": "Kip dichtbij",
+  "bron": "“R01-58-Close Chicken Vocals.wav” — craigsmith, Freesound",
+  "licentie": "CC0"
+ },
+ "geluid/krekels-avond.mp3": {
+  "naam": "Krekels 's avonds",
+  "bron": "“Crickets, very distant barks summer night” — Daphne_in_Wonderland, Freesound",
+  "licentie": "CC0"
+ },
+ "portret/paul.png": {
+  "naam": "Portret Paul (menu)",
+  "bron": "Getekend uit Bobs foto (tools/mensen/cartoon.py)",
+  "licentie": "eigen werk"
+ },
+ "portret/dave.png": {
+  "naam": "Portret Dave (menu)",
+  "bron": "Getekend uit Bobs foto (tools/mensen/cartoon.py)",
+  "licentie": "eigen werk"
+ },
+ "portret/bob.png": {
+  "naam": "Portret Bob (menu)",
+  "bron": "Getekend uit Bobs foto (tools/mensen/cartoon.py)",
+  "licentie": "eigen werk"
+ },
+ "portret/wim.png": {
+  "naam": "Portret Wim (menu)",
+  "bron": "Getekend uit Bobs foto (tools/mensen/cartoon.py)",
+  "licentie": "eigen werk"
+ },
+ "drank/fristi.glb": {
+  "naam": "Fristi Rood Fruit, blikje 250 ml (Wim)",
+  "bron": "“Soda Can 250ml” — sebastian204, Sketchfab; etiket van de productfoto Fristi Rood Fruit 250 ml (FrieslandCampina, via PS in foodservice)",
+  "licentie": "CC BY 4.0"
+ },
+ "drank/heineken-fles.glb": {
+  "naam": "Heineken, flesje",
+  "bron": "“Heineken Bottle” — liontrike, Sketchfab",
+  "licentie": "CC BY 4.0"
+ },
+ "drank/heineken-blik.glb": {
+  "naam": "Heineken, blik",
+  "bron": "“Realistic Heineken can” — mihadshok9, Sketchfab; op maat en lichter gemaakt",
+  "licentie": "CC BY 4.0"
+ },
+ "drank/heineken-krat.glb": {
+  "naam": "Heineken, krat met flesjes",
+  "bron": "“beer crate 12x750ml” — milansaman21, Sketchfab; groen met het Heineken-logo en twaalf flesjes (“Heineken Bottle”, liontrike)",
+  "licentie": "CC BY 4.0"
+ },
+ "drank/whisky.glb": {
+  "naam": "Jack Daniel's Old No.7",
+  "bron": "“Jack Daniels Whiskey No.7 Bottle” — 3DDave247, Sketchfab; lichter gemaakt",
+  "licentie": "CC BY 4.0"
+ },
+ "autos/rav4.glb": {
+  "naam": "Bobs zwarte Toyota RAV4",
+  "bron": "“2021 Toyota RAV4 Hybrid” — tonielpro520, Sketchfab (uit Fatbike Sniper)",
+  "licentie": "CC BY 4.0"
+ },
+ "autos/rav4.json": {
+  "naam": "RAV4: wielen en maten",
+  "bron": "uit Fatbike Sniper",
+  "licentie": "eigen werk"
+ },
+ "autos/vito.glb": {
+  "naam": "Mercedes Vito, zilvergrijs",
+  "bron": "“Mercedes-Benz Vito MK3 W447 from 2014” — szymonpasterczyk, Sketchfab; zilvergrijs gemaakt, wielen gezet, lichter",
+  "licentie": "CC BY 4.0"
+ },
+ "grind.jpg": {
+  "naam": "Grind (parkeerplaats)",
+  "bron": "“gravel_floor_02” — Poly Haven",
+  "licentie": "CC0"
+ },
+ "kamperen/trakker-tempest.glb": {
+  "naam": "Trakker Tempest RS Brolly, karpertent (open, met de Fox Camolite (node \"stretcher\") en de JBL Charge 6 (node \"speaker\") erin)",
+  "bron": "Zelf gebouwd in Blender naar de productfoto's en maten van Trakker, met stofsimulatie (tools/tent/trakker-tempest.py); doek: “Fabric082A” — ambientCG (CC0)",
+  "licentie": "eigen werk + CC0"
+ },
+ "kamperen/fox-camolite.glb": {
+  "naam": "Fox Camolite Sleep System (stretcher met slaapzak)",
+  "bron": "Zelf gebouwd in Blender naar de productfoto's en maten van Fox (tools/bed/fox-camolite.py); camo uit de productfoto van Fox, fleece: “Fabric082A” — ambientCG (CC0)",
+  "licentie": "eigen werk + CC0; camopatroon © Fox"
+ },
+ "kamperen/jbl-charge-6.glb": {
+  "naam": "JBL Charge 6 bluetooth-speaker (zwart), met afneembaar handvat (node \"handvat\")",
+  "bron": "Zelf gebouwd in Blender (tools/jbl/jbl-charge-6.py) naar de productfoto's en maten van Coolblue (coolblue.nl/product/959880) en MediaMarkt; texturen (stof, logo, passieve radiator, knoppenpaneel, CHARGE 6-plaatje) uit de Coolblue-productfoto's geknipt met tools/jbl/textuur.py; op Sketchfab geen Charge 6 gevonden",
+  "licentie": "Eigen werk; texturen uit productfoto's (© JBL/Harman), het JBL-logo is een merk van Harman"
+ },
+ "vis/zonnebaars.glb": {
+  "naam": "Zonnebaars (Henk)",
+  "bron": "“CC0 ブルーギル 🐟 Bluegill, Lepomis macrochirus” — ffishAsia-and-floraZia, Sketchfab (3D-scan, omgekleurd naar zonnebaars met tools/vis/)",
+  "licentie": "CC0"
+ },
+ "kamperen/ridgemonkey-emmer.glb": {
+  "naam": "RidgeMonkey Perspective Collapsible Bucket 10 L (opvouwbare emmer met helder doorzichtige PVC-wand, ondersteboven als helm te gebruiken; hengsel als node \"hengsel\")",
+  "bron": "Zelf gebouwd in Blender (tools/emmer/ridgemonkey-perspective.py) naar de productfoto's van team-outdoors.nl; logo uit de productfoto",
+  "licentie": "Eigen werk; RidgeMonkey-logo is merk van RidgeMonkey"
+ }
 }

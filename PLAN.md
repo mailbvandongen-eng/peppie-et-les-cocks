@@ -108,3 +108,11 @@ Volgens `CLAUDE.md`: beste bron eerst, zelf toetsen tegen foto's.
 5. **Huis en terrein**: texturen, ramen, dak, terras, zwembad; verre oevers met IGN-luchtfoto en hoogtemodel (heuvels).
 6. **Water, lucht en licht**: mooiere spiegeling en golfjes, zachter licht.
 7. **Knoppen en schermen**: één nette stijl.
+
+## 12. Sandbox (Bob, 28-11)
+Het spel wordt een sandbox: je loopt vrij rond en kiest zelf wat je doet. Missies blijven, als iets wat je onderweg oppakt.
+- **Rondlopen** over het hele terrein (tuin, steigers, zwembad, oprit) en het huis in.
+- **Een bellyboat pakken**: naar de steiger lopen, instappen, wegvaren, en weer aanmeren en uitstappen.
+- **Op de steiger zitten**: in een stoel gaan zitten, een biertje pakken, de hengel uitgooien en wachten op een beet (met beetverklikker).
+- **Weglopen en de auto pakken**: de tuin uit, de oprit af, de auto in en over de echte wegen (IGN) rijden.
+- De anderen doen intussen hun eigen ding (vissen, zuipen, slapen); Pleurisbeesten en kippen leven ook door.

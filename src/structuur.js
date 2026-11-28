@@ -10,7 +10,8 @@ const V = (x, y, z) => new THREE.Vector3(x, y, z);
 export function bouwStructuur(scene, W, { start, u, t }) {
   const steen = onderWater(new THREE.MeshStandardMaterial({ color: "#5d5a4c", roughness: 0.95 }));
   // drie muren: één vlak bij de plek waar je begint (zodat je hem meteen kunt vinden), twee verder weg
-  const plekken = [[22, 6, 0.4], [70, -40, 1.2], [45, 90, -0.6]];
+  // Bob (28-11): de muren klopten niet (zwevende blokken op de livescope) — liever geen muur dan een slechte muur
+  const plekken = [];
   for (const [voor, opzij, hoek] of plekken) {
     const m = start.clone().addScaledVector(u, voor).addScaledVector(t, opzij), r = V(Math.cos(hoek) * t.x + Math.sin(hoek) * u.x, 0, Math.cos(hoek) * t.z + Math.sin(hoek) * u.z).normalize();
     const L = tussen(10, 16), a = m.clone().addScaledVector(r, -L / 2), b = m.clone().addScaledVector(r, L / 2), bodem = W.bodemZonderMuur(m.x, m.z);
