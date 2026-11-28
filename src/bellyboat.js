@@ -11,7 +11,7 @@ const KLEUREN = {
   paul: { romp: "#1d1f22", neus: "#1d1f22", band: "#2c2f33", stoel: "#141517", sticker: null, logo: "RAPTOR" },
   bob: { romp: "#1d1f22", neus: "#1d1f22", band: "#2c2f33", stoel: "#141517", sticker: null, logo: "RAPTOR" },
   wim: { romp: "#a3a8ac", neus: "#c4c8cb", band: "#3b3e42", stoel: "#1a1b1d", sticker: null }, // Black Cat Battle Boat: lichtgrijs met een donkere band
-  dave: { romp: "#39d43b", neus: "#39d43b", band: "#141618", stoel: "#141517", sticker: null },
+  dave: { romp: "#17191b", neus: "#17191b", band: "#39d43b", onder: true, stoel: "#141517", sticker: null },
 };
 const mats = {}; const M = (k, o = {}) => (mats[k + JSON.stringify(o)] ??= new THREE.MeshStandardMaterial({ color: k, roughness: 0.55, ...o }));
 
@@ -41,7 +41,7 @@ export function maakBellyboat(soort = "paul", { scherm = null } = {}) {
   if (k.neus !== k.romp) { const n = 10, L = (n - 1) * 0.05, nm = M(k.neus, { roughness: 0.5 });
     for (const [stuk, tip0] of [[pad.slice(0, n), true], [pad.slice(-n), false]]) { const d = (s_) => (tip0 ? s_ : 1 - s_) * L;
       g.add(new THREE.Mesh(buis(stuk, (s_) => R * 1.012 * Math.max(0.04, Math.min(1, d(s_) / 0.5) ** 0.55), (s_) => (d(s_) < 0.5 ? (1 - d(s_) / 0.5) ** 2 * 0.09 : 0)), nm)); } }
-  { const band = new THREE.Mesh(buis(pad.slice(4, -4), () => R * 1.012, () => -0.0, 14), M(k.band, { roughness: 0.6 })); band.scale.set(1, 0.16, 1); band.position.y = 0.09; g.add(band); }
+  { const band = new THREE.Mesh(buis(pad.slice(4, -4), () => R * 1.012, () => -0.0, 14), M(k.band, { roughness: 0.6 })); if (k.onder) { band.scale.set(1.01, 0.62, 1.01); band.position.y = 0.035; } else { band.scale.set(1, 0.16, 1); band.position.y = 0.09; } g.add(band); } // Dave: de onderste helft gifgroen, de bovenkant zwart
   if (k.sticker) for (const x of [-B, B]) { const s = doos(x + Math.sign(x) * (R - 0.005), 0.12, 0.25, 0.01, 0.07, 0.26, M(k.sticker, { roughness: 0.4 })); s.rotation.z = Math.sign(x) * 0.25; }
   // ventielen bovenop
   for (const x of [-B, B]) cil(x, 0.1 + R, 0.55, 0.025, 0.02, M("#2b2b2b"));
