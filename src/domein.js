@@ -262,16 +262,16 @@ export function bouwDomein(W, scene) {
     // RVS-trapje aan het westeinde
     for (const k of [-1, 1]) { const b = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.025, 6, 14, Math.PI), Mrvs); b.rotation.y = Math.PI / 2; zet(b, 3.4 + k * 0.22, y + 0.05, 1.3, g); cil(3.4 + k * 0.22, y - 0.6, 1.62, 0.02, 0.02, 1.3, Mrvs, 6, g); } }
   // de middelste steiger: twee delen in een hoek, trapje links, drie grijze kuipstoelen, band met parasolvoet, emmers, prullenbak, hengels
-  const SM = steiger("midden", -1.7, [[0, 0.6, 8.6, 2.2], [3.6, 2.4, 3.2, 2.4, -0.32]], { hout: houtM, trap: [-1.2, 4] });
+  const SM = steiger("midden", -1.7, [[0, 0.95, 8.6, 2.9]], { hout: houtM, trap: [-1.2, 4] }); // één recht dek, een paar planken breder (Bobs foto 28-11)
   { const y = DEK, g = SM.groep, P = (lx, lz) => [SM.x + lx, SM.z0 + lz];
-    band(-3.4, y - 0.25, 1.75, 0, g); band(0.4, y - 0.25, 1.75, 0, g);
+    band(-3.4, y - 0.25, 2.4, 0, g); band(0.4, y - 0.25, 2.4, 0, g);
     for (const [lx, lz, r] of [[1.2, 0.7, 0.5], [2.3, 1.1, 0.1], [-2.6, 0.3, -0.3]]) kuipstoel(...P(lx, lz), r, "#8e9a9b", y);
     band(-0.6, y + 0.11, 0.3, 0, g).rotation.x = Math.PI / 2; parasol(...[SM.x - 0.6, SM.z0 + 0.3], "#c8c2b4", false, y);
-    emmer(SM.x + 3.2, y, SM.z0 + 1.6, "#e9e9e4"); emmer(SM.x - 1.6, y, SM.z0 + 1.1, "#5a5f63"); doos(-1.7, y + 0.15, 1.15, 0.35, 0.3, 0.3, mat("krukje", { color: "#4d5258" }), g); doos(-2.6, y + 0.12, 1.3, 0.55, 0.24, 0.38, mat("aasbak", { color: "#dfe7c8", transparent: true, opacity: 0.85 }), g);
+    emmer(SM.x + 2.6, y, SM.z0 + 1.7, "#e9e9e4"); emmer(SM.x - 1.6, y, SM.z0 + 1.1, "#5a5f63"); doos(-1.7, y + 0.15, 1.15, 0.35, 0.3, 0.3, mat("krukje", { color: "#4d5258" }), g); doos(-2.6, y + 0.12, 1.3, 0.55, 0.24, 0.38, mat("aasbak", { color: "#dfe7c8", transparent: true, opacity: 0.85 }), g);
     prullenbak(SM.x - 4.0, y, SM.z0 + 0.2);
-    for (const [lx, r] of [[4.2, 0.2], [-3.9, -0.15], [-4.15, 0.25]]) hengelsteun(SM.x + lx, y, SM.z0 + 1.3, r);
+    for (const [lx, r] of [[3.9, 0.2], [-3.9, -0.15], [-4.15, 0.25]]) hengelsteun(SM.x + lx, y, SM.z0 + 2.1, r);
     // trapje aan de linkerkant van het schuine deel
-    for (const k of [-1, 1]) { const b = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.025, 6, 14, Math.PI), Mrvs); b.rotation.y = 0.3; zet(b, 5.1 + k * 0.2, y + 0.05, 3.35, g); } }
+    for (const k of [-1, 1]) { const b = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.025, 6, 14, Math.PI), Mrvs); b.rotation.y = Math.PI / 2; zet(b, 3.6 + k * 0.22, y + 0.05, 2.25, g); cil(3.6 + k * 0.22, y - 0.6, 2.45, 0.02, 0.02, 1.3, Mrvs, 6, g); } }
   // de rechter steiger: donker hout onder hoge bomen, drie banden, oranje vlaggetjes, turquoise en witte stoelen
   const SR = steiger("rechts", -21, [[0, 0.8, 7.8, 2.6]], { hout: houtR, trap: null });
   { const y = DEK, g = SR.groep; for (const lx of [-3.4, -0.2, 3.2]) band(lx, y - 0.22, 2.15, 0, g);

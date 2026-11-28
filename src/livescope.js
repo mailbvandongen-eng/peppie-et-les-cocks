@@ -26,7 +26,7 @@ export class Livescope {
    * bodem(v) = diepte op v meter voor de transducer (negatief = erachter); vissen = [{ v, d, lengte, hoek, soort }];
    * school = [{ v, d }]; planten = [{ v, bodem, top }]; aas = { v, d } of null; onder = diepte onder de boot; richting = stand van de transducer.
    */
-  teken({ bodem, vissen = [], aas = null, school = [], planten = [], temp = 14.8, snelheid = 0, volt = 12.5, tijd = "12:50", richting = null, onder = null }) {
+  teken({ bodem, vissen = [], aas = null, school = [], planten = [], takken = [], temp = 14.8, snelheid = 0, volt = 12.5, tijd = "12:50", richting = null, onder = null }) {
     this.t += 1; const t = this.t, c = this.c, W = c.width, H = c.height, F = Math.min(H, (W * 9) / 16);
     // het bereik (Auto): bodem + ruim 3,5 m op hele meters; vooruit even ver, achteruit 0,385 daarvan;
     // de diepte-as heeft dezelfde verhouding meters per pixel als op de opname
@@ -65,6 +65,8 @@ export class Livescope {
       g.addColorStop(0, `rgba(235,25,0,${Math.min(1, 1.0 * sterk)})`); g.addColorStop(0.28, `rgba(254,140,0,${Math.min(1, 0.95 * sterk)})`); g.addColorStop(0.5, `rgba(206,234,34,${0.85 * sterk})`); g.addColorStop(0.7, `rgba(100,238,123,${0.6 * sterk})`); g.addColorStop(0.86, `rgba(0,200,225,${0.35 * sterk})`); g.addColorStop(1, "rgba(0,40,225,0)"); k.fillStyle = g; k.beginPath(); k.arc(0, 0, rx, 0, 6.3); k.fill(); k.restore(); };
     const stip = (cx, cy, r, sterk) => { const g = k.createRadialGradient(cx, cy, 0, cx, cy, r); g.addColorStop(0, `rgba(120,255,230,${sterk})`); g.addColorStop(0.5, `rgba(0,200,235,${sterk * 0.6})`); g.addColorStop(1, "rgba(0,60,230,0)"); k.fillStyle = g; k.beginPath(); k.arc(cx, cy, r, 0, 6.3); k.fill(); };
     for (const p of planten) { if (p.v < X0 || p.v > X1) continue; for (let d = p.bodem; d > p.top; d -= 0.22) stip(X(p.v) + Math.sin(d * 5 + p.v) * 1.1, Y(d), 1.8, 0.45 * (0.4 + 0.6 * (d - p.top) / (p.bodem - p.top + 0.01))); }
+    // takken: een dunne, felle lijn (hout geeft een harde echo)
+    for (const tk of takken) { const n = 14; for (let i = 0; i <= n; i++) { const f = i / n, v = tk.v0 + (tk.v1 - tk.v0) * f, d = tk.d0 + (tk.d1 - tk.d0) * f; if (v < X0 || v > X1) continue; vlek(X(v), Y(d), 1.6, 1.1, 0.75); } }
     for (const s of school) { if (s.v < X0 || s.v > X1) continue; stip(X(s.v) + Math.sin(t * 0.7 + s.d * 9) * 0.8, Y(s.d) + Math.cos(t * 0.5 + s.v * 7) * 0.5, 2.0, 0.7); }
     // de vorm verraadt de soort: een meerval is een kikkervisje (dikke kop, pens, dunne staart), een karper bol en hoog
     for (const f of vissen) { if (f.v < X0 || f.v > X1 || f.d > D1) continue;

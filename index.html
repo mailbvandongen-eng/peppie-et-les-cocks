@@ -56,6 +56,8 @@ canvas{display:block}
 #versie{position:fixed;right:8px;bottom:4px;font-size:10px;opacity:.5;z-index:11}
 @media (orientation:portrait){#tel{top:calc(max(8px,env(safe-area-inset-top)) + 46px);font-size:15px}#missie{top:calc(max(8px,env(safe-area-inset-top)) + 88px)}}
 #pip{position:absolute;right:max(10px,env(safe-area-inset-right));top:calc(max(8px,env(safe-area-inset-top)) + 40px);width:min(30vw,260px);aspect-ratio:4/3;border:3px solid #fff8;border-radius:10px;box-shadow:0 3px 12px #0008;pointer-events:none}#pip span{position:absolute;left:6px;bottom:4px;font-size:12px;font-weight:700;text-shadow:0 1px 3px #000}
+#knopA.rood{background:radial-gradient(circle at 40% 35%,#ff6a5a,#c0281c 70%);box-shadow:0 0 0 3px #fff6,0 4px 12px #0008}
+#slip{position:absolute;right:max(22px,env(safe-area-inset-right));bottom:150px;display:flex;flex-direction:column;align-items:center;gap:4px;background:#0009;border-radius:12px;padding:6px;z-index:2}#slip button{width:48px;height:40px;border-radius:10px;background:#35506ee6;font-size:22px}#slip span{font-size:12px;font-weight:700}
 </style>
 </head>
 <body>
@@ -83,14 +85,14 @@ canvas{display:block}
   <div id="meter" hidden></div><div id="span" hidden><i></i></div>
   <div id="stick" hidden><i></i></div>
   <button id="knopLinks" hidden></button><button id="knopRechts" hidden></button><button id="knopOp" hidden>▲</button><button id="knopNeer" hidden>▼</button>
-  <button id="knopB" hidden></button><button id="knopA" hidden></button>
+  <button id="knopB" hidden></button><div id="slip" hidden><button id="slipPlus">+</button><span id="slipTekst">slip 75%</span><button id="slipMin">−</button></div><button id="knopA" hidden></button>
 </div>
 <div id="uitslag" hidden><div><h2 id="uitslagKop"></h2><p id="uitslagTekst"></p><button id="opnieuw">Nog een keer</button><button id="terug">Menu</button></div></div>
 <div id="versie"></div>
 <!-- versie -->
-<script>window.VERSIE = "b2267a872e"; window.VERSIE_DATUM = "28-11, 09:24"; document.getElementById("versie").textContent = "versie 28-11, 09:24";</script>
-<script type="importmap">{"imports":{"three":"./lib/three.module.js?v=b2267a872e","./lib/three.module.js":"./lib/three.module.js?v=b2267a872e","./lib/meshopt_decoder.mjs":"./lib/meshopt_decoder.mjs?v=b2267a872e","./lib/three-addons.js":"./lib/three-addons.js?v=b2267a872e","./src/bellyboat.js":"./src/bellyboat.js?v=b2267a872e","./src/chirp.js":"./src/chirp.js?v=b2267a872e","./src/domein.js":"./src/domein.js?v=b2267a872e","./src/effecten.js":"./src/effecten.js?v=b2267a872e","./src/grond.js":"./src/grond.js?v=b2267a872e","./src/hengel.js":"./src/hengel.js?v=b2267a872e","./src/kippen.js":"./src/kippen.js?v=b2267a872e","./src/livescope.js":"./src/livescope.js?v=b2267a872e","./src/main.js":"./src/main.js?v=b2267a872e","./src/mensen.js":"./src/mensen.js?v=b2267a872e","./src/natuur.js":"./src/natuur.js?v=b2267a872e","./src/planten.js":"./src/planten.js?v=b2267a872e","./src/vissen.js":"./src/vissen.js?v=b2267a872e","./src/water.js":"./src/water.js?v=b2267a872e","./src/wereld.js":"./src/wereld.js?v=b2267a872e"}}</script>
-<script type="module" src="./src/main.js?v=b2267a872e"></script>
+<script>window.VERSIE = "a587e19014"; window.VERSIE_DATUM = "28-11, 13:34"; document.getElementById("versie").textContent = "versie 28-11, 13:34";</script>
+<script type="importmap">{"imports":{"three":"./lib/three.module.js?v=a587e19014","./lib/three.module.js":"./lib/three.module.js?v=a587e19014","./lib/meshopt_decoder.mjs":"./lib/meshopt_decoder.mjs?v=a587e19014","./lib/three-addons.js":"./lib/three-addons.js?v=a587e19014","./src/bellyboat.js":"./src/bellyboat.js?v=a587e19014","./src/chirp.js":"./src/chirp.js?v=a587e19014","./src/domein.js":"./src/domein.js?v=a587e19014","./src/effecten.js":"./src/effecten.js?v=a587e19014","./src/grond.js":"./src/grond.js?v=a587e19014","./src/hengel.js":"./src/hengel.js?v=a587e19014","./src/kippen.js":"./src/kippen.js?v=a587e19014","./src/livescope.js":"./src/livescope.js?v=a587e19014","./src/main.js":"./src/main.js?v=a587e19014","./src/meerval.js":"./src/meerval.js?v=a587e19014","./src/mensen.js":"./src/mensen.js?v=a587e19014","./src/natuur.js":"./src/natuur.js?v=a587e19014","./src/planten.js":"./src/planten.js?v=a587e19014","./src/structuur.js":"./src/structuur.js?v=a587e19014","./src/vissen.js":"./src/vissen.js?v=a587e19014","./src/water.js":"./src/water.js?v=a587e19014","./src/wereld.js":"./src/wereld.js?v=a587e19014"}}</script>
+<script type="module" src="./src/main.js?v=a587e19014"></script>
 <!-- /versie -->
 </body>
 </html>

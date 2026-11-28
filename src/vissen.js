@@ -7,12 +7,15 @@ import * as THREE from "three";
 import { onderWater } from "./water.js";
 
 const tussen = (a, b) => a + Math.random() * (b - a);
+// de verhouding zoals op de Lot: vooral meerval (van klein tot reus), veel kleine vis op de bodem en in scholen, karper zelden
 const SOORTEN = {
-  Meerval: { model: "meerval", lengte: [0.45, 1.85], boven: [0.1, 0.9], snel: 0.22, kans: 3.2, groep: [1, 1] },
-  Karper: { model: "karper", lengte: [0.45, 0.95], boven: [0.6, 5], snel: 0.38, kans: 1.6, groep: [2, 5] },
-  Brasem: { model: "brasem", lengte: [0.3, 0.62], boven: [0.2, 1.6], snel: 0.3, kans: 1.6, groep: [5, 14] },
-  Snoekbaars: { model: "snoekbaars", lengte: [0.4, 0.85], boven: [0.4, 3], snel: 0.35, kans: 1.0, groep: [1, 3] },
+  Meerval: { model: "meerval", lengte: [0.6, 1.0], boven: [0.1, 1.2], snel: 0.22, kans: 3.0, groep: [1, 1] },
+  Karper: { model: "karper", lengte: [0.55, 0.95], boven: [1, 5], snel: 0.45, kans: 0.12, groep: [1, 2] },
+  Brasem: { model: "brasem", lengte: [0.3, 0.42], boven: [0.05, 0.5], snel: 0.28, kans: 1.4, groep: [4, 10] }, // de kleine vis die op de bodem schuilt
+  Snoekbaars: { model: "snoekbaars", lengte: [0.4, 0.75], boven: [0.3, 2.5], snel: 0.35, kans: 0.5, groep: [1, 3] },
 };
+/** De lengte van een meerval: de meeste rond 80 cm, minder rond anderhalve meter, een enkele over de twee. */
+const meervalLengte = () => { const r = Math.random(); return r < 0.5 ? tussen(0.6, 1.0) : r < 0.8 ? tussen(1.0, 1.5) : r < 0.95 ? tussen(1.5, 1.95) : tussen(1.95, 2.3); };
 const NAMEN = Object.keys(SOORTEN);
 
 export async function maakVisbestand(scene, W, { telefoon = false, fx = null, geluid = null } = {}) {
@@ -27,12 +30,15 @@ export async function maakVisbestand(scene, W, { telefoon = false, fx = null, ge
     const b = new THREE.Box3(); for (const d of delen) { d.geo.computeBoundingBox(); b.union(d.geo.boundingBox); } const c = b.getCenter(new THREE.Vector3()), l = b.max.z - b.min.z;
     for (const d of delen) d.geo.translate(-c.x, -c.y, -c.z).scale(1 / l, 1 / l, 1 / l); vorm[n] = delen; }
 
-  const R = telefoon ? 32 : 38, NIND = telefoon ? 200 : 260, NSCHOOL = telefoon ? 16 : 22;
+  const R = telefoon ? 34 : 40, NIND = telefoon ? 200 : 260, NSCHOOL = telefoon ? 22 : 30;
   const lijst = [], scholen = []; let midden = new THREE.Vector3();
   const bodem = (x, z) => W.diepte(x, z);
   /** Een plek in het water rond het midden (niet te ondiep). */
-  const plek = (rmin, rmax, minDiep = 1.5) => { for (let i = 0; i < 25; i++) { const a = Math.random() * 6.283, r = tussen(rmin, rmax), x = midden.x + Math.cos(a) * r, z = midden.z + Math.sin(a) * r; if (bodem(x, z) > minDiep) return [x, z]; } return null; };
-  const nieuw = (v, soort, x, z) => { const S = SOORTEN[soort]; Object.assign(v, { soort, x, z, x0: x, z0: z, tx: x, tz: z, h: Math.random() * 6.28, lengte: tussen(...S.lengte) * (soort === "Meerval" && Math.random() < 0.15 ? 1.2 : 1), boven: tussen(...S.boven), zin: 0, d: 0, staart: Math.random() * 6, lok: null, straal: soort === "Meerval" ? 8 : 14 }); v.d = Math.max(0.5, bodem(x, z) - v.boven); return v; };
+  // een derde van de vis zoekt de structuur op: rond de muren onder water is het altijd druk
+  const bijMuur = () => { const m = W.muren.filter((q) => Math.hypot(q.midden.x - midden.x, q.midden.z - midden.z) < R * 1.4); if (!m.length) return null; const q = m[(Math.random() * m.length) | 0], f = tussen(-0.6, 0.6), dx = q.b[0] - q.a[0], dz = q.b[1] - q.a[1];
+    return [q.midden.x + dx * f * 0.5 + tussen(-3.5, 3.5), q.midden.z + dz * f * 0.5 + tussen(-3.5, 3.5)]; };
+  const plek = (rmin, rmax, minDiep = 1.5) => { if (Math.random() < 0.33) { const p = bijMuur(); if (p && bodem(p[0], p[1]) > minDiep) return p; } for (let i = 0; i < 25; i++) { const a = Math.random() * 6.283, r = tussen(rmin, rmax), x = midden.x + Math.cos(a) * r, z = midden.z + Math.sin(a) * r; if (bodem(x, z) > minDiep) return [x, z]; } return null; };
+  const nieuw = (v, soort, x, z) => { const S = SOORTEN[soort]; Object.assign(v, { soort, x, z, x0: x, z0: z, tx: x, tz: z, h: Math.random() * 6.28, lengte: soort === "Meerval" ? meervalLengte() : tussen(...S.lengte), boven: tussen(...S.boven), zin: 0, d: 0, staart: Math.random() * 6, lok: null, straal: soort === "Meerval" ? 8 : 14 }); v.d = Math.max(0.5, bodem(x, z) - v.boven); return v; };
   const vulGroep = (n0 = 0) => { while (lijst.length < NIND + n0) { const soort = (() => { let r = Math.random() * NAMEN.reduce((s, n) => s + SOORTEN[n].kans, 0); for (const n of NAMEN) if ((r -= SOORTEN[n].kans) <= 0) return n; return "Meerval"; })(), p = plek(4, R); if (!p) break;
       const [g0, g1] = SOORTEN[soort].groep, n = Math.round(tussen(g0, g1)); for (let i = 0; i < n && lijst.length < NIND + n0; i++) lijst.push(nieuw({}, soort, p[0] + tussen(-2, 2), p[1] + tussen(-2, 2))); } };
   // de reuzen: in elke diepe kolk één
@@ -60,7 +66,7 @@ export async function maakVisbestand(scene, W, { telefoon = false, fx = null, ge
     if (!lijst.length) { vulGroep(); for (let i = 0; i < NSCHOOL; i++) scholen.push(nieuweSchool({}, 6, R)); }
     // te ver weg: opnieuw ergens om de boot heen (buiten beeld van de livescope)
     for (let i = lijst.length - 1; i >= 0; i--) { const v = lijst[i]; if (v.vast) continue; if (Math.hypot(v.x - midden.x, v.z - midden.z) > R * 1.35) { const p = plek(R * 0.55, R * 1.2); if (p) nieuw(v, v.soort, p[0], p[1]); } }
-    for (const s of scholen) { s.x += s.vx * dt; s.z += s.vz * dt; if (Math.hypot(s.x - midden.x, s.z - midden.z) > R * 1.4 || bodem(s.x, s.z) < s.d + 0.5) nieuweSchool(s, R * 0.5, R * 1.1); }
+    for (const s of scholen) { s.x += s.vx * dt; s.z += s.vz * dt; if (Math.random() < dt * 0.05) s.dDoel = tussen(0.8, Math.max(1, bodem(s.x, s.z) - 0.6)); if (s.dDoel != null) s.d += (s.dDoel - s.d) * Math.min(1, dt * 0.25); if (Math.hypot(s.x - midden.x, s.z - midden.z) > R * 1.4 || bodem(s.x, s.z) < s.d + 0.5) nieuweSchool(s, R * 0.5, R * 1.1); }
     const alle = lijst.concat(reuzen);
     for (const v of alle) { if (v.vast) continue;
       if (Math.hypot(v.tx - v.x, v.tz - v.z) < 0.8) { const a = Math.random() * 6.28, r = Math.random() * v.straal; v.tx = v.x0 + Math.cos(a) * r; v.tz = v.z0 + Math.sin(a) * r; }

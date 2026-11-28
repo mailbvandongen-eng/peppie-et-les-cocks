@@ -30,7 +30,8 @@ export async function laadVisspullen(scene) {
   for (const g of Object.values(M)) g.scene.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; } });
   const HENGEL = 3.3;
   const molenVorm = recht(M.molen.scene, 0.15); { const b = new THREE.Box3().setFromObject(molenVorm); molenVorm.position.y = -(b.max.y - b.min.y); }
-  const maakHengel = () => {
+  /** lengte in meters; boven = reel bovenop (een werpmolen/baitcaster, zoals Bob en de anderen gebruiken). */
+  const maakHengel = (LENGTE = HENGEL, { boven = false, dik = 0.5 } = {}) => {
     const bron = M.hengel.scene.clone(true); let mesh = null; bron.updateMatrixWorld(true); bron.traverse((o) => { if (o.isMesh && !mesh) mesh = o; });
     // (de punten in het bestand zijn ingepakt als hele getallen: eerst uitpakken naar gewone meters)
     const bronP = mesh.geometry.attributes.position, n = bronP.count, v = new THREE.Vector3(), uitgepakt = new Float32Array(n * 3);
@@ -48,18 +49,18 @@ export async function laadVisspullen(scene) {
     const as = b.clone().sub(a), len = as.length(); as.normalize();
     const zij = c.clone().sub(a); zij.addScaledVector(as, -zij.dot(as)).normalize();
     const basis = new THREE.Matrix4().makeBasis(new THREE.Vector3().crossVectors(zij.clone().negate(), as), zij.clone().negate(), as).invert();
-    geo.applyMatrix4(new THREE.Matrix4().makeTranslation(-a.x, -a.y, -a.z)).applyMatrix4(basis).scale((HENGEL / len) * 0.5, (HENGEL / len) * 0.5, HENGEL / len); // een karperhengel is lang en dun
+    geo.applyMatrix4(new THREE.Matrix4().makeTranslation(-a.x, -a.y, -a.z)).applyMatrix4(basis).scale((HENGEL / len) * dik, (HENGEL / len) * dik, LENGTE / len); // een karperhengel is lang en dun; een meervalhengel korter en dikker
     geo.computeVertexNormals();
     const m = new THREE.Mesh(geo, mesh.material); m.castShadow = true; m.frustumCulled = false;
     const g = new THREE.Group(); g.add(m); scene.add(g);
     // een echte molen onder het handvat (die van het hengelmodel is na het versmallen te klein om te zien)
-    { const mo = new THREE.Group(); mo.add(molenVorm.clone()); mo.position.set(0, -0.012, 0.52); g.add(mo); }
+    { const mo = new THREE.Group(); mo.add(molenVorm.clone()); if (boven) { mo.rotation.z = Math.PI; mo.position.set(0, 0.03, LENGTE * 0.12); mo.scale.setScalar(0.85); } else mo.position.set(0, -0.012, 0.52); g.add(mo); }
     const y0 = Float32Array.from(geo.attributes.position.array);
     const h = { g, bocht: 0, top: new THREE.Vector3(),
       /** Buig de hengel (0 = recht): de top zakt, het meest aan het eind. */
-      buig(k) { if (Math.abs(k - h.bocht) < 0.004) return; h.bocht = k; const q = geo.attributes.position; for (let i = 0; i < q.count; i++) { const s = Math.max(0, y0[i * 3 + 2] / HENGEL); q.array[i * 3 + 1] = y0[i * 3 + 1] - k * HENGEL * s ** 2.4; } q.needsUpdate = true; },
+      buig(k) { if (Math.abs(k - h.bocht) < 0.004) return; h.bocht = k; const q = geo.attributes.position; for (let i = 0; i < q.count; i++) { const s = Math.max(0, y0[i * 3 + 2] / LENGTE); q.array[i * 3 + 1] = y0[i * 3 + 1] - k * LENGTE * s ** 2.0; } q.needsUpdate = true; },
       /** Leg hem neer: handvat op p, wijzend naar richting d. Geeft de top (in de wereld) terug. */
-      leg(p, d) { g.position.copy(p); g.quaternion.setFromUnitVectors(V(0, 0, 1), d.clone().normalize()); const zij2 = V(0, 1, 0).applyQuaternion(g.quaternion); if (zij2.y < 0) g.rotateZ(Math.PI); g.updateMatrixWorld(true); return h.top.set(0, -h.bocht * HENGEL, HENGEL * (1 - h.bocht * h.bocht * 0.6)).applyMatrix4(g.matrixWorld); } };
+      leg(p, d) { g.position.copy(p); g.quaternion.setFromUnitVectors(V(0, 0, 1), d.clone().normalize()); const zij2 = V(0, 1, 0).applyQuaternion(g.quaternion); if (zij2.y < 0) g.rotateZ(Math.PI); g.updateMatrixWorld(true); return h.top.set(0, -h.bocht * LENGTE, LENGTE * (1 - h.bocht * h.bocht * 0.6)).applyMatrix4(g.matrixWorld); }, lengte: LENGTE };
     return h;
   };
   const vormen = {};

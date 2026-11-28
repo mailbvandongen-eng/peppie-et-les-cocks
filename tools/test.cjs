@@ -17,9 +17,13 @@ const T = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javasc
   await p.tap("[data-missie=belly]"); await beeld("1-belly");
   console.log("belly:", await p.evaluate(() => { const s = window.__spel, b = s.belly, W = s.W, reuzen = s.vb.reuzen.length; const k = W.kolken[0]; b.pos.set(k[0], 0, k[1]); b.yaw = 0.5; return JSON.stringify({ vissen: s.vb.lijst.length, scholen: s.vb.scholen.length, reuzen, diepteKolk: +W.diepte(k[0], k[1]).toFixed(1) }); }));
   await beeld("2-scope", 3500);
-  console.log("  beet:", await p.evaluate(() => { const s = window.__spel, b = s.belly, st = s.MISSIES.belly[1]; st(0.05); const v = s.vb.reuzen[0]; const zetVis = () => { v.x = b.top.x; v.z = b.top.z; v.tx = v.x; v.tz = v.z; v.x0 = v.x; v.z0 = v.z; v.straal = 0.1; b.aas = v.d; }; zetVis(); let t = 0; while (!s.dril.aan && t < 30) { zetVis(); s.invoer.Atik = t % 0.5 < 0.05; st(0.05); t += 0.05; } return `dril ${s.dril.aan} na ${t.toFixed(1)} s, vis ${v.soort} ${v.lengte.toFixed(2)} m`; }));
-  await beeld("3-dril");
-  console.log("  dril:", await p.evaluate(() => { const s = window.__spel, st = s.MISSIES.belly[1]; let t = 0; while (s.dril.aan && t < 400) { s.invoer.A = s.dril.span < 0.7; st(0.05); t += 0.05; } s.invoer.A = false; return `klaar na ${t.toFixed(0)} s: ${document.querySelector("#melding").textContent} | missie klaar: ${s.spel.klaar}`; }));
+  console.log("  beet:", await p.evaluate(() => { const s = window.__spel, b = s.belly, st = s.MISSIES.belly[1]; st(0.05); const v = s.vb.reuzen[0]; s.aasgedrag.aan = 300;
+    const zetVis = () => { v.x = b.top.x + 0.8; v.z = b.top.z; v.d = b.aas; }; b.aas = 4; let t = 0;
+    while (!s.drilB && t < 40) { if (!v.nieuws) zetVis(); s.invoer.Atik = !!s.aasgedrag.pakt; st(0.05); s.invoer.Atik = false; t += 0.05; }
+    return `dril ${!!s.drilB} na ${t.toFixed(1)} s, vis ${s.drilB?.vis.soort} ${s.drilB?.vis.lengte.toFixed(2)} m, bodycam ${s.bodycam.aan}`; }));
+  await beeld("3-dril"); await p.evaluate(() => { const s = window.__spel; s.drilB.fase = "duik"; s.drilB.faseT = 5; s.invoer.A = true; for (let i = 0; i < 20; i++) s.MISSIES.belly[1](0.05); s.invoer.A = false; }); await beeld("3b-duik", 800);
+  console.log("  dril:", await p.evaluate(() => { const s = window.__spel, st = s.MISSIES.belly[1]; let t = 0, af = 0, duik = 0; while (s.drilB && t < 900) { const d = s.drilB; s.invoer.A = true; s.invoer.op = d.fase === "rust" && (t % 2) < 0.7; s.invoer.neer = !s.invoer.op && (t % 2) < 1.2; st(0.05); t += 0.05; if (s.drilB?.af > 0) af += 0.05; if (s.drilB?.fase === "duik") duik += 0.05; } s.invoer.A = s.invoer.op = s.invoer.neer = false;
+    return `klaar na ${t.toFixed(0)} s (lijn eraf ${af.toFixed(0)} s, duiken ${duik.toFixed(0)} s): ${document.querySelector("#melding").textContent} | missie klaar: ${s.spel.klaar}`; }));
   await beeld("4-binnen", 2500);
   // vanaf de kant
   await p.evaluate(() => window.__spel.start("kant")); await beeld("5-kant");
@@ -29,12 +33,12 @@ const T = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javasc
   await beeld("6-kant-na");
   // drone
   await p.evaluate(() => window.__spel.start("drone")); await beeld("7-drone");
-  console.log("drone:", await p.evaluate(() => { const s = window.__spel, W = s.W, d = s.dr, st = s.MISSIES.drone[1]; const buiten = W.huis.raam.clone().addScaledVector(W.huis.u, 3); d.pos.copy(buiten); s.cam.yaw = W.huis.yaw; s.cam.pitch = 0.1; let t = 0;
+  console.log("drone:", await p.evaluate(() => { const s = window.__spel, W = s.W, d = s.dr, st = s.MISSIES.drone[1]; s.piloot.nuchter = true; s.piloot.valT = 999; const buiten = W.huis.raam.clone().addScaledVector(W.huis.u, 3); d.pos.copy(buiten); s.cam.yaw = W.huis.yaw; s.cam.pitch = 0.1; let t = 0;
     s.invoer.y = 1; while (t < 6 && d.pos.distanceTo(W.huis.bed) > 0.9) { st(0.05); t += 0.05; if (Math.abs(d.pos.x - W.huis.bed.x) < 0.5 && Math.abs(d.pos.z - W.huis.bed.z) < 0.5) break; } s.invoer.y = 0;
     const l = W.huis.naarBinnen(d.pos); return JSON.stringify({ binnen: Math.abs(l.z) < W.huis.BZ / 2 && Math.abs(l.x) < W.huis.BX / 2, sec: +t.toFixed(1), totBed: +Math.hypot(d.pos.x - W.huis.bed.x, d.pos.z - W.huis.bed.z).toFixed(2), hoogte: +(d.pos.y - W.huis.bed.y).toFixed(2) }); }));
   await beeld("8-drone-binnen", 3000);
-  console.log("  piloten:", await p.evaluate(() => { const s = window.__spel, st = s.MISSIES.drone[1]; s.piloot.valT = 0.01; for (let t = 0; t < 3; t += 0.05) st(0.05); return s.piloot.lijst.map((q) => (q.w === s.C.paul ? "Paul" : "Bob") + (q === s.piloot.heeft ? "(ab)" : "") + (q.val > 0 ? " ligt" : " staat")).join(", "); }));
-  console.log("  glas:", await p.evaluate(() => { const s = window.__spel, st = s.MISSIES.drone[1]; s.dr.pos.x = s.W.huis.bed.x; s.dr.pos.z = s.W.huis.bed.z; s.invoer.Atik = true; st(0.02); s.invoer.Atik = false; for (let t = 0; t < 2; t += 0.02) st(0.02); return `wakker: ${s.cocks.wakker}, klaar: ${s.spel.klaar}`; }));
+  console.log("  piloten:", await p.evaluate(() => { const s = window.__spel, st = s.MISSIES.drone[1]; s.piloot.nuchter = false; s.piloot.valT = 0.01; for (let t = 0; t < 3; t += 0.05) st(0.05); return s.piloot.lijst.map((q) => (q.w === s.C.paul ? "Paul" : "Bob") + (q === s.piloot.heeft ? "(ab)" : "") + (q.val > 0 ? " ligt" : " staat")).join(", "); }));
+  console.log("  glas:", await p.evaluate(() => { const s = window.__spel, st = s.MISSIES.drone[1]; s.piloot.nuchter = true; s.piloot.lijst.forEach((q) => q.val = 0); s.piloot.valT = 999; s.dr.pos.x = s.W.huis.bed.x; s.dr.pos.z = s.W.huis.bed.z; s.invoer.Atik = true; st(0.02); s.invoer.Atik = false; for (let t = 0; t < 2; t += 0.02) st(0.02); return `wakker: ${s.cocks.wakker}, klaar: ${s.spel.klaar}`; }));
   await beeld("9-wakker", 3000);
   // beverratten
   await p.evaluate(() => window.__spel.start("rat")); await beeld("10-rat");
