@@ -36,6 +36,7 @@ Bediening: links op het scherm slepen = sturen, rechts slepen = rondkijken, knop
 - Karpertent: Trakker Tempest RS Brolly, zelf gebouwd in Blender naar de productfoto's, met stofsimulatie (`tools/tent/trakker-tempest.py`), met tentdoek “Fabric082A” van ambientCG (CC0).
 - Stretcher: Fox Camolite Sleep System, zelf gebouwd in Blender naar de productfoto's (`tools/bed/fox-camolite.py`); camopatroon uit de productfoto van Fox, fleece “Fabric082A” van ambientCG (CC0).
 - Speaker: JBL Charge 6 (zwart), zelf gebouwd in Blender naar de productfoto's van Coolblue (`tools/jbl/jbl-charge-6.py`); texturen uit die foto's, het JBL-logo is een merk van Harman.
+- Zonnebaars (Henk): 3D-scan “CC0 Bluegill, Lepomis macrochirus” (ffishAsia-and-floraZia, Sketchfab, CC0), omgekleurd naar zonnebaars (`tools/vis/`).
 - Kippen: “ANIMAL & FOOD | Chicken Model (CS2)” (kill6lucius, Sketchfab, CC BY 4.0), met eigen kleuren per kip.
 - Drone: “DJI 3 mini Pro” (wishmaster88, Sketchfab, CC BY 4.0), vereenvoudigd; staat in het spel voor Pauls DJI Mini 2.
 - Vissen via Sketchfab (CC BY 4.0): “Wels catfish” (faerbogdan99), “Bream (Abramis Brama)” en “Zander (Sander lucioperca)” (Nullifiedit), “Common Roach” (robert.meier.art); verkleind.
