@@ -46,15 +46,16 @@ export class Livescope {
         if (d < b - 0.15) {
           // het water: effen blauw met een fijne korrel; af en toe een lichter spikkeltje; bij de transducer de waaier
           const r = Math.hypot(v, d * 0.9);
+          if (d > b - 0.7) { const hr = h2(i, 91); if (hr > 0.82) s += (0.2 + (hr - 0.82) * 2) * (1 - (b - d) / 0.7) * (0.6 + korrel * 0.4); }
           if (korrel > 0.9985) s += 0.16; s += (wolk(i * 0.08 + t * 0.01, j * 0.1) - 0.5) * 0.04;
           if (r < 3.0 && v > -0.15) { const a = Math.atan2(d, v), st = h2(Math.round(a * 140), Math.floor(r * 3 + h2(Math.round(a * 140), 5) * 3) + (t >> 2)); if (st > 0.82 && a < 1.45) s += (0.32 + korrel * 0.15) * (1 - r / 3.0) ** 0.7 + 0.06; }
-        } else if (d < b + 1.05) {
+        } else if (d < b + 0.75) {
           // de bodem: rood-oranje kern, geel-groene randen, schuine strepen
-          const x_ = (d - b + 0.15) / 1.2, kern = Math.sin(Math.min(1, x_ * 1.15) * Math.PI) ** 0.8, streep = wolk((i * 0.9 - j * 1.6) * 0.09, (i * 0.3 + j * 0.9) * 0.6) * 0.6 + wolk(i * 0.05 + 7, j * 0.12) * 0.4, fijn = wolk((i * 1.4 - j * 2.2) * 0.25, (i + j) * 0.9);
+          const x_ = (d - b + 0.15) / 0.9, kern = Math.sin(Math.min(1, x_ * 1.15) * Math.PI) ** 1.3, streep = wolk((i * 0.9 - j * 1.6) * 0.09, (i * 0.3 + j * 0.9) * 0.6) * 0.6 + wolk(i * 0.05 + 7, j * 0.12) * 0.4, fijn = wolk((i * 1.4 - j * 2.2) * 0.25, (i + j) * 0.9);
           const dikte = (0.65 + wolk(i * 0.018 + 3, 1.7) * 0.55) * (1 - Math.max(0, v) / 50); s = 0.36 + kern * 0.52 * dikte + (streep - 0.5) * 0.36 + (fijn - 0.5) * 0.16 + (korrel - 0.5) * 0.08 - (1 - kern) * 0.12;
         } else {
           // onder de bodem: donkerblauw met schuine lichtblauwe vegen
-          const veeg = wolk((i * 0.35 + j * 0.15) * 0.12, (j * 0.35 - i * 0.12) * 0.05) * wolk(i * 0.6 - j * 0.3, j * 0.25), diep = d - b - 1.05;
+          const veeg = wolk((i * 0.35 + j * 0.15) * 0.12, (j * 0.35 - i * 0.12) * 0.05) * wolk(i * 0.6 - j * 0.3, j * 0.25), diep = d - b - 0.75;
           s = 0.03 + Math.max(0, veeg - 0.3) * 1.3 * Math.max(0.25, 1 - diep / 4) + korrel * 0.04;
         }
         if (s > 0.08) s *= versterk; const k = Math.max(0, Math.min(255, (s * 255) | 0)) * 3; px[o] = KLEUR[k]; px[o + 1] = KLEUR[k + 1]; px[o + 2] = KLEUR[k + 2]; px[o + 3] = 255; } }
