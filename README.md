@@ -22,6 +22,14 @@ Bediening: links op het scherm slepen = sturen, rechts slepen = rondkijken, knop
 - Mensen: MakeHuman (CC0), bewegingen Quaternius Universal Animation Library (CC0).
 - Modellen via Sketchfab (CC BY 4.0): hengel “Fishing Rod” (emelyarules), molen “Spinning Reel” (SiBeRiEIIIkA), stoel “Camping Chair” (lpfeffer), blikje “Beer can” (Arte Hexe), krat “Beer crate” (3DDomino), karper “Carp Fish” (huykhoi2407).
 - Bomen via Sketchfab (CC BY 4.0): “Realistic HD Lombardy poplar (16/75)” (PlantCatalog), “Maple trees pack (lowpoly, game ready, LODs)” (lolipop_1707), “Willow” (evolveduk); verkleind voor de telefoon.
+- Achtergrond- en dierengeluiden van Freesound (alle CC0):
+  - rivier-vogels.mp3: “nature_river_birds.wav” door divaldo11 (zero) https://freesound.org/people/divaldo11/sounds/184818/
+  - kabbelen.mp3: “The sound of a babbling brook” door hoshisato (zero) https://freesound.org/people/hoshisato/sounds/853672/
+  - wind-bomen.mp3: “Wind in a tree, close to the foliage. (Anatolia-Turkey)” door felix.blume (zero) https://freesound.org/people/felix.blume/sounds/167434/
+  - haan.mp3: “Rooster Crowing” door pooky1 (zero) https://freesound.org/people/pooky1/sounds/556913/
+  - kippen.mp3: “Chicken Clucking” door Filmscore (zero) https://freesound.org/people/Filmscore/sounds/823065/
+  - kip-dichtbij.mp3: “R01-58-Close Chicken Vocals.wav” door craigsmith (zero) https://freesound.org/people/craigsmith/sounds/479593/
+  - krekels-avond.mp3: “Crickets, very distant barks summer night.wav” door Daphne_in_Wonderland (zero) https://freesound.org/people/Daphne_in_Wonderland/sounds/383479/
 - Geluid: de plons komt uit Bobs eigen dril-video; het geluid van de slip en de reel is door Bob aangeleverd (28-11) met toestemming om het te gebruiken.
 - Kippen: “ANIMAL & FOOD | Chicken Model (CS2)” (kill6lucius, Sketchfab, CC BY 4.0), met eigen kleuren per kip.
 - Drone: “DJI 3 mini Pro” (wishmaster88, Sketchfab, CC BY 4.0), vereenvoudigd; staat in het spel voor Pauls DJI Mini 2.

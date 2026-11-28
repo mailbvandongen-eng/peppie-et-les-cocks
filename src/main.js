@@ -53,8 +53,11 @@ const geluid = { ctx: null,
   // echte opnames (assets/geluid/*.mp3); wat er (nog) niet is, blijft stil. stemmen.json: [{ "bestand": "...", "wanneer": "beet|groot|duik|binnen" }]
   buf: {}, stemmen: [], lus: {},
   async laad() { if (this.geladen) return; this.geladen = true; const c = this.ctx;
-    for (const n of ["plons-meerval", "slip", "reel"]) fetch(`assets/geluid/${n}.mp3?v=${window.VERSIE ?? ""}`).then((r) => (r.ok ? r.arrayBuffer() : null)).then((a) => a && c.decodeAudioData(a)).then((b) => { if (b) this.buf[n] = b; }).catch(() => {});
+    for (const n of ["plons-meerval", "slip", "reel", "rivier-vogels", "kabbelen", "wind-bomen", "haan", "kippen", "kip-dichtbij"]) fetch(`assets/geluid/${n}.mp3?v=${window.VERSIE ?? ""}`).then((r) => (r.ok ? r.arrayBuffer() : null)).then((a) => a && c.decodeAudioData(a)).then((b) => { if (b) this.buf[n] = b; }).catch(() => {});
     fetch(`assets/geluid/stemmen.json?v=${window.VERSIE ?? ""}`).then((r) => (r.ok ? r.json() : [])).then((l) => { this.stemmen = l; for (const s_ of l) fetch(`assets/geluid/${s_.bestand}`).then((r) => r.arrayBuffer()).then((a) => c.decodeAudioData(a)).then((b) => { s_.buf = b; }).catch(() => {}); }).catch(() => {}); },
+  /** Een stukje uit een opname (kippen, de haan): vanaf een willekeurige plek, met in- en uitfaden. */
+  stuk(n, duur, gain = 1) { const c = this.ctx, b = this.buf[n]; if (!c || !b) return; const s_ = c.createBufferSource(), g = c.createGain(), van = Math.random() * Math.max(0, b.duration - duur), t = c.currentTime;
+    s_.buffer = b; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(gain, t + 0.08); g.gain.setValueAtTime(gain, t + duur - 0.25); g.gain.linearRampToValueAtTime(0, t + duur); s_.connect(g); g.connect(c.destination); s_.start(t, van, duur); },
   speel(n, { gain = 1, rate = 1 } = {}) { const c = this.ctx, b = this.buf[n]; if (!c || !b) return; const s_ = c.createBufferSource(), g = c.createGain(); s_.buffer = b; s_.playbackRate.value = rate; g.gain.value = gain; s_.connect(g); g.connect(c.destination); s_.start(); },
   /** Een opname die doorloopt zolang hij nodig is (de slip, de reel): sterkte 0 = uit. */
   zet(n, sterk, rate = 1) { const c = this.ctx, b = this.buf[n]; if (!c || !b) return; let l = this.lus[n];
@@ -62,9 +65,12 @@ const geluid = { ctx: null,
     if (l) { l.g.gain.setTargetAtTime(sterk, c.currentTime, 0.05); l.s.playbackRate.setTargetAtTime(rate, c.currentTime, 0.1); } },
   stem(wanneer) { const l = this.stemmen.filter((s_) => s_.wanneer === wanneer && s_.buf); if (!l.length || this.ctx.currentTime < (this.stilTot ?? 0)) return; const s_ = l[(Math.random() * l.length) | 0], b = this.ctx.createBufferSource(); b.buffer = s_.buf; b.connect(this.ctx.destination); b.start(); this.stilTot = this.ctx.currentTime + s_.buf.duration + 4; },
   // kippen: getok, gekakel en de haan (zacht, en alleen als je er dichtbij bent)
-  tok(v = 1) { for (let i = 0; i < 2 + ((Math.random() * 3) | 0); i++) this.toon({ freq: 520 + Math.random() * 80, freq2: 380, duur: 0.07, type: "square", gain: 0.018 * v, start: i * 0.16 }); },
-  kakel(v = 1) { for (let i = 0; i < 7; i++) this.toon({ freq: 600 + Math.random() * 300, freq2: 420, duur: 0.08, type: "square", gain: 0.022 * v, start: i * 0.1 + (i > 4 ? 0.15 : 0) }); },
-  kraai(v = 1) { [[420, 560, 0.18], [560, 700, 0.16], [700, 760, 0.5], [760, 520, 0.35]].reduce((t, [a, b, d]) => { this.toon({ freq: a, freq2: b, duur: d, type: "sawtooth", gain: 0.03 * v, start: t }); this.toon({ freq: a * 2, freq2: b * 2, duur: d, type: "triangle", gain: 0.015 * v, start: t }); return t + d * 0.9; }, 0); },
+  tok(v = 1) { this.stuk("kip-dichtbij", 1.4, 0.5 * v); },
+  tokOud(v = 1) { for (let i = 0; i < 2 + ((Math.random() * 3) | 0); i++) this.toon({ freq: 520 + Math.random() * 80, freq2: 380, duur: 0.07, type: "square", gain: 0.018 * v, start: i * 0.16 }); },
+  kakel(v = 1) { this.stuk("kippen", 2.6, 0.6 * v); },
+  kakelOud(v = 1) { for (let i = 0; i < 7; i++) this.toon({ freq: 600 + Math.random() * 300, freq2: 420, duur: 0.08, type: "square", gain: 0.022 * v, start: i * 0.1 + (i > 4 ? 0.15 : 0) }); },
+  kraai(v = 1) { this.speel("haan", { gain: 0.45 * v }); },
+  kraaiOud(v = 1) { [[420, 560, 0.18], [560, 700, 0.16], [700, 760, 0.5], [760, 520, 0.35]].reduce((t, [a, b, d]) => { this.toon({ freq: a, freq2: b, duur: d, type: "sawtooth", gain: 0.03 * v, start: t }); this.toon({ freq: a * 2, freq2: b * 2, duur: d, type: "triangle", gain: 0.015 * v, start: t }); return t + d * 0.9; }, 0); },
 };
 
 // ---------- laden ----------
@@ -528,6 +534,8 @@ function lus() {
     peppie.g.position.copy(W.steiger.eind).addScaledVector(u, -1).setY(W.steiger.dek); peppie.g.rotation.set(0, huis.yaw, 0); peppie.m.zet("staan"); peppie.m.mixer.update(dt);
   } else if (spel.modus === "kijk") { /* camera van buitenaf (tools/kijk.cjs) */ } else if (!spel.klaar || spel.modus === "drone") MISSIES[spel.modus][1](dt);
   if (meldT > 0 && (meldT -= dt) <= 0) hud.melding.hidden = true;
+  // achtergrondgeluid: de rivier met vogels, wind in de bomen, en het kabbelen van het water als je bij de oever bent
+  if (geluid.ctx) { const cp = camera.position, oever = Math.abs(W.oever(cp.x, cp.z)); geluid.zet("rivier-vogels", 0.32); geluid.zet("wind-bomen", 0.16); geluid.zet("kabbelen", Math.max(0, 0.4 - oever / 30)); }
   for (const a of aangemeerd) { a.f += dt; a.b.position.y = 0.02 + Math.sin(a.f * 1.5) * 0.015; }
   for (const w of rest) w.m.mixer.update(dt); for (const w of Object.values(C)) for (const a of [w.m.pet, w.m.bril, w.m.hoed, w.m.gopro]) a?.userData.pas?.();
   kippen.stap(dt, spel.modus === "kant" || spel.modus === "rat" ? { x: loop.pos.x, z: loop.pos.z, v: loop.v } : null);
