@@ -2,7 +2,7 @@
 // Vier missies: vissen vanaf de kant, met de belly boat en de livescope op meerval, met de drone een glas water
 // op de slapende Cocks laten vallen, en beverratten scheppen vanaf de steiger.
 import * as THREE from "three";
-import { laadMensen, maakMens, zetPet } from "./mensen.js";
+import { laadMensen, maakMens, zetPet, cartoon, zetBril, zetHoed, zetGoPro } from "./mensen.js";
 import { Effecten } from "./effecten.js";
 import { Livescope } from "./livescope.js";
 import { Chirp } from "./chirp.js";
@@ -90,6 +90,9 @@ const huis = W.huis, u = huis.u, t = huis.t; // u = naar de rivier, t = langs de
 // staat er één op de middelste steiger en zit er één aan de picknicktafel.
 const C = { paul: mens("paul"), dave: mens("dave"), bob: mens("bob"), wim: mens("wim") };
 zetPet(C.dave.m);
+// cartoonpersonages: Paul met GoPro, Wim groot en dik met zijn zwarte bril, Bob kaal, Dave met de witte pet
+for (const [n, o] of Object.entries({ paul: {}, dave: {}, bob: { hoofd: 1.15, buik: 1.12 }, wim: { lengte: 1.08, buik: 1.35 } })) cartoon(C[n].m, o);
+zetBril(C.wim.m, "zwart"); zetGoPro(C.paul.m);
 let peppie = C.paul, cocks = C.bob, rest = [C.dave, C.wim];
 const plekken = (() => { const zet = (w, lx, lz, rot, houding, zit) => { const p = dom.wereld(lx, 0, lz); w.g.position.set(p.x, W.opSteiger(p.x, p.z) ?? W.hoogte(p.x, p.z), p.z); w.g.rotation.set(0, huis.yaw + rot, 0); w.m.zet(houding, 1, houding === "zitten" ? 0 : null); w.m.mixer.update(0.01); if (zit) w.g.position.y += 0.44 - w.m.zithoogte() + 0.02; };
   return [(w) => zet(w, -5.4, dom.oeverZ(-5.4) + 1.7, 0.4, "staan"), (w) => zet(w, -6.4, dom.oeverZ(-6.5) - 5.25, Math.PI, "zitten", true)]; })();
@@ -126,7 +129,7 @@ legCocks();
 
 // ---------- bediening ----------
 const invoer = { sonarSleep: 0, links: false, rechts: false, x: 0, y: 0, A: false, Atik: false, B: false, Btik: false, op: false, neer: false, toets: {} };
-const cam = { yaw: huis.yaw + Math.PI, pitch: 0.28, afstand: 5, sleep: 0 };
+const cam = { yaw: huis.yaw + Math.PI, pitch: 0.28, afstand: 5, sleep: 0, zYaw: 0, zPitch: -0.32 };
 // De stuurknop staat vast linksonder (altijd op dezelfde plek, ook boven de livescope); slepen over het beeld = rondkijken;
 // in de livescope-stand is slepen over het scherm de transducer draaien.
 { const stick = $("#stick"), dop = $("#stick i"); let sid = null, kid = null, lx = 0, ly = 0, scid = null, scx = 0;
@@ -136,7 +139,8 @@ const cam = { yaw: huis.yaw + Math.PI, pitch: 0.28, afstand: 5, sleep: 0 };
   for (const ev of ["pointerup", "pointercancel"]) stick.addEventListener(ev, (e) => { if (e.pointerId === sid) { sid = null; invoer.x = invoer.y = 0; dop.style.transform = ""; } });
   const vlak = renderer.domElement;
   vlak.addEventListener("pointerdown", (e) => { geluid.start(); if (kid === null) { kid = e.pointerId; lx = e.clientX; ly = e.clientY; cam.sleep = 1; vlak.setPointerCapture(e.pointerId); } });
-  vlak.addEventListener("pointermove", (e) => { if (e.pointerId === kid && spel.modus === "belly" && !strepen()) { invoer.sonarSleep += (e.clientX - lx) / innerWidth * 1.4; lx = e.clientX; ly = e.clientY; return; } if (e.pointerId === kid) { cam.yaw -= (e.clientX - lx) * 0.0055; cam.pitch = klem(cam.pitch + (e.clientY - ly) * 0.004, -0.3, 1.2); lx = e.clientX; ly = e.clientY; cam.sleep = 1; } });
+  vlak.addEventListener("pointermove", (e) => { if (e.pointerId === kid && spel.modus === "belly" && belly.weergave === "zelf") { cam.zYaw = klem(cam.zYaw - (e.clientX - lx) * 0.005, -1.6, 1.6); cam.zPitch = klem(cam.zPitch - (e.clientY - ly) * 0.004, -1.0, 0.5); lx = e.clientX; ly = e.clientY; return; }
+    if (e.pointerId === kid && spel.modus === "belly" && !strepen()) { invoer.sonarSleep += (e.clientX - lx) / innerWidth * 1.4; lx = e.clientX; ly = e.clientY; return; } if (e.pointerId === kid) { cam.yaw -= (e.clientX - lx) * 0.0055; cam.pitch = klem(cam.pitch + (e.clientY - ly) * 0.004, -0.3, 1.2); lx = e.clientX; ly = e.clientY; cam.sleep = 1; } });
   const los = (e) => { if (e.pointerId === kid) kid = null; };
   vlak.addEventListener("pointerup", los); vlak.addEventListener("pointercancel", los);
   const sc = $("#scope");
@@ -278,7 +282,7 @@ const scope = new Livescope(hud.scope), chirp = new Chirp(hud.scope); scope.voor
 let spelerNaam = "paul"; const strepen = () => spelerNaam === "wim"; // Wim heeft geen livescope, alleen zijn strepenkijker
 const aasgedrag = new Aasgedrag(); let drilB = null; // de dril vanuit de bellyboat (src/meerval.js)
 function beginBelly() {
-  belly.pos.copy(W.steiger.eind).addScaledVector(u, 32); belly.yaw = huis.yaw; belly.sonar = 0; belly.aas = 1; belly.vis = null; belly.v = 0; belly.w = 0; drilB = null; cam.yaw = huis.yaw + Math.PI; cam.afstand = 6.5; cam.pitch = 0.3; zetWeergave("varen");
+  belly.pos.copy(W.steiger.eind).addScaledVector(u, 32); belly.yaw = huis.yaw; belly.sonar = 0; belly.aas = 1; belly.vis = null; belly.v = 0; belly.w = 0; drilB = null; cam.yaw = huis.yaw + Math.PI; cam.afstand = 6.5; cam.pitch = 0.3; zetWeergave("hoog");
   hud.missie.textContent = strepen() ? "Wim heeft alleen zijn strepenkijker: vaar over de vis heen, laat het aas zakken en sla aan als hij pakt" : "Zoek met de transducer (veeg over het scherm) een grote meerval, vaar erboven, laat het aas zakken tot voor zijn kop en sla aan als hij pakt"; hud.tel.textContent = "";
 }
 /** De hengel in de bellyboat: de kolf tegen je buik onder je onderarm, de hengel vooruit over de punt; op = opgeheven (0..1),
@@ -289,7 +293,9 @@ function bellyHengel(b, f, op, bocht, duik = 0) { const m = peppie.m, buik = m.p
   const k = strepen() ? "L" : "R", ander = k === "R" ? "L" : "R", zijk = k === "R" ? -1 : 1;
   m.arm(k, hengelKort.reelHand(), V(0, -1, 0).addScaledVector(links, zijk * 0.7)); m.arm(ander, hengelKort.voorHand(), V(0, -1, 0).addScaledVector(links, -zijk * 0.7)); return top; }
 const bodycam = { aan: false, schok: 0 };
-function zetBodycam(aan) { bodycam.aan = aan; const hoofd = peppie.m.object.getObjectByName("DEF-head"); if (hoofd) hoofd.scale.setScalar(aan ? 0.001 : 1); if (peppie.m.pet) peppie.m.pet.visible = !aan; hud.scope.hidden = aan || belly.weergave === "varen"; $("#slip").hidden = !aan; }
+/** Je eigen hoofd weg als je door je eigen ogen kijkt (anders zit het in beeld). */
+function eigenHoofd(weg) { const hoofd = peppie.m.object.getObjectByName("DEF-head"); if (hoofd) hoofd.scale.setScalar(weg ? 0.001 : peppie.m.hoofdMaat ?? 1); for (const a of [peppie.m.pet, peppie.m.bril, peppie.m.hoed, peppie.m.gopro]) if (a) a.visible = !weg; }
+function zetBodycam(aan) { bodycam.aan = aan; eigenHoofd(aan || belly.weergave === "zelf"); hud.scope.hidden = aan; $("#slip").hidden = !aan; }
 function stapBelly(dt) {
   const b = belly, s = stuur(), f = voor(b.yaw), rechts = V(-f.z, 0, f.x); b.klok += dt;
   // varen met de motor: gas geven en sturen, met wat traagheid zoals een bellyboat op een elektromotor
@@ -362,19 +368,24 @@ function stapBelly(dt) {
    
     camera.position.copy(oog).add(V((Math.random() - 0.5) * sch, (Math.random() - 0.5) * sch, (Math.random() - 0.5) * sch)); camera.lookAt(top.clone().lerp(oog, 0.15).add(V(0, -0.25 - (drilB?.fase === "duik" ? 0.3 : 0), 0)));
     zon.target.position.copy(b.pos); zon.position.copy(b.pos).add(V(40, 70, 25)); return; }
-  cam.sleep = Math.max(0, cam.sleep - dt * 0.4); if (cam.sleep <= 0) { let d = b.yaw + Math.PI - cam.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); cam.yaw += d * Math.min(1, dt * 1.6); cam.pitch += ((belly.weergave !== "varen" ? 0.42 : 0.26) - cam.pitch) * Math.min(1, dt * 2); }
-  cam.afstand += ((belly.weergave !== "varen" ? 3.4 : 6.5) - cam.afstand) * Math.min(1, dt * 2);
-  volg(b.pos.clone().add(V(0, belly.weergave !== "varen" ? 0.8 : 1.6, 0)).addScaledVector(f, belly.weergave !== "varen" ? 0.4 : 3));
+  if (belly.weergave === "zelf") { // door je eigen ogen: de hengel op de stang, het scherm, de bekerhouder en de tassen
+    const oog = peppie.m.plek("DEF-head").clone().addScaledVector(f, 0.06).add(V(0, 0.08, 0)), ky = b.yaw + cam.zYaw, kp = cam.zPitch;
+    camera.position.copy(oog); camera.lookAt(oog.clone().add(V(Math.sin(ky) * Math.cos(kp), Math.sin(kp), Math.cos(ky) * Math.cos(kp))));
+    zon.target.position.copy(b.pos); zon.position.copy(b.pos).add(V(40, 70, 25)); return; }
+  // hoog achter de boot, met zicht over de rivier (en op de boot zelf)
+  cam.sleep = Math.max(0, cam.sleep - dt * 0.4); if (cam.sleep <= 0) { let d = b.yaw + Math.PI - cam.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); cam.yaw += d * Math.min(1, dt * 1.6); cam.pitch += (0.42 - cam.pitch) * Math.min(1, dt * 2); }
+  cam.afstand += (8.5 - cam.afstand) * Math.min(1, dt * 2);
+  volg(b.pos.clone().add(V(0, 1.0, 0)).addScaledVector(f, 2.2));
 }
-/** Varen (uitzicht over de rivier, geen scherm) of livescope (het hele scherm is de Garmin). */
-function zetWeergave(w) { belly.weergave = w; $("#stick").classList.toggle("zacht", w !== "varen"); for (const k of document.querySelectorAll("#weergave button")) k.classList.toggle("aan", k.dataset.w === w); hud.scope.hidden = w === "varen"; plaatsScope(); }
-function plaatsScope() { const sc = hud.scope, staand = innerHeight > innerWidth, vol = belly.weergave === "vol"; let b, h, l, tp;
-  if (vol) { b = innerWidth; h = innerHeight; l = 0; tp = 0; }
-  else if (staand) { b = innerWidth - 12; h = (b * 9) / 16; l = 6; tp = 96; }
-  else { h = innerHeight - 64; b = (h * 16) / 9; const max = innerWidth - 250; if (b > max) { b = max; h = (b * 9) / 16; } l = 8; tp = Math.max(50, (innerHeight - h) / 2 + 20); }
-  sc.style.left = `${l}px`; sc.style.top = `${tp}px`; sc.style.width = `${b}px`; sc.style.height = `${h}px`; sc.classList.toggle("vol", vol);
-  // het canvas zelf in de juiste verhouding (scherp op het hele scherm)
-  const k = Math.min(devicePixelRatio, 1.5), cw = vol ? Math.round(b * k) : 960, ch = vol ? Math.round(h * k) : 540; if (sc.width !== cw || sc.height !== ch) { sc.width = cw; sc.height = ch; } }
+/** Hoog (achter de boot, klein scherm linksboven), Zelf (door je eigen ogen, groter scherm) of Vol (alleen de livescope). */
+function zetWeergave(w) { belly.weergave = w; for (const k of document.querySelectorAll("#weergave button")) k.classList.toggle("aan", k.dataset.w === w); hud.scope.hidden = false; eigenHoofd(w === "zelf" || bodycam.aan); cam.zYaw = 0; cam.zPitch = -0.32; plaatsScope(); }
+function plaatsScope() { const sc = hud.scope, W_ = innerWidth, H_ = innerHeight, staand = H_ > W_, w = belly.weergave; let b, h, l = 8, tp = 52;
+  if (w === "vol") { b = W_; h = H_; l = 0; tp = 0; }
+  else if (staand) { b = (w === "zelf" ? 0.96 : 0.62) * W_; h = (b * 9) / 16; l = 6; tp = 52; }
+  else { b = Math.min((w === "zelf" ? 0.5 : 0.3) * W_, (w === "zelf" ? 0.62 : 0.42) * H_ * 16 / 9); h = (b * 9) / 16; }
+  sc.style.left = `${l}px`; sc.style.top = `${tp}px`; sc.style.width = `${b}px`; sc.style.height = `${h}px`; sc.classList.toggle("vol", w === "vol");
+  // het canvas zelf in de juiste verhouding (scherp, ook als het klein is)
+  const k = Math.min(devicePixelRatio, 2), cw = Math.max(480, Math.round(b * k)), ch = Math.max(270, Math.round(h * k)); if (sc.width !== cw || sc.height !== ch) { sc.width = cw; sc.height = ch; } }
 addEventListener("resize", () => { if (spel.modus === "belly") plaatsScope(); });
 
 // ---------- missie 3: de drone en het glas water ----------
@@ -518,7 +529,7 @@ function lus() {
   } else if (spel.modus === "kijk") { /* camera van buitenaf (tools/kijk.cjs) */ } else if (!spel.klaar || spel.modus === "drone") MISSIES[spel.modus][1](dt);
   if (meldT > 0 && (meldT -= dt) <= 0) hud.melding.hidden = true;
   for (const a of aangemeerd) { a.f += dt; a.b.position.y = 0.02 + Math.sin(a.f * 1.5) * 0.015; }
-  for (const w of rest) w.m.mixer.update(dt); for (const w of Object.values(C)) w.m.pet?.userData.pas?.();
+  for (const w of rest) w.m.mixer.update(dt); for (const w of Object.values(C)) for (const a of [w.m.pet, w.m.bril, w.m.hoed, w.m.gopro]) a?.userData.pas?.();
   kippen.stap(dt, spel.modus === "kant" || spel.modus === "rat" ? { x: loop.pos.x, z: loop.pos.z, v: loop.v } : null);
   invoer.Atik = invoer.Btik = false; fx.stap(dt); bomen.stap(dt, camera); water.stap(dt); vb.stap(dt, spel.modus === "belly" ? belly.pos : spel.modus === "kant" || spel.modus === "rat" ? loop.pos.clone().addScaledVector(u, 20) : W.steiger.eind.clone().addScaledVector(u, 25), camera);
   renderer.render(scene, camera);

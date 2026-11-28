@@ -8,7 +8,7 @@ Elk karakter moet direct herkenbaar zijn en een eigen kenmerk hebben.
 
 | Naam | Uiterlijk (uit foto's) | Eigenschap |
 |------|------------------------|------------|
-| **Paul** | jongste; rossig-blond warrig haar, rossige stoppelbaard, oorbel, rood gezicht; grijs T-shirt; zwarte hoodie; groen T-shirt in de groene boot | drinkt ("lazarus") |
+| **Paul** | jongste; rossig-blond warrig haar, rossige stoppelbaard, rood gezicht, geen oorbel; grijs T-shirt; zwarte hoodie; groen T-shirt in de groene boot | drinkt ("lazarus") |
 | **Dave** | kort geschoren hoofd, grijzende stoppels, lachrimpels, gekke bekken trekken; lichtblauwe polo, zwart T-shirt; in zijn bellyboat geel/groen poloshirt of grijs vest met oranje portofoon, witte Adidas-pet, zonnebril; groen/zwarte "CATFISH"-bellyboat en ook een zwarte bellyboat | drinkt ("lazarus") |
 | **Bob** | helemaal kaal, groot rond hoofd, lichte wenkbrauwen; pilotenzonnebril met bruine glazen; donker bodywarmer/jas (North Face), donker T-shirt | drinkt ("lazarus") |
 | **Wim** | ouder, kaal met grijze rand; bruine cowboyhoed met hoofdlamp, bril, brede glimlach; donker T-shirt met opdruk, korte broek; zwarte 12BB-bellyboat; ook zwart "I'm Yorkshire"-shirt, grijs vest | drinkt alleen **Fristi** — nog uitwerken wat dat in het spel doet |
@@ -91,3 +91,10 @@ Uitwerking van eigenschappen volgt later van Bob.
 - **Nacht**: spel krijgt ook een nachtstand met hoofdlampen en weerspiegeling op het water.
 
 - **Bellyboten (Bob, 28-11):** Wim = Black Cat Battle Boat (lichtgrijs, donkere band, klein sonarschermpje); Paul en Bob = Raptor 180 zwart carbon (RAPTOR met rode klauwkrassen); Dave = MADCAT groen/zwart met Garmin onder een zonnekap.
+
+## 10. De vier als cartoonpersonages (Bob, 28-11)
+Getekende stijl, herkenbaar aan kenmerken; iedereen korte broek, T-shirt, sneakers. Foto's in ref/gezicht/.
+- **Bob** (ref/gezicht/bob-nieuw): helemaal kaal, groot rond hoofd, blauwe ogen, lichte wenkbrauwen, stoppels; soms pilotenzonnebril; zwart T-shirt.
+- **Wim** (ref/gezicht/wim-nieuw): **groot en dik** (lang, brede schouders, flinke buik — moet goed uitkomen), donkerblauw T-shirt, bruine korte broek, zonnebril; ouder, kaal met een grijs randje opzij en achter, zwarte rechthoekige bril, brede lach, blozend; overhemd met fijn blauw patroon; bruine leren cowboyhoed met gevlochten band (op het water); trouwring.
+- **Paul** (ref/gezicht/paul-nieuw): rossig/koperblond kort warrig haar dat rechtop staat, rossige stoppelbaard en snor, ronde blozende wangen, kleine ogen die dichtknijpen als hij lacht, scheve grijns; geen oorbel; zwart T-shirt; vaak een GoPro op een hoofdband; jongste van de vier.
+- **Dave** (ref/gezicht/dave-nieuw): kort geschoren hoofd (bijna kaal, iets wijkende haargrens), grijzende stoppelbaard, smal gezicht met diepe lachrimpels, bruine ogen, enorme lach met veel tanden; zonnebril vaak op het hoofd; lichtblauw/mintgroen poloshirt of T-shirt; witte Adidas-pet op het water; slank.

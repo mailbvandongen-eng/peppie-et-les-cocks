@@ -109,9 +109,11 @@ export class Livescope {
     [[temp.toFixed(2), "°", "C"], [snelheid.toFixed(2), "k", "t"], [volt.toFixed(1), "", "V"], [tijd, "", ""]].forEach(([w, e1, e2], i) => { const y = F * (0.226 + i * 0.0445); x.font = `${Math.round(F * 0.056)}px ${FONT}`; x.fillText(w, L0, y); const bw = x.measureText(w).width; x.font = `${Math.round(F * 0.027)}px ${FONT}`; if (e1) x.fillText(e1, L0 + bw + 2, y - F * 0.022); if (e2) x.fillText(e2, L0 + bw + 2, y - (e1 ? 0 : F * 0.002)); });
     x.shadowBlur = 0;
     // waar kijkt de transducer heen? (een bellyboat van boven met de bundel; niet van Garmin, maar handig in het spel)
-    if (richting !== null) { const r = F * 0.09, cx = W - F * 0.2, cy = F * 0.2; x.save(); x.fillStyle = "rgba(10,14,30,0.55)"; x.beginPath(); x.arc(cx, cy, r * 1.25, 0, 6.3); x.fill();
-      x.fillStyle = "rgba(255,230,60,0.6)"; x.beginPath(); x.moveTo(cx + r * 0.25, cy - r * 0.3); x.arc(cx + r * 0.25, cy - r * 0.3, r * 1.05, -Math.PI / 2 - richting - 0.2, -Math.PI / 2 - richting + 0.2); x.closePath(); x.fill();
-      x.strokeStyle = "#fff"; x.lineWidth = 2; x.beginPath(); x.moveTo(cx - r * 0.3, cy - r * 0.5); x.lineTo(cx - r * 0.3, cy + r * 0.3); x.quadraticCurveTo(cx, cy + r * 0.65, cx + r * 0.3, cy + r * 0.3); x.lineTo(cx + r * 0.3, cy - r * 0.5); x.stroke(); x.restore(); }
+    if (richting !== null) { // waar kijkt de transducer heen: een bundel vanuit het midden (de boot), vooruit = omhoog
+      const r = F * 0.09, cx = W - F * 0.2, cy = F * 0.2; x.save(); x.fillStyle = "rgba(10,14,30,0.55)"; x.beginPath(); x.arc(cx, cy, r * 1.2, 0, 6.3); x.fill();
+      x.strokeStyle = "rgba(255,255,255,0.35)"; x.lineWidth = 1; x.beginPath(); x.arc(cx, cy, r * 1.2, 0, 6.3); x.stroke();
+      const a = -Math.PI / 2 - richting; x.fillStyle = "rgba(255,226,70,0.7)"; x.beginPath(); x.moveTo(cx, cy); x.arc(cx, cy, r * 1.15, a - 0.38, a + 0.38); x.closePath(); x.fill();
+      x.fillStyle = "#fff"; x.beginPath(); x.arc(cx, cy, r * 0.1, 0, 6.3); x.fill(); x.restore(); }
     // de knoppen van het toestel, zoals op de opname
     const U = (F * 16) / 9; // breedte van een 16:9-scherm met deze hoogte: de knoppen staan op dezelfde plek als op de opname
     this.knoppen = [];

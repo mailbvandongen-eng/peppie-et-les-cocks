@@ -7,6 +7,8 @@ import * as THREE from "three";
 import { onderWater } from "./water.js";
 
 const tussen = (a, b) => a + Math.random() * (b - a);
+// Bob (28-11): geen vissen zichtbaar in het water (ze zwommen stijf als blokken) en geen springende karper. Alleen op de livescope.
+const ZICHTBAAR = false, SPRONG = false;
 // de verhouding zoals op de Lot: vooral meerval (van klein tot reus), veel kleine vis op de bodem en in scholen, karper zelden
 const SOORTEN = {
   Meerval: { model: "meerval", lengte: [0.6, 1.0], boven: [0.1, 1.2], snel: 0.22, kans: 3.0, groep: [1, 1] },
@@ -74,6 +76,8 @@ export async function maakVisbestand(scene, W, { telefoon = false, fx = null, ge
       const nx = v.x + (dx / l) * sn * dt, nz = v.z + (dz / l) * sn * dt; if (bodem(nx, nz) > 0.8) { v.x = nx; v.z = nz; } else { v.tx = v.x0; v.tz = v.z0; }
       let dh = Math.atan2(dx, dz) - v.h; dh = Math.atan2(Math.sin(dh), Math.cos(dh)); const dr = dh * Math.min(1, dt * 2); v.h += dr; v.draai = (v.draai ?? 0) * 0.9 + (dr / Math.max(dt, 0.001)) * 0.1;
       const doelD = v.lok ?? Math.max(0.4, bodem(v.x, v.z) - v.boven); v.d += (doelD - v.d) * Math.min(1, dt * (v.lok != null ? 1.2 : 0.4)); v.staart += dt * (4 + sn * 8); }
+    if (!ZICHTBAAR) { for (const ms of Object.values(inst)) for (const m of ms) m.count = 0; for (const m of voorn) m.count = 0; }
+    else {
     // tekenen (alleen wat in de buurt van de camera is; diep onder water zie je het toch niet)
     const cp = camera.position, n = { meerval: 0, karper: 0, brasem: 0, snoekbaars: 0 };
     for (const v of alle) { if (v.verborgen) continue; const dx = v.x - cp.x, dz = v.z - cp.z; if (dx * dx + dz * dz > 45 * 45) continue; const mod = SOORTEN[v.soort].model, i = n[mod]++; if (i >= NMAX) continue;
@@ -82,11 +86,12 @@ export async function maakVisbestand(scene, W, { telefoon = false, fx = null, ge
     let nv = 0; for (const s of scholen) { const dx = s.x - cp.x, dz = s.z - cp.z; if (dx * dx + dz * dz > 40 * 40) continue; const h = Math.atan2(s.vx, s.vz);
       for (let i = 0; i < Math.min(48, s.n) && nv < VOORN; i++) { const a = s.zaad + i * 2.4, o = schoolPunt(s, i); m4.compose(p3.set(o.x, -o.d, o.z), q.setFromEuler(e.set(0, h + Math.sin(klok * 3 + a) * 0.25, 0)), s3.setScalar(s.lengte)); for (const m of voorn) m.setMatrixAt(nv, m4); nv++; } }
     for (const m of voorn) { m.count = nv; m.instanceMatrix.needsUpdate = true; }
+    }
     // kringen en sprongen
     if ((ringT -= dt) <= 0) { ringT = tussen(0.4, 1.6); const s = scholen[(Math.random() * scholen.length) | 0], v = lijst[(Math.random() * lijst.length) | 0];
       if (Math.random() < 0.6 && s && Math.hypot(s.x - midden.x, s.z - midden.z) < 45) { for (let k = 0; k < 3; k++) kring(s.x + tussen(-s.r, s.r), s.z + tussen(-s.r, s.r), tussen(0.3, 0.7)); } else if (v && v.soort === "Karper" && Math.hypot(v.x - midden.x, v.z - midden.z) < 45) kring(v.x, v.z, 1.3); }
     for (const k of ringen) { if (k.t >= 1) continue; k.t = Math.min(1, k.t + dt / 2.6); const s = (0.15 + k.t * 1.6) * k.groot; k.r.scale.set(s, 1, s); k.r.material.opacity = (1 - k.t) * 0.55; if (k.t >= 1) k.r.visible = false; }
-    if ((sprongT -= dt) <= 0 && sprong.t >= 1) { sprongT = tussen(6, 16); const p = plek(8, 38, 1.5); if (p) { Object.assign(sprong, { t: 0, x: p[0], z: p[1], h: Math.random() * 6.28, l: tussen(0.5, 0.9) }); fx?.(V3(p[0], 0, p[1]), 10); } }
+    if (SPRONG && (sprongT -= dt) <= 0 && sprong.t >= 1) { sprongT = tussen(6, 16); const p = plek(8, 38, 1.5); if (p) { Object.assign(sprong, { t: 0, x: p[0], z: p[1], h: Math.random() * 6.28, l: tussen(0.5, 0.9) }); fx?.(V3(p[0], 0, p[1]), 10); } }
     if (sprong.t < 1) { const t0 = sprong.t; sprong.t = Math.min(1, sprong.t + dt / 1.1); const f = sprong.t, h = Math.sin(f * Math.PI) * 1.1 * sprong.l, vx = Math.sin(sprong.h), vz = Math.cos(sprong.h);
       springer.visible = f < 0.97; springer.position.set(sprong.x + vx * (f - 0.5) * 1.6, h - 0.2, sprong.z + vz * (f - 0.5) * 1.6); springer.rotation.set(0, sprong.h, 0); springer.rotateX(-Math.cos(f * Math.PI) * 0.9); springer.scale.setScalar(sprong.l);
       if (t0 < 0.82 && f >= 0.82) { fx?.(springer.position.clone().setY(0), 26); kring(springer.position.x, springer.position.z, 1.6); geluid?.(Math.hypot(sprong.x - cp.x, sprong.z - cp.z)); } }

@@ -177,16 +177,89 @@ def deel(naam, pts, vt, faces, refs, vak, weg_vlakken=None):
                 groepen[bot].add([nieuw_i], w, 'REPLACE')
     return ob
 
+# ---------- schilderen op het vel: per driehoek van een onderdeel, met de 3D-plek (MakeHuman-maat) per pixel ----------
+def verf(P, vt, faces, vak, fn):
+    """P: punten (MakeHuman, y omhoog, dm); fn(xyz Nx3, kleur Nx3) -> nieuwe kleur Nx3 (lineair)."""
+    x0, y0, w0, h0 = VAK[vak]; yb = A - y0 - h0; deelpx = atlas[yb:yb + h0, x0:x0 + w0]; P = np.asarray(P, dtype=np.float32)
+    for q in faces:
+        I = [i for i, _ in q]; Tv = [t for _, t in q]
+        if any(t < 0 for t in Tv): continue
+        for tri in ([0, 1, 2], [0, 2, 3]) if len(q) == 4 else ([0, 1, 2],):
+            uv = np.array([vt[Tv[k]] for k in tri], dtype=np.float32) * [w0, h0]; Q = P[[I[k] for k in tri]]
+            bx0, by0 = np.floor(uv.min(axis=0)).astype(int); bx1, by1 = np.ceil(uv.max(axis=0)).astype(int); bx0, by0 = max(bx0, 0), max(by0, 0); bx1, by1 = min(bx1, w0 - 1), min(by1, h0 - 1)
+            if bx1 < bx0 or by1 < by0: continue
+            gx, gy = np.meshgrid(np.arange(bx0, bx1 + 1) + 0.5, np.arange(by0, by1 + 1) + 0.5)
+            d = (uv[1, 1] - uv[2, 1]) * (uv[0, 0] - uv[2, 0]) + (uv[2, 0] - uv[1, 0]) * (uv[0, 1] - uv[2, 1])
+            if abs(d) < 1e-9: continue
+            l0 = ((uv[1, 1] - uv[2, 1]) * (gx - uv[2, 0]) + (uv[2, 0] - uv[1, 0]) * (gy - uv[2, 1])) / d; l1 = ((uv[2, 1] - uv[0, 1]) * (gx - uv[2, 0]) + (uv[0, 0] - uv[2, 0]) * (gy - uv[2, 1])) / d; l2 = 1 - l0 - l1
+            ok = (l0 >= -0.03) & (l1 >= -0.03) & (l2 >= -0.03)
+            if not ok.any(): continue
+            xyz = l0[ok][:, None] * Q[0] + l1[ok][:, None] * Q[1] + l2[ok][:, None] * Q[2]
+            rr, cc = (gy[ok] - 0.5).astype(int), (gx[ok] - 0.5).astype(int)
+            deelpx[rr, cc, :3] = np.clip(fn(xyz, deelpx[rr, cc, :3]), 0, 1)
+    atlas[yb:yb + h0, x0:x0 + w0] = deelpx
+Vy = np.array([v[1] for v in V]); ZOOL, KRUIN = float(Vy.min()), float(Vy.max()); LENGTE = KRUIN - ZOOL
+lum3 = lambda c: (c @ np.array([0.3, 0.59, 0.11], dtype=np.float32))[:, None]
+
 delen = []
 for map_, naam, vak in [('clothes/' + C['pak'], C['pak'], 'pak'), ('clothes/' + C['schoenen'], C['schoenen'], 'schoen')]:
-    pts, vt, f, refs, weg = fitfile(f'{S}/{map_}/{naam}.mhclo'); verborgen |= weg
+    pts, vt, f, refs, weg = fitfile(f'{S}/{map_}/{naam}.mhclo')
+    if vak == 'pak' and C.get('korteBroek'):
+        # een korte broek: de broekspijpen boven de knie afknippen en de benen eronder weer laten zien
+        knip = ZOOL + 0.315 * LENGTE; mid = lambda q: sum(pts[i][1] for i, _ in q) / len(q)
+        f = [q for q in f if mid(q) > knip]; weg = {i for i in weg if V[i][1] > knip - 0.12}
+    if vak == 'schoen' and C.get('korteBroek'):
+        # sneakers met korte sokjes: de lange sokken weg, de kuiten weer zichtbaar
+        enkel = ZOOL + 0.07 * LENGTE; mid = lambda q: sum(pts[i][1] for i, _ in q) / len(q)
+        f = [q for q in f if mid(q) < enkel]; weg = {i for i in weg if V[i][1] < enkel - 0.1}
+    verborgen |= weg
+    if vak == 'pak' and (C.get('shirtKleur') or C.get('broekKleur')):
+        # het shirt en de broek elk hun eigen kleur (de plooien en schaduwen van de stof blijven)
+        heup = ZOOL + 0.535 * LENGTE; sk, bk = [hexrgb(C.get(k, '#808080')) for k in ('shirtKleur', 'broekKleur')]
+        def kleur(xyz, c, sk=sk, bk=bk, heup=heup):
+            l = lum3(c) / 0.42; boven = (xyz[:, 1] > heup)[:, None]
+            return np.where(boven, (l ** 0.8) * sk if C.get('shirtKleur') else c, (l ** 0.8) * bk if C.get('broekKleur') else c)
+        verf(pts, vt, f, 'pak', kleur)
     delen.append(deel(naam, pts, vt, f, refs, vak))
+img.pixels.foreach_set(atlas.ravel()); img.pack()
 # lijf: de lowpoly proxy, zonder de stukken die onder de kleding zitten
 prox = 'male1591' if G == 'male' else 'female1605'
-pts, vt, f, refs, _ = fitfile(f'{S}/proxymeshes/{prox}/{prox}.proxy')
+if C.get('hoogDetail'):
+    # het volle lijf van MakeHuman (13.000 vlakken): een glad gezicht, geen facetten (voor de cartoonstijl)
+    pts = [list(v) for v in V]; vt = VT; refs = [[(i, 1.0)] for i in range(len(V))]
+    f = [q for q, g_ in zip(F, GR) if g_ == 'body']
+else:
+    pts, vt, f, refs, _ = fitfile(f'{S}/proxymeshes/{prox}/{prox}.proxy')
 weg_p = {i for i, r in enumerate(refs) if any(bi in verborgen for bi, bw in r if bw > 0.2)}
 f = [q for q in f if sum(i in weg_p for i, _ in q) < 2]
-print('lijf: vlakken over', len(f), 'verborgen punten', len(weg_p))
+print('lijf: vlakken over', len(f), 'verborgen punten', len(weg_p), 'benen (knie-enkel) zichtbaar', sum(1 for q in f if ZOOL + 0.06 * LENGTE < sum(pts[i][1] for i, _ in q) / len(q) < ZOOL + 0.28 * LENGTE))
+if C.get('cartoon'):
+    # ---------- cartoon: een effen huid met blos, en de stoppels, de baard of het korte haar erop geschilderd ----------
+    ope, _, _, _, _ = fitfile(f'{S}/eyes/low-poly/low-poly.mhclo'); E_ = np.array(ope)
+    oogL, oogR = E_[E_[:, 0] < 0].mean(axis=0), E_[E_[:, 0] > 0].mean(axis=0); oogM = (oogL + oogR) / 2; io = float(np.linalg.norm(oogR - oogL))
+    mondY, kinY = oogM[1] - io * 1.12, oogM[1] - io * 1.75; voorZ = oogM[2]   # MakeHuman: y omhoog, +z = voor
+    hk = hexrgb(C.get('huid', '#e8b49a')); blos = hexrgb(C.get('blos', '#e07a6a')); sk = hexrgb(C.get('stoppelKleur', '#6a5a4a')); hh = hexrgb(C.get('kortHaar', '#5a5048'))
+    rng = np.random.default_rng(7)
+    def huidverf(xyz, c):
+        l = lum3(c); l = 0.9 + (l / max(1e-3, float(l.mean())) - 1) * 0.25   # bijna effen, een zweem van de schaduwen
+        uit = hk * l
+        dx, dy, dz = xyz[:, 0] - oogM[0], xyz[:, 1] - oogM[1], xyz[:, 2] - voorZ
+        # blos op de wangen
+        for kant in (-1, 1): w = np.exp(-(((dx - kant * io * 0.62) / (io * 0.42)) ** 2 + ((dy + io * 0.65) / (io * 0.35)) ** 2)); uit = uit * (1 - w[:, None] * C.get('blosSterk', 0.35)) + blos * (w[:, None] * C.get('blosSterk', 0.35))
+        # stoppels / baard: van de kaak tot onder de neus, voor de oren
+        if C.get('stoppels'):
+            gebied = (xyz[:, 1] < oogM[1] - io * 0.85) & (xyz[:, 1] > kinY - io * 0.55) & (np.abs(dx) < io * 1.05) & (dz > -io * 1.1)
+            lippen = (np.abs(dx) < io * 0.42) & (np.abs(xyz[:, 1] - mondY) < io * 0.12)
+            dicht = C.get('stoppelDicht', 0.55) * (rng.random(len(xyz)) < 0.75)
+            m = (gebied & ~lippen)[:, None] * dicht[:, None]; uit = uit * (1 - m) + sk * m
+        # kort geschoren haar: op de schedel boven de oren (Dave), of alleen een randje (Wim)
+        if C.get('kortHaar'):
+            hoog = xyz[:, 1] > oogM[1] + io * (0.95 if not C.get('randjeHaar') else -0.1)
+            if C.get('randjeHaar'): hoog = hoog & (xyz[:, 1] < oogM[1] + io * 1.35) & (dz < -io * 0.35)
+            else: hoog = hoog & ~((dz > io * 0.2) & (xyz[:, 1] < oogM[1] + io * 1.55))   # het voorhoofd vrij (iets wijkende haargrens)
+            m = hoog[:, None] * (C.get('haarDicht', 0.7) * (rng.random(len(xyz)) < 0.85))[:, None]; uit = uit * (1 - m) + hh * m
+        return uit
+    verf(pts, vt, f, 'huid', huidverf); img.pixels.foreach_set(atlas.ravel()); img.pack()
 if C.get('gezicht'):
     # ---------- het echte gezicht: de foto op het hoofd projecteren en in de huidtextuur bakken ----------
     # gezicht = {"foto": pad, "ogen": [[x, y], [x, y]] (links en rechts in de foto), "mond": [x, y]}

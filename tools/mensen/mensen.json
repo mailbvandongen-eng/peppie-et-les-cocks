@@ -1,67 +1,53 @@
 {
- "_uitleg": "De vier Cocks. Gebouwd met tools/mensen/bouw.sh (MakeHuman CC0 + Universal Animation Library CC0). Petten en hoeden zet het spel erop (src/mensen.js).",
+ "_uitleg": "De vier Cocks als cartoonpersonages (Bob, 28-11). MakeHuman-lijf, T-shirt + korte broek (casualsuit04 afgeknipt), sneakers, effen huid met geschilderde stoppels/haar. Bril, pet, hoed en GoPro zet het spel erop (src/mensen.js).",
  "mensen": [
   {
    "naam": "paul",
    "geslacht": "male",
    "afkomst": "caucasian",
-   "oud": 0.28,
-   "spier": 0.3,
-   "gewicht": 0.15,
-   "pak": "male_casualsuit06",
-   "shirtTint": "#9a9da2",
-   "schoenen": "shoes04",
+   "oud": 0.25,
+   "spier": 0.25,
+   "gewicht": 0.35,
+   "pak": "male_casualsuit04",
+   "korteBroek": true,
+   "shirtKleur": "#1c1d20",
+   "broekKleur": "#4a4e3a",
+   "schoenen": "shoes06",
    "haar": "short02",
-   "haarTint": "#d8975a",
-   "huid": "#e8b49a",
+   "haarTint": "#b28a66",
+   "cartoon": true,
+   "huid": "#f7ddd0",
+   "blos": "#e0645a",
+   "blosSterk": 0.35,
+   "stoppels": true,
+   "stoppelDicht": 0.6,
    "ogen": "blue",
-   "gezicht": {
-    "foto": "/root/apps/peppie-lot/ref/gezicht/paul.jpg",
-    "ogen": [
-     [
-      852,
-      456
-     ],
-     [
-      1092,
-      451
-     ]
-    ],
-    "mond": [
-     1008,
-     696
-    ]
-   }
+   "stoppelKleur": "#a8643a",
+   "hoogDetail": true
   },
   {
    "naam": "dave",
    "geslacht": "male",
    "afkomst": "caucasian",
    "oud": 0.5,
-   "spier": 0.2,
-   "gewicht": 0.3,
-   "pak": "male_casualsuit06",
-   "shirtTint": "#cfc43a",
+   "spier": 0.25,
+   "gewicht": -0.35,
+   "pak": "male_casualsuit04",
+   "korteBroek": true,
+   "shirtKleur": "#9fd6c4",
+   "broekKleur": "#3d4148",
    "schoenen": "shoes05",
-   "huid": "#e2a98c",
+   "cartoon": true,
+   "huid": "#f0d2c0",
+   "blos": "#d77a62",
+   "blosSterk": 0.25,
+   "stoppels": true,
+   "stoppelDicht": 0.5,
+   "kortHaar": "#6b625a",
+   "haarDicht": 0.55,
    "ogen": "brown",
-   "gezicht": {
-    "foto": "/root/apps/peppie-lot/ref/gezicht/dave.jpg",
-    "ogen": [
-     [
-      312,
-      640
-     ],
-     [
-      672,
-      676
-     ]
-    ],
-    "mond": [
-     468,
-     990
-    ]
-   }
+   "stoppelKleur": "#7a7068",
+   "hoogDetail": true
   },
   {
    "naam": "bob",
@@ -69,62 +55,45 @@
    "afkomst": "caucasian",
    "oud": 0.55,
    "spier": 0.1,
-   "gewicht": 0.6,
-   "pak": "male_casualsuit05",
-   "schoenen": "shoes01",
-   "huid": "#e6b29a",
+   "gewicht": 0.55,
+   "pak": "male_casualsuit04",
+   "korteBroek": true,
+   "shirtKleur": "#18191b",
+   "broekKleur": "#2e3136",
+   "schoenen": "shoes06",
+   "cartoon": true,
+   "huid": "#f6d8c8",
+   "blos": "#e2786a",
+   "blosSterk": 0.35,
+   "stoppels": true,
+   "stoppelDicht": 0.25,
    "ogen": "blue",
-   "pakTint": "#2b2d31",
-   "gezicht": {
-    "foto": "/root/apps/peppie-lot/ref/gezicht/bob3.jpg",
-    "ogen": [
-     [
-      497,
-      505
-     ],
-     [
-      728,
-      422
-     ]
-    ],
-    "mond": [
-     683,
-     750
-    ]
-   }
+   "stoppelKleur": "#b89a80",
+   "hoogDetail": true
   },
   {
    "naam": "wim",
    "geslacht": "male",
    "afkomst": "caucasian",
    "oud": 0.85,
-   "spier": -0.1,
-   "gewicht": 0.35,
-   "pak": "male_casualsuit06",
-   "shirtTint": "#1d1e21",
-   "schoenen": "shoes01",
-   "haar": "short02",
-   "haarTint": "#c4c0b8",
-   "randje": 0.075,
-   "huid": "#e9b8a3",
+   "spier": 0.2,
+   "gewicht": 1.0,
+   "pak": "male_casualsuit04",
+   "korteBroek": true,
+   "shirtKleur": "#2a3a5a",
+   "broekKleur": "#5a4632",
+   "schoenen": "shoes05",
+   "cartoon": true,
+   "huid": "#f5d4c6",
+   "blos": "#e06a62",
+   "blosSterk": 0.35,
+   "kortHaar": "#cfcac2",
+   "randjeHaar": true,
+   "haarDicht": 0.8,
    "ogen": "grey",
-   "gezicht": {
-    "foto": "/root/apps/peppie-lot/ref/gezicht/wim.jpg",
-    "ogen": [
-     [
-      450,
-      515
-     ],
-     [
-      715,
-      510
-     ]
-    ],
-    "mond": [
-     575,
-     742
-    ]
-   }
+   "lengte": 1.12,
+   "stoppelKleur": "#cfcac2",
+   "hoogDetail": true
   }
  ]
 }

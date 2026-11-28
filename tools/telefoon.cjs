@@ -14,9 +14,9 @@ const T = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javasc
     if (process.argv[2] === "wim") await p.evaluate(() => window.__spel.kiesSpeler("wim")); await p.tap("[data-missie=belly]"); await p.waitForTimeout(800);
     // even varen
     await p.evaluate(() => { const s = window.__spel; s.invoer.y = 0.8; s.invoer.x = 0.2; }); await p.waitForTimeout(2500); await p.evaluate(() => { const s = window.__spel; s.invoer.y = 0; s.invoer.x = 0; });
-    await p.waitForTimeout(1500); await p.screenshot({ path: `${UIT}/${naam}-varen.png` });
+    
     if (process.argv[2] === "wim") await p.evaluate(() => { const s = window.__spel, b = s.belly; s.vb.lijst.slice(0, 4).forEach((v, i) => { v.x = b.pos.x + (i - 1.5) * 0.8; v.z = b.pos.z + 0.6; v.tx = v.x; v.tz = v.z; v.x0 = v.x; v.z0 = v.z; v.straal = 0.2; v.boven = 2 + i * 1.6; }); });
-    for (const w of ["scope", "vol"]) { await p.evaluate((w) => document.querySelector(`#weergave [data-w=${w}]`).click(), w); await p.waitForTimeout(process.argv[2] === "wim" ? 9000 : 2500); await p.screenshot({ path: `${UIT}/${naam}-${w}.png` }); }
+    for (const w of ["hoog", "zelf", "vol"]) { await p.evaluate((w) => document.querySelector(`#weergave [data-w=${w}]`).click(), w); await p.waitForTimeout(process.argv[2] === "wim" ? 9000 : 2500); await p.screenshot({ path: `${UIT}/${naam}-${w}.png` }); }
     console.log(naam, await p.evaluate(() => { const s = window.__spel; return JSON.stringify({ diepte: +s.W.diepte(s.belly.pos.x, s.belly.pos.z).toFixed(1), weergave: s.belly.weergave, vissen: s.vb.lijst.length, scholen: s.vb.scholen.length }); }));
     await p.close();
   }

@@ -328,5 +328,43 @@ export function zetPet(m, kleur = "#f2f2ee") {
   g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
   // het bot heeft zijn eigen schaal en draaiing: de pet in wereldmaat op de kruin zetten
   hoofd.add(g); g.userData.pas = () => { m.object.updateMatrixWorld(true); const s = new THREE.Vector3(); hoofd.getWorldScale(s); g.scale.setScalar(0.78 / s.x); };
-  g.position.set(0, 0.118, 0.012); g.userData.pas(); m.pet = g; return g;
+  g.position.set(0, 0.128, 0.008); g.userData.pas(); m.pet = g; return g;
 }
+
+// ---------- cartoonstijl (Bob, 28-11): getekende personages ----------
+// Toon-shading (een paar vlakke lichttinten), een donkere omlijning (de omgekeerde schil), en een iets groter hoofd.
+const TOON = (() => { const d = new Uint8Array([120, 150, 185, 215, 240, 255]), t = new THREE.DataTexture(d, 6, 1, THREE.RedFormat); t.minFilter = t.magFilter = THREE.NearestFilter; t.needsUpdate = true; return t; })();
+const LIJN = new THREE.MeshBasicMaterial({ color: "#1b1612", side: THREE.BackSide });
+LIJN.onBeforeCompile = (sh) => { sh.vertexShader = sh.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\n  transformed += normalize(objectNormal) * 0.006;"); };
+LIJN.customProgramCacheKey = () => "lijn";
+/** Maak van een mens een cartoonpersonage. hoofd = hoe veel groter het hoofd (1 = gewoon). */
+export function cartoon(m, { hoofd = 1.12, lengte = 1, buik = 1 } = {}) {
+  m.object.traverse((o) => { if (!o.isSkinnedMesh) return; const oud = o.material; o.material = new THREE.MeshToonMaterial({ map: oud.map, gradientMap: TOON, alphaTest: 0.5, side: THREE.DoubleSide });
+    if (!o.name.includes("Laag")) { const l = new THREE.SkinnedMesh(o.geometry, LIJN); l.bind(o.skeleton, o.bindMatrix); l.frustumCulled = false; l.castShadow = false; o.parent.add(l); l.position.copy(o.position); l.quaternion.copy(o.quaternion); l.scale.copy(o.scale); o.userData.lijn = l; } });
+  let kop = null; m.object.traverse((b) => { if (b.isBone && b.name === "DEF-head") kop = b; }); if (kop) kop.scale.setScalar(hoofd); m.hoofdMaat = hoofd;
+  // een dikke buik (Wim): de onderste ruggenwervels breder en dieper
+  if (buik !== 1) m.object.traverse((b) => { if (b.isBone && b.name === "DEF-spine001") b.scale.set(buik, 1, buik * 1.2); if (b.isBone && b.name === "DEF-spine002") b.scale.set(1 / Math.sqrt(buik), 1, 1 / buik); });
+  if (lengte !== 1) m.object.scale.multiplyScalar(lengte);
+  const oudDetail = m.detail.bind(m); m.detail = (fijn, schaduw) => { oudDetail(fijn, schaduw); m.object.traverse((o) => { if (o.userData.lijn) o.userData.lijn.visible = o.visible; }); };
+  return m;
+}
+/** Iets op het hoofdbot zetten (in wereldmaat): bril, hoed, GoPro. */
+function opHoofd(m, g, y, z) { let kop = null; m.object.traverse((b) => { if (b.isBone && b.name === "DEF-head") kop = b; }); if (!kop) return; kop.add(g); g.position.set(0, y, z); const k0 = g.scale.x;
+  g.userData.pas = () => { m.object.updateMatrixWorld(true); const s = new THREE.Vector3(); kop.getWorldScale(s); g.scale.setScalar((k0 / s.x) * kop.scale.x); }; g.userData.pas(); g.traverse((o) => { if (o.isMesh) o.castShadow = true; }); return g; }
+/** Een bril: zwart rechthoekig montuur (Wim), of een pilotenzonnebril (Bob). */
+export function zetBril(m, soort = "zwart") { const g = new THREE.Group(), mont = new THREE.MeshToonMaterial({ color: soort === "zwart" ? "#141414" : "#b8a780", gradientMap: TOON }), glas = new THREE.MeshBasicMaterial({ color: soort === "zwart" ? "#9fb8c8" : "#3a2a1c", transparent: true, opacity: soort === "zwart" ? 0.25 : 0.85 });
+  for (const k of [-1, 1]) { const r = new THREE.Mesh(new THREE.TorusGeometry(soort === "zwart" ? 0.022 : 0.025, 0.0035, 4, soort === "zwart" ? 4 : 18), mont); r.rotation.z = Math.PI / 4; r.scale.set(1.25, soort === "zwart" ? 0.8 : 0.9, 1); r.position.set(k * 0.033, 0, 0); g.add(r);
+    const gl = new THREE.Mesh(new THREE.CircleGeometry(0.022, soort === "zwart" ? 4 : 16), glas); gl.rotation.z = Math.PI / 4; gl.scale.set(1.25, 0.8, 1); gl.position.set(k * 0.033, 0, -0.001); g.add(gl);
+    const poot = new THREE.Mesh(new THREE.BoxGeometry(0.003, 0.004, 0.1), mont); poot.position.set(k * 0.062, 0.004, -0.05); g.add(poot); }
+  const brug = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.004, 0.004), mont); brug.position.y = 0.006; g.add(brug);
+  g.scale.multiplyScalar(1.1); return (m.bril = opHoofd(m, g, 0.048, 0.118)); }
+/** Wims bruine leren cowboyhoed met gevlochten band. */
+export function zetHoed(m) { const g = new THREE.Group(), leer = new THREE.MeshToonMaterial({ color: "#7a5636", gradientMap: TOON }), band = new THREE.MeshToonMaterial({ color: "#4a3020", gradientMap: TOON });
+  const rand = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.008, 28), leer); rand.scale.set(1, 1, 1.15); g.add(rand); const kroon = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.1, 0.11, 22), leer); kroon.position.y = 0.055; kroon.scale.set(1, 1, 1.15); g.add(kroon);
+  const b = new THREE.Mesh(new THREE.TorusGeometry(0.098, 0.009, 6, 24), band); b.rotation.x = Math.PI / 2; b.scale.set(1, 1.15, 1); b.position.y = 0.015; g.add(b);
+  const deuk = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.02, 0.15), band); deuk.position.y = 0.11; g.add(deuk); return (m.hoed = opHoofd(m, g, 0.13, 0.0)); }
+/** Pauls GoPro op een hoofdband. */
+export function zetGoPro(m) { const g = new THREE.Group(), zw = new THREE.MeshToonMaterial({ color: "#1a1b1d", gradientMap: TOON });
+  const band = new THREE.Mesh(new THREE.TorusGeometry(0.092, 0.009, 4, 28), zw); band.rotation.x = Math.PI / 2 - 0.3; band.scale.set(1, 1.15, 1); g.add(band);
+  const cam = new THREE.Mesh(new THREE.BoxGeometry(0.042, 0.032, 0.022), zw); cam.position.set(0, 0.01, 0.1); g.add(cam); const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.011, 0.01, 12), new THREE.MeshBasicMaterial({ color: "#2a6ab0" })); lens.rotation.x = Math.PI / 2; lens.position.set(0.01, 0.01, 0.112); lens.scale.setScalar(0.75); g.add(lens);
+  return (m.gopro = opHoofd(m, g, 0.1, 0.0)); }

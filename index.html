@@ -26,7 +26,7 @@ canvas{display:block}
 #missies b{display:block;font-size:17px;color:var(--geel)}#missies small{opacity:.85;line-height:1.3;display:block;margin-top:3px}
 #hud{position:fixed;inset:0;pointer-events:none;z-index:5}
 #hud button{pointer-events:auto;font:inherit;color:#fff;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
-#missie{transition:opacity 1s;position:absolute;left:50%;top:calc(max(8px,env(safe-area-inset-top)) + 40px);transform:translateX(-50%);max-width:min(70vw,560px);padding:7px 14px;border-radius:12px;background:#0009;font-size:14px;text-align:center}
+#missie{transition:opacity 1s;position:absolute;left:62%;top:calc(max(8px,env(safe-area-inset-top)) + 40px);transform:translateX(-50%);max-width:min(70vw,560px);padding:7px 14px;border-radius:12px;background:#0009;font-size:14px;text-align:center}
 #tel{position:absolute;left:50%;transform:translateX(-50%);white-space:nowrap;top:max(8px,env(safe-area-inset-top));padding:7px 12px;border-radius:12px;background:#0009;font-weight:700}
 #stop{position:absolute;left:max(12px,env(safe-area-inset-left));top:max(8px,env(safe-area-inset-top));padding:7px 12px;border-radius:12px;background:#0009}
 #knopA{z-index:2;position:absolute;right:max(22px,env(safe-area-inset-right));bottom:28px;width:104px;height:104px;border-radius:50%;background:#1f6f43e6;box-shadow:0 0 0 3px #fff5;font-weight:800;font-size:17px}
@@ -80,7 +80,7 @@ canvas{display:block}
 </div>
 <div id="hud" hidden>
   <canvas id="scope" width="960" height="540" hidden></canvas>
-  <div id="missie"></div><div id="tel"></div><button id="stop">Menu</button><div id="weergave" hidden><button data-w="varen">Varen</button><button data-w="scope">Scope</button><button data-w="vol">Vol</button></div>
+  <div id="missie"></div><div id="tel"></div><button id="stop">Menu</button><div id="weergave" hidden><button data-w="hoog">Hoog</button><button data-w="zelf">Zelf</button><button data-w="vol">Scope</button></div>
   <div id="melding" hidden></div><div id="pip" hidden><span>Paul &amp; Bob</span></div>
   <div id="meter" hidden></div><div id="span" hidden><i></i></div>
   <div id="stick" hidden><i></i></div>
@@ -90,9 +90,9 @@ canvas{display:block}
 <div id="uitslag" hidden><div><h2 id="uitslagKop"></h2><p id="uitslagTekst"></p><button id="opnieuw">Nog een keer</button><button id="terug">Menu</button></div></div>
 <div id="versie"></div>
 <!-- versie -->
-<script>window.VERSIE = "0f8ed5025a"; window.VERSIE_DATUM = "28-11, 15:55"; document.getElementById("versie").textContent = "versie 28-11, 15:55";</script>
-<script type="importmap">{"imports":{"three":"./lib/three.module.js?v=0f8ed5025a","./lib/three.module.js":"./lib/three.module.js?v=0f8ed5025a","./lib/meshopt_decoder.mjs":"./lib/meshopt_decoder.mjs?v=0f8ed5025a","./lib/three-addons.js":"./lib/three-addons.js?v=0f8ed5025a","./src/bellyboat.js":"./src/bellyboat.js?v=0f8ed5025a","./src/chirp.js":"./src/chirp.js?v=0f8ed5025a","./src/domein.js":"./src/domein.js?v=0f8ed5025a","./src/effecten.js":"./src/effecten.js?v=0f8ed5025a","./src/grond.js":"./src/grond.js?v=0f8ed5025a","./src/hengel.js":"./src/hengel.js?v=0f8ed5025a","./src/kippen.js":"./src/kippen.js?v=0f8ed5025a","./src/livescope.js":"./src/livescope.js?v=0f8ed5025a","./src/main.js":"./src/main.js?v=0f8ed5025a","./src/meerval.js":"./src/meerval.js?v=0f8ed5025a","./src/meervalhengel.js":"./src/meervalhengel.js?v=0f8ed5025a","./src/mensen.js":"./src/mensen.js?v=0f8ed5025a","./src/natuur.js":"./src/natuur.js?v=0f8ed5025a","./src/planten.js":"./src/planten.js?v=0f8ed5025a","./src/structuur.js":"./src/structuur.js?v=0f8ed5025a","./src/vissen.js":"./src/vissen.js?v=0f8ed5025a","./src/water.js":"./src/water.js?v=0f8ed5025a","./src/wereld.js":"./src/wereld.js?v=0f8ed5025a"}}</script>
-<script type="module" src="./src/main.js?v=0f8ed5025a"></script>
+<script>window.VERSIE = "4fe8bc09d3"; window.VERSIE_DATUM = "28-11, 17:25"; document.getElementById("versie").textContent = "versie 28-11, 17:25";</script>
+<script type="importmap">{"imports":{"three":"./lib/three.module.js?v=4fe8bc09d3","./lib/three.module.js":"./lib/three.module.js?v=4fe8bc09d3","./lib/meshopt_decoder.mjs":"./lib/meshopt_decoder.mjs?v=4fe8bc09d3","./lib/three-addons.js":"./lib/three-addons.js?v=4fe8bc09d3","./src/bellyboat.js":"./src/bellyboat.js?v=4fe8bc09d3","./src/chirp.js":"./src/chirp.js?v=4fe8bc09d3","./src/domein.js":"./src/domein.js?v=4fe8bc09d3","./src/effecten.js":"./src/effecten.js?v=4fe8bc09d3","./src/grond.js":"./src/grond.js?v=4fe8bc09d3","./src/hengel.js":"./src/hengel.js?v=4fe8bc09d3","./src/kippen.js":"./src/kippen.js?v=4fe8bc09d3","./src/livescope.js":"./src/livescope.js?v=4fe8bc09d3","./src/main.js":"./src/main.js?v=4fe8bc09d3","./src/meerval.js":"./src/meerval.js?v=4fe8bc09d3","./src/meervalhengel.js":"./src/meervalhengel.js?v=4fe8bc09d3","./src/mensen.js":"./src/mensen.js?v=4fe8bc09d3","./src/natuur.js":"./src/natuur.js?v=4fe8bc09d3","./src/planten.js":"./src/planten.js?v=4fe8bc09d3","./src/structuur.js":"./src/structuur.js?v=4fe8bc09d3","./src/vissen.js":"./src/vissen.js?v=4fe8bc09d3","./src/water.js":"./src/water.js?v=4fe8bc09d3","./src/wereld.js":"./src/wereld.js?v=4fe8bc09d3"}}</script>
+<script type="module" src="./src/main.js?v=4fe8bc09d3"></script>
 <!-- /versie -->
 </body>
 </html>

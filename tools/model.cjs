@@ -1,6 +1,6 @@
 // node tools/model.cjs <glb> [regex] [uit.png]
 const { chromium } = require("/root/tools/pw/node_modules/playwright-core"); const fs = require("fs"), path = require("path");
-const ROOT = path.resolve(__dirname, ".."), T = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".glb": "model/gltf-binary" };
+const ROOT = path.resolve(__dirname, ".."), T = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".glb": "model/gltf-binary", ".gltf": "model/gltf+json", ".bin": "application/octet-stream", ".png": "image/png" };
 (async () => { const b = await chromium.launch({ executablePath: "/usr/bin/chromium", args: ["--no-sandbox", "--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"] });
   const p = await b.newPage({ viewport: { width: 900, height: 700 } });
   await p.route("http://m.test/**", (r) => { const f = path.join(ROOT, new URL(r.request().url()).pathname); r.fulfill(fs.existsSync(f) ? { body: fs.readFileSync(f), contentType: T[path.extname(f)] ?? "application/octet-stream" } : { status: 404 }); });
