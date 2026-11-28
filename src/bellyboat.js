@@ -11,7 +11,7 @@ const KLEUREN = {
   paul: { romp: "#1d1f22", neus: "#1d1f22", band: "#2c2f33", stoel: "#141517", sticker: null },
   bob: { romp: "#1d1f22", neus: "#1d1f22", band: "#2c2f33", stoel: "#141517", sticker: null },
   wim: { romp: "#6c705f", neus: "#d6cea6", band: "#5a5e50", stoel: "#1a1b1d", sticker: "#e8e0b8" },
-  dave: { romp: "#39d43b", neus: "#39d43b", band: "#141618", stoel: "#141517", sticker: "#141618" },
+  dave: { romp: "#39d43b", neus: "#39d43b", band: "#141618", stoel: "#141517", sticker: null },
 };
 const mats = {}; const M = (k, o = {}) => (mats[k + JSON.stringify(o)] ??= new THREE.MeshStandardMaterial({ color: k, roughness: 0.55, ...o }));
 
@@ -56,27 +56,38 @@ export function maakBellyboat(soort = "paul", { scherm = null } = {}) {
   // de rugtas achter en de spullen op de boog
   doos(0, 0.33, -0.78, 0.5, 0.3, 0.2, M("#26292d", { roughness: 0.95 }));
 
-  // ---- de stang voorop: dwars over de U, hier zitten de arm met het scherm en de transducerstang aan ----
-  const alu = M("#2a2c2f", { metalness: 0.6, roughness: 0.35 });
-  { const st = cil(0, 0.34, 0.62, 0.018, 1.16, alu, g, 8); st.rotation.z = Math.PI / 2; for (const x of [-B, B]) cil(x, 0.27, 0.62, 0.03, 0.08, alu); }
-  // de arm met het Garmin-scherm, naar de zitter gedraaid
-  const armVoet = V(0.2, 0.34, 0.62);
-  { cil(armVoet.x, 0.47, armVoet.z, 0.016, 0.26, alu); const a2 = cil(armVoet.x - 0.05, 0.62, armVoet.z - 0.06, 0.014, 0.18, alu); a2.rotation.x = -0.6; }
-  const schermGroep = new THREE.Group(); schermGroep.position.set(armVoet.x - 0.08, 0.74, armVoet.z - 0.1); schermGroep.rotation.set(-0.42, Math.PI - 0.12, 0); g.add(schermGroep);
-  doos(0, 0, 0, 0.27, 0.18, 0.045, M("#121315", { roughness: 0.4 }), schermGroep); doos(0, -0.11, 0.01, 0.12, 0.05, 0.05, alu, schermGroep);
-  const beeld = new THREE.Mesh(new THREE.PlaneGeometry(0.235, 0.132), scherm ? new THREE.MeshBasicMaterial({ map: scherm, toneMapped: false }) : M("#0a1a50", { emissive: "#10308a", emissiveIntensity: 0.6 })); beeld.position.set(0, 0.01, 0.024); schermGroep.add(beeld);
-  // de transducerstang: rechts voorin, een verticale stok tot onder water met de LiveScope-transducer onderaan; bovenop een handvat
-  const stang = new THREE.Group(); stang.position.set(B + 0.1, 0, 0.66); g.add(stang);
-  cil(-0.06, 0.32, 0, 0.02, 0.06, alu).position.set(B + 0.04, 0.32, 0.66);
-  cil(0, -0.05, 0, 0.016, 1.15, alu, stang); const greep = cil(0, 0.54, -0.07, 0.016, 0.16, M("#111"), stang); greep.rotation.x = Math.PI / 2;
-  const tr = doos(0, -0.62, 0.04, 0.06, 0.07, 0.17, M("#151618"), stang); doos(0, -0.62, 0.13, 0.055, 0.06, 0.02, M("#30343a"), stang); // de transducer kijkt naar +z van de stang
+  // ---- de Garmin: laag op de voorkant van de rechter ponton, op een Scotty-mount (plaatje + kogel + korte arm), schuin naar de zitter ----
+  const alu = M("#2a2c2f", { metalness: 0.6, roughness: 0.35 }), rvs = M("#c9ced3", { metalness: 0.85, roughness: 0.25 }), zwartM = M("#141517", { roughness: 0.5 });
+  const top = 0.1 + R; // bovenkant van een ponton
+  const mount = new THREE.Group(); mount.position.set(B - 0.02, top, 0.52); g.add(mount);
+  doos(0, 0.01, 0, 0.16, 0.02, 0.2, M("#3a3d42"), mount); cil(0, 0.05, 0, 0.022, 0.06, zwartM, mount); { const k = new THREE.Mesh(new THREE.SphereGeometry(0.03, 10, 8), zwartM); zet(k, 0, 0.09, 0, mount); }
+  const arm = doos(-0.03, 0.14, -0.04, 0.035, 0.11, 0.03, zwartM, mount); arm.rotation.x = 0.5; doos(0.07, 0.03, 0.03, 0.03, 0.02, 0.12, M("#e07a14"), mount); doos(-0.06, 0.03, 0.06, 0.1, 0.018, 0.025, M("#b4d62a"), mount);
+  const schermGroep = new THREE.Group(); schermGroep.position.set(-0.05, 0.25, -0.08); schermGroep.rotation.set(-0.55, Math.PI + 0.35, 0); mount.add(schermGroep);
+  doos(0, 0, 0, 0.27, 0.18, 0.05, M("#121315", { roughness: 0.4 }), schermGroep); doos(0, -0.1, 0.02, 0.08, 0.04, 0.04, zwartM, schermGroep);
+  const beeld = new THREE.Mesh(new THREE.PlaneGeometry(0.235, 0.132), scherm ? new THREE.MeshBasicMaterial({ map: scherm, toneMapped: false }) : M("#0a1a50", { emissive: "#10308a", emissiveIntensity: 0.6 })); beeld.position.set(0, 0.01, 0.026); schermGroep.add(beeld);
+  // de kabel van het scherm over de ponton naar achteren
+  { const pts = [V(B - 0.05, top + 0.1, 0.46), V(B - 0.02, top + 0.02, 0.3), V(B + 0.02, top + 0.01, 0.0), V(B, top + 0.02, -0.25)]; const kb = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 20, 0.005, 5), zwartM); g.add(kb); }
+  // de transducerstang: een dunne RVS-stang rechts voorin naast de punt, laag, met een greep bovenaan; de transducer onder water
+  const stang = new THREE.Group(); stang.position.set(B + R + 0.05, 0, 0.78); g.add(stang);
+  doos(-0.05, top - 0.02, 0, 0.1, 0.04, 0.06, alu, stang); // de klem op de ponton
+  cil(0, -0.12, 0, 0.011, 0.95, rvs, stang); const greep = cil(0, 0.38, 0, 0.018, 0.12, M("#111"), stang); greep.rotation.z = Math.PI / 2; greep.position.x = -0.04;
+  doos(0, -0.58, 0.04, 0.06, 0.07, 0.17, M("#151618"), stang); doos(0, -0.58, 0.13, 0.055, 0.06, 0.02, M("#30343a"), stang); // de transducer kijkt naar +z van de stang
+  // een drinkbeker in een houder op de linker ponton
+  { cil(-B, top + 0.03, 0.18, 0.045, 0.06, zwartM); const beker = cil(-B, top + 0.09, 0.18, 0.04, 0.12, M("#8e9499", { metalness: 0.7, roughness: 0.3 }), g, 14); }
+  // de MADCAT-letters op de neuzen van Dave
+  if (soort === "dave") { const c = document.createElement("canvas"); c.width = 512; c.height = 128; const x = c.getContext("2d"); x.font = "900 92px Impact, Arial Black, sans-serif"; x.textAlign = "center"; x.textBaseline = "middle"; x.lineWidth = 10; x.strokeStyle = "#0e2a10"; x.strokeText("MADCAT", 256, 66); x.fillStyle = "#8ef060"; x.fillText("MADCAT", 256, 66);
+    const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; const mm = new THREE.MeshBasicMaterial({ map: tx, transparent: true, toneMapped: false, depthWrite: false });
+    for (const k_ of [-1, 1]) { const pl = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.105), mm); pl.position.set(k_ * (B + R + 0.004), 0.14, 0.62); pl.rotation.y = k_ * Math.PI / 2; g.add(pl); } }
   // ---- de motor: achter rechts, kop met helmstok, schacht omlaag, schroef onder water ----
   const motor = new THREE.Group(); motor.position.set(0.34, 0, -0.98); g.add(motor); const zwart = M("#16171a", { roughness: 0.4 });
   doos(0, 0.3, 0.12, 0.08, 0.1, 0.2, alu, motor); cil(0, 0.12, 0, 0.022, 0.9, zwart, motor); const kop = doos(0, 0.6, 0, 0.13, 0.13, 0.22, zwart, motor); const helm = doos(-0.12, 0.6, 0.12, 0.04, 0.04, 0.32, zwart, motor); helm.rotation.y = 0.9;
   const pod = cil(0, -0.34, 0, 0.045, 0.2, zwart, motor, 12); pod.rotation.x = Math.PI / 2; const schroef = new THREE.Group(); schroef.position.set(0, -0.34, -0.12); motor.add(schroef); for (let i = 0; i < 3; i++) { const b = doos(0, 0.05, 0, 0.02, 0.1, 0.012, M("#3a3d42"), schroef); b.position.set(Math.sin((i * 2 * Math.PI) / 3) * 0.05, Math.cos((i * 2 * Math.PI) / 3) * 0.05, 0); b.rotation.z = -(i * 2 * Math.PI) / 3; }
   doos(-0.34, 0.3, -0.05, 0.22, 0.16, 0.16, M("#202225"), motor); // de accu op de boog
-  // ---- hengelhouders achter, met twee hengels rechtop (Paul en Bob) ----
-  if (soort === "paul" || soort === "bob") for (const x of [-0.42, -0.3]) { const h = cil(x, 0.42, -0.72, 0.02, 0.28, alu); h.rotation.x = -0.25; const st = cil(x, 1.25, -0.93, 0.007, 1.8, M("#20242a"), g, 6); st.rotation.x = -0.2; doos(x + 0.05, 0.62, -0.78, 0.07, 0.08, 0.08, M("#1e3a8a", { metalness: 0.5 })); }
+  // ---- twee hengelsteunen achter naast de stoel, met reservehengels rechtop (met een reel en een lichtje op de top) ----
+  for (const [x, kl] of [[-0.42, "#ff4a2a"], [0.42, "#f5b21e"]]) { cil(x, 0.5, -0.62, 0.022, 0.42, alu); const st = cil(x, 1.65, -0.62, 0.008, 2.3, M("#1a1d21"), g, 6); cil(x, 0.62, -0.62, 0.016, 0.3, M("#2b2b2b"));
+    doos(x, 0.86, -0.6, 0.06, 0.05, 0.08, M("#b99a3a", { metalness: 0.6, roughness: 0.35 })); const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 6), new THREE.MeshBasicMaterial({ color: kl })); zet(lamp, x, 2.78, -0.62); }
+  // grote tas achter de stoel
+  doos(0, 0.42, -0.86, 0.46, 0.26, 0.22, M("#4a4e52", { roughness: 0.95 }));
   g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
-  return { g, stang, motor, schroef, scherm: beeld, zit: V(0, 0.12, -0.18), hengelVoet: V(0, 0.4, 0.2) };
+  return { g, stang, motor, schroef, scherm: beeld, zit: V(0, 0.12, -0.18), hengelVoet: V(0, 0.4, 0.2), mount };
 }

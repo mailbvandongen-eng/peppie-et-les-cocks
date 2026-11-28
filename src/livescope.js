@@ -26,7 +26,7 @@ export class Livescope {
    * bodem(v) = diepte op v meter voor de transducer (negatief = erachter); vissen = [{ v, d, lengte, hoek, soort }];
    * school = [{ v, d }]; planten = [{ v, bodem, top }]; aas = { v, d } of null; onder = diepte onder de boot; richting = stand van de transducer.
    */
-  teken({ bodem, vissen = [], aas = null, school = [], planten = [], takken = [], temp = 14.8, snelheid = 0, volt = 12.5, tijd = "12:50", richting = null, onder = null }) {
+  teken({ bodem, vissen = [], aas = null, school = [], planten = [], takken = [], wolk: turb = null, temp = 14.8, snelheid = 0, volt = 12.5, tijd = "12:50", richting = null, onder = null }) {
     this.t += 1; const t = this.t, c = this.c, W = c.width, H = c.height, F = Math.min(H, (W * 9) / 16);
     // het bereik (Auto): bodem + ruim 3,5 m op hele meters; vooruit even ver, achteruit 0,385 daarvan;
     // de diepte-as heeft dezelfde verhouding meters per pixel als op de opname
@@ -72,6 +72,8 @@ export class Livescope {
     for (const f of vissen) { if (f.v < X0 || f.v > X1 || f.d > D1) continue;
       const ver = Math.max(0, f.v) / 30, cs = Math.cos(f.hoek ?? 0), kop = cs >= 0 ? 1 : -1, L = f.lengte * ppm * (0.45 + 0.55 * Math.abs(cs)) + ver * 6, hY = f.lengte * ppmY, cx = X(f.v), cy = Y(f.d), wieg = Math.sin(t * 0.25 + f.v * 3) * 0.5, z = (f.sterk ?? 1) * (1 - ver * 0.45) * Math.min(1.3, versterk); // verder weg: groter, vager
       if (f.lengte < 0.3) { stip(cx, cy, 2.6, 0.85); continue; }
+      if (f.staand) { // een grote vis aan de haak die rechtop in het water hangt: een staande streep, zoals op Bobs opname
+        const hS = f.lengte * ppmY; for (let i = 0; i < 9; i++) { const a = i / 8; vlek(cx + Math.sin(t * 0.6 + a * 5) * 1.2, cy - hS * (a - 0.35), Math.max(2.2, f.lengte * ppm * 0.08), Math.max(1.8, hS * 0.09), z * (1 - Math.abs(a - 0.35) * 0.6)); } continue; }
       const dik = Math.max(2.4, ppmY * (0.14 + f.lengte * 0.1)) + ver * 3; // de echo is dikker dan de vis
       if (f.soort === "Meerval") {
         // zoals op Bobs opname: een lange dunne echo; voorin dik en rood (kop en pens), daarachter een lange dunne staart die meebuigt
@@ -84,6 +86,8 @@ export class Livescope {
       // rafels en het spoor erachter, zoals op de opname
       for (let i = 0; i < 3; i++) { const q = Math.sin(t * 0.9 + i * 2.3 + f.v * 5); vlek(cx + (i - 1) * L * 0.3 + q * 1.2, cy + q * dik * 0.4, Math.max(1.4, L * 0.12), dik * 0.45, 0.5 * z); }
       if (f.soort !== "Meerval") vlek(cx - kop * L * 0.85, cy, Math.max(2, L * 0.55), dik * 0.4, 0.3 * z); }
+    // de aanbeet van een reus: hij schiet met het aas naar beneden en laat een wolk van turbulentie achter
+    if (turb && turb.v >= X0 && turb.v <= X1) { const n = 60, r = 0.4 + turb.t * 1.4; for (let i = 0; i < n; i++) { const a = h2(i, 7) * 6.28, q = Math.sqrt(h2(i, 3)), dd = turb.d + Math.sin(a) * r * q * 0.8 + turb.t * 0.8, vv = turb.v + Math.cos(a) * r * q; stip(X(vv), Y(dd), 1.6 + q, 0.6 * (1 - turb.t / 3)); } }
     if (aas && aas.v != null) { // het aas: een klein lichtblauw streepje rechtop, met een vage lijn naar boven (zoals op de opname)
       const ax = X(aas.v), ay = Y(aas.d); for (let i = 0; i < 4; i++) stip(ax, ay - i * ppmY * 0.08, 1.6, 0.9 - i * 0.12); for (let d = aas.d - 0.4; d > 0.4; d -= 0.35) if (h2(d * 10, t >> 2) > 0.45) stip(ax + Math.sin(d * 3) * 0.3, Y(d), 0.9, 0.25); }
     k.globalCompositeOperation = "source-over";
