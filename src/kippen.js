@@ -6,61 +6,55 @@ import * as THREE from "three";
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const tussen = (a, b) => a + Math.random() * (b - a);
 
+// de soorten: de kleur van de veren (de kam, de lellen en de poten blijven zoals ze zijn)
 const SOORTEN = [
-  { lijf: "#f3f1ea", staart: "#ffffff", hals: "#f6f4ee" }, // wit
-  { lijf: "#f3f1ea", staart: "#ffffff", hals: "#f6f4ee" },
-  { lijf: "#f3f1ea", staart: "#ffffff", hals: "#f6f4ee" },
-  { lijf: "#9a5a2c", staart: "#7a4020", hals: "#b8743a" }, // roodbruin
-  { lijf: "#a8662f", staart: "#2a2420", hals: "#c98a45" },
-  { lijf: "#b77a44", staart: "#8d5530", hals: "#d29a5c" }, // licht bruin
-  { lijf: "#8d8f99", staart: "#7b7d86", hals: "#9fa1aa" }, // lavendelgrijs
-  { lijf: "#878891", staart: "#6f717a", hals: "#9b9ca4" },
-  { lijf: "#1e2024", staart: "#16181c", hals: "#24272c" }, // zwart
-  { lijf: "#22252a", staart: "#121418", hals: "#2a2d33", kuif: true }, // zwart met witte krullenbol
-  { lijf: "#26292e", staart: "#1a1c20", hals: "#2d3036", kuif: true },
-  { lijf: "#7d6244", staart: "#3a2c20", hals: "#c49a5a", gestreept: true }, // patrijs
-  { lijf: "#3b3a3c", staart: "#2b2a2c", hals: "#4a4a4e", gestreept: true }, // donker gespikkeld
+  { kleur: null }, { kleur: null }, // roodbruin, zoals het model
+  { kleur: "#f1eee6" }, { kleur: "#f1eee6" }, { kleur: "#f1eee6" }, // wit
+  { kleur: "#c48d52" }, // licht bruin
+  { kleur: "#8c8f99" }, { kleur: "#8c8f99" }, // lavendelgrijs
+  { kleur: "#26282c" }, // zwart
+  { kleur: "#202226", kuif: true }, { kleur: "#232529", kuif: true }, // zwart met een witte krullenbol
+  { kleur: "#6a5440", gestreept: true }, // patrijs
 ];
-const HAAN = { lijf: "#7a2e12", staart: "#13201c", hals: "#c0571c", haan: true };
+const HAAN = { kleur: "#7a3514", haan: true };
+const CLIPS = { lopen: "walk01", rennen: "run01", fladder: "run01flap", pikken: "peck_idle2", staan: "idle01", schrik: "chicken_scared01" };
+let MODEL = null, ANIMS = [], BRON = null; const KLEURMAT = {};
 
-const mats = {}; const M = (k, o = {}) => (mats[k + JSON.stringify(o)] ??= new THREE.MeshStandardMaterial({ color: k, roughness: 0.9, ...o }));
+/** Het model laden (Sketchfab, CC BY: "Chicken Model (CS2)" van kill6lucius, zie README). */
+async function laadModel() { if (MODEL) return;
+  const [{ GLTFLoader, SkeletonUtils }, { MeshoptDecoder }] = await Promise.all([import("../lib/three-addons.js"), import("../lib/meshopt_decoder.mjs")]);
+  const g = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync(`assets/dieren/kip.glb?v=${window.VERSIE ?? ""}`);
+  MODEL = { scene: g.scene, clone: SkeletonUtils.clone }; ANIMS = g.animations; g.scene.traverse((o) => { if (o.isMesh && !BRON) BRON = o.material; }); }
+/** Een materiaal met andere veren: de bruine veren krijgen de nieuwe kleur, de rode kam en de grijze poten blijven. */
+function verenMat(kleur, gestreept) { const sleutel = kleur + (gestreept ? "s" : ""); if (KLEURMAT[sleutel]) return KLEURMAT[sleutel];
+  const img = BRON.map.image, c = document.createElement("canvas"); c.width = img.width; c.height = img.height; const x = c.getContext("2d"); x.drawImage(img, 0, 0);
+  const d = x.getImageData(0, 0, c.width, c.height), p = d.data, doel = new THREE.Color(kleur), t = [doel.r, doel.g, doel.b].map((v) => Math.pow(v, 1 / 2.2) * 255);
+  for (let i = 0; i < p.length; i += 4) { const r = p[i], gg = p[i + 1], b = p[i + 2], mx = Math.max(r, gg, b), mn = Math.min(r, gg, b), sat = mx ? (mx - mn) / mx : 0;
+    const rood = r > 120 && r > gg * 1.9 && r > b * 1.9, grijs = sat < 0.12; if (rood || grijs) continue;
+    const l = (0.3 * r + 0.59 * gg + 0.11 * b) / 160, streep = gestreept ? (((i / 4) % c.width) % 9 < 3 ? 0.55 : 1.15) : 1;
+    for (let k = 0; k < 3; k++) p[i + k] = Math.min(255, t[k] * l * streep); }
+  x.putImageData(d, 0, 0); const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.flipY = BRON.map.flipY;
+  const m = BRON.clone(); m.map = tex; return (KLEURMAT[sleutel] = m); }
 
-/** Eén kip als groep met bewegende delen: kop, poten, vleugels, staart. Lengte ± 45 cm (haan 55). */
+/** Eén kip: een kopie van het model met eigen bewegingen; ± 45 cm (de haan 55). */
 function maakKip(s) {
-  const g = new THREE.Group(), lijf = new THREE.Group(); g.add(lijf); const k = s.haan ? 1.22 : 1;
-  const sfeer = (r, kleur, sx = 1, sy = 1, sz = 1, ouder = lijf, plat = false) => { const m = new THREE.Mesh(plat ? new THREE.IcosahedronGeometry(r, 1) : new THREE.SphereGeometry(r, 12, 9), M(kleur, plat ? { flatShading: true } : {})); m.scale.set(sx, sy, sz); m.castShadow = true; ouder.add(m); return m; };
-  const romp = sfeer(0.16 * k, s.lijf, 0.9, 0.85, 1.25); romp.position.set(0, 0.3 * k, 0);
-  const borst = sfeer(0.12 * k, s.hals, 1, 1, 1); borst.position.set(0, 0.32 * k, 0.12 * k);
-  if (s.gestreept) for (let i = 0; i < 10; i++) { const v = sfeer(0.035 * k, i % 2 ? "#d8c08a" : "#2a2018", 1, 0.4, 1.4); v.position.set(Math.sin(i * 1.7) * 0.12 * k, 0.32 * k + Math.cos(i * 2.3) * 0.06, Math.cos(i) * 0.1 * k); }
-  // vleugels
-  const vleugels = [-1, 1].map((z) => { const w = new THREE.Group(); w.position.set(z * 0.12 * k, 0.33 * k, 0.02); lijf.add(w); const v = sfeer(0.1 * k, s.lijf, 0.35, 0.65, 1.2, w); v.position.set(z * 0.02, -0.02, -0.03); return w; });
-  // de staart: een waaier omhoog naar achter (de haan: lange donkere sikkels)
-  const staart = new THREE.Group(); staart.position.set(0, 0.36 * k, -0.15 * k); lijf.add(staart);
-  if (s.haan) for (let i = 0; i < 6; i++) { const b = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.022, 5, 10, Math.PI * 0.85), M(s.staart, { metalness: 0.3, roughness: 0.5 })); b.rotation.set(0, Math.PI / 2, 0.3 + i * 0.12); b.position.set((i - 2.5) * 0.02, 0.05, -0.12); b.scale.set(1, 1 + i * 0.08, 1); staart.add(b); }
-  else for (let i = 0; i < 5; i++) { const v = sfeer(0.075, s.staart, 0.35, 1.25, 0.8, staart); v.position.set((i - 2) * 0.025, 0.07, -0.02); v.rotation.set(-0.5, 0, (i - 2) * 0.18); }
-  // hals en kop
-  const hals = new THREE.Group(); hals.position.set(0, 0.4 * k, 0.15 * k); lijf.add(hals);
-  const nek = sfeer(0.07 * k, s.hals, 1, 1.5, 1, hals); nek.position.set(0, 0.06 * k, 0.01);
-  const kop = new THREE.Group(); kop.position.set(0, 0.15 * k, 0.03 * k); hals.add(kop);
-  sfeer(0.062 * k, s.hals, 0.95, 1, 1.1, kop);
-  const snavel = new THREE.Mesh(new THREE.ConeGeometry(0.022 * k, 0.06 * k, 6).rotateX(Math.PI / 2), M("#e2b545", { roughness: 0.5 })); snavel.position.set(0, -0.01, 0.075 * k); kop.add(snavel);
-  const rood = M("#d4261c", { roughness: 0.6 }); const kam = s.haan ? 5 : 3;
-  if (!s.kuif || s.haan) for (let i = 0; i < kam; i++) { const c = new THREE.Mesh(new THREE.SphereGeometry(0.022 * k * (s.haan ? 1.5 : 1), 6, 5), rood); c.scale.set(0.5, 1.3, 1); c.position.set(0, 0.06 * k + Math.sin((i / (kam - 1)) * Math.PI) * 0.015, 0.04 * k - i * 0.022 * k); kop.add(c); }
-  for (const z of [-1, 1]) { const ll = new THREE.Mesh(new THREE.SphereGeometry(0.016 * k * (s.haan ? 1.5 : 1), 6, 5), rood); ll.scale.set(0.5, 1.4, 1); ll.position.set(z * 0.008, -0.05 * k, 0.05 * k); kop.add(ll);
-    const oog = new THREE.Mesh(new THREE.SphereGeometry(0.009 * k, 6, 5), M("#d48a1a", { roughness: 0.3 })); oog.position.set(z * 0.05 * k, 0.012, 0.025 * k); kop.add(oog); const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.005 * k, 5, 4), M("#000")); pupil.position.set(z * 0.057 * k, 0.012, 0.027 * k); kop.add(pupil); }
-  if (s.kuif) { const kuif = sfeer(0.085, "#f7f5ef", 1.15, 0.9, 1.1, kop, true); kuif.position.set(0, 0.06, -0.005); }
-  // poten
-  const geel = M("#e0b04a", { roughness: 0.6 }); const poten = [-1, 1].map((z) => { const p = new THREE.Group(); p.position.set(z * 0.055 * k, 0.2 * k, 0); g.add(p); const l = new THREE.Mesh(new THREE.CylinderGeometry(0.011 * k, 0.011 * k, 0.2 * k, 5), geel); l.position.y = -0.1 * k; p.add(l);
-    for (const a of [-0.45, 0, 0.45]) { const t = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.008, 0.06 * k), geel); t.position.set(Math.sin(a) * 0.025, -0.2 * k, Math.cos(a) * 0.025); t.rotation.y = a; p.add(t); } return p; });
-  return { g, lijf, hals, kop, vleugels, staart, poten, k };
+  const g = new THREE.Group(), o = MODEL.clone(MODEL.scene), k = s.haan ? 0.31 : 0.26; o.scale.setScalar(k); g.add(o);
+  o.traverse((m) => { if (m.isMesh) { m.castShadow = true; m.frustumCulled = false; if (s.kleur) m.material = verenMat(s.kleur, s.gestreept); } });
+  if (s.kuif) { let kop = null; o.traverse((b) => { if (b.isBone && /head/i.test(b.name) && !kop) kop = b; }); const bol = new THREE.Mesh(new THREE.IcosahedronGeometry(0.05, 1), new THREE.MeshStandardMaterial({ color: "#f5f2ea", roughness: 1, flatShading: true }));
+    bol.scale.set(1.1, 0.85, 1.1); if (kop) { const w = new THREE.Vector3(); kop.getWorldScale(w); bol.scale.multiplyScalar(1 / w.x); bol.position.set(0, 0.06 / w.x, 0); kop.add(bol); } else { bol.position.set(0, 0.42, 0.12); g.add(bol); } }
+  const mixer = new THREE.AnimationMixer(o), acties = {};
+  for (const [n, c] of Object.entries(CLIPS)) { const clip = ANIMS.find((a) => a.name === c); if (clip) acties[n] = mixer.clipAction(clip); }
+  return { g, mixer, acties, nu: null };
 }
+const zetActie = (k, n, snel = 1) => { const a = k.acties[n]; if (!a) return; a.timeScale = snel; if (k.nu === n) return; a.reset().play(); if (k.nu && k.acties[k.nu]) k.acties[k.nu].crossFadeTo(a, 0.25, false); k.nu = n; };
 
 export class Kippen {
   /** gebied(x, z) → mag een kip hier staan? grond(x, z) → hoogte. plekken() → een willekeurig punt { x, z } om naartoe te lopen. */
+  static laad() { return laadModel(); }
   constructor(scene, { grond, mag, plek, aantal = 16, geluid = null }) {
     this.scene = scene; this.grond = grond; this.mag = mag; this.plek = plek; this.geluid = geluid; this.lijst = []; this.t = 0;
     for (let i = 0; i < aantal; i++) { const s = i === 0 ? HAAN : SOORTEN[i % SOORTEN.length], d = maakKip(s), p = plek(); d.g.position.set(p.x, grond(p.x, p.z), p.z); d.g.rotation.y = Math.random() * 6.28; scene.add(d.g);
-      this.lijst.push({ ...d, s, doel: plek(), wacht: tussen(0, 3), fase: Math.random() * 6, pik: 0, ren: 0, v: 0, fladder: 0 }); }
+      d.mixer.update(Math.random() * 3); this.lijst.push({ ...d, s, doel: plek(), wacht: tussen(0, 3), fase: Math.random() * 6, pik: 0, ren: 0, v: 0, fladder: 0 }); }
     // de verrassing: een roze rubberen ding in het gras
     const roze = new THREE.MeshStandardMaterial({ color: "#f2a3a8", roughness: 0.45 }), v = new THREE.Group();
     const schacht = new THREE.Mesh(new THREE.CapsuleGeometry(0.045, 0.2, 6, 12), roze); schacht.position.y = 0.16; v.add(schacht);
@@ -90,14 +84,10 @@ export class Kippen {
         let d = Math.atan2(dx, dz) - k.g.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d)); k.g.rotation.y += d * Math.min(1, dt * 8);
       }
       p.y = this.grond(p.x, p.z);
-      // de beweging: pootjes, kopknikken bij het lopen, pikken naar de grond, vleugels bij het fladderen
-      k.fase += dt * (k.v > 0 ? 6 + k.v * 4 : 0); const loopt = k.v > 0, sw = Math.sin(k.fase);
-      k.poten[0].rotation.x = loopt ? sw * 0.6 : 0; k.poten[1].rotation.x = loopt ? -sw * 0.6 : 0;
-      k.pik = Math.max(0, k.pik - dt * 1.6); const pik = !loopt && k.wacht > 0 ? Math.max(0, Math.sin(this.t * 7 + k.fase)) * (bijVerrassing ? 1 : 0.8) * (k.pik > 0 || bijVerrassing ? 1 : 0) : 0;
-      k.lijf.rotation.x = pik * 0.75; k.hals.rotation.x = pik * 0.9; k.hals.position.z = 0.15 * k.k + (loopt ? Math.max(0, Math.sin(k.fase * 2)) * 0.03 : 0);
-      k.kop.rotation.y = !loopt && !pik ? Math.sin(this.t * 1.3 + k.fase * 3) * 0.6 : 0;
-      k.fladder = Math.max(0, k.fladder - dt); const fl = k.fladder > 0 ? Math.sin(this.t * 40) * 0.9 : 0; k.vleugels[0].rotation.z = -Math.abs(fl); k.vleugels[1].rotation.z = Math.abs(fl); k.lijf.position.y = k.fladder > 0 ? Math.abs(Math.sin(this.t * 12)) * 0.12 : 0;
-      k.staart.rotation.x = Math.sin(this.t * 2 + k.fase) * 0.05;
+      // de beweging: de echte bewegingen van het model (lopen, rennen, fladderen, pikken, rondkijken)
+      k.fladder = Math.max(0, k.fladder - dt);
+      if (k.v > 1.5) zetActie(k, k.fladder > 0 ? "fladder" : "rennen", 1.1); else if (k.v > 0) zetActie(k, "lopen", 1.3); else if (k.wacht > 0 && (k.pik > 0 || bijVerrassing)) zetActie(k, "pikken"); else zetActie(k, "staan");
+      k.pik = Math.max(0, k.pik - dt * 0.3); k.mixer.update(dt);
     }
     // af en toe kraait de haan, en tokt er een kip
     if (Math.random() < dt / 40) this.geluid?.("kraai"); else if (Math.random() < dt / 6) this.geluid?.("tok");

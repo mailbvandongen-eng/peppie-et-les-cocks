@@ -39,9 +39,12 @@ addEventListener("resize", pasAan); pasAan();
 // ---------- geluid: een paar eenvoudige klanken ----------
 const geluid = { ctx: null,
   start() { this.ctx ??= new (window.AudioContext || window.webkitAudioContext)(); this.ctx.resume?.(); this.laad(); },
-  toon({ freq, freq2 = freq, duur, type = "sine", gain = 0.1, start = 0 }) { const c = this.ctx; if (!c) return; const o = c.createOscillator(), g = c.createGain(), t = c.currentTime + start; o.type = type; o.frequency.setValueAtTime(freq, t); o.frequency.exponentialRampToValueAtTime(Math.max(20, freq2), t + duur); g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(0.0005, t + duur); o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + duur + 0.02); },
-  ruis({ duur, freq = 1200, gain = 0.3, start = 0 }) { const c = this.ctx; if (!c) return; const n = Math.ceil(c.sampleRate * duur), b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n) ** 2; const s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(); s.buffer = b; f.type = "lowpass"; f.frequency.value = freq; g.gain.value = gain; s.connect(f); f.connect(g); g.connect(c.destination); s.start(c.currentTime + start); },
-  plons(v = 1) { this.ruis({ duur: 0.7, freq: 1500, gain: 0.5 * v }); this.ruis({ duur: 0.3, freq: 4000, gain: 0.25 * v, start: 0.04 }); },
+  // alleen echte opnames (Bob, 28-11): de zelfgemaakte piepjes en ruis staan uit
+  toon() {},
+  toonOud({ freq, freq2 = freq, duur, type = "sine", gain = 0.1, start = 0 }) { const c = this.ctx; if (!c) return; const o = c.createOscillator(), g = c.createGain(), t = c.currentTime + start; o.type = type; o.frequency.setValueAtTime(freq, t); o.frequency.exponentialRampToValueAtTime(Math.max(20, freq2), t + duur); g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(0.0005, t + duur); o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + duur + 0.02); },
+  ruis() {},
+  ruisOud({ duur, freq = 1200, gain = 0.3, start = 0 }) { const c = this.ctx; if (!c) return; const n = Math.ceil(c.sampleRate * duur), b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n) ** 2; const s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(); s.buffer = b; f.type = "lowpass"; f.frequency.value = freq; g.gain.value = gain; s.connect(f); f.connect(g); g.connect(c.destination); s.start(c.currentTime + start); },
+  plons(v = 1) { this.speel("plons-meerval", { gain: Math.min(1, v * 0.8), rate: 1.25 }); },
   piep() { for (let i = 0; i < 4; i++) this.toon({ freq: 2300, duur: 0.07, gain: 0.04, start: i * 0.11 }); },
   goed() { [523, 659, 784, 1047].forEach((f, i) => this.toon({ freq: f, duur: 0.22, type: "triangle", gain: 0.09, start: i * 0.11 })); },
   fout() { this.toon({ freq: 220, freq2: 110, duur: 0.4, type: "sawtooth", gain: 0.06 }); },
@@ -89,13 +92,14 @@ const C = { paul: mens("paul"), dave: mens("dave"), bob: mens("bob"), wim: mens(
 zetPet(C.dave.m);
 let peppie = C.paul, cocks = C.bob, rest = [C.dave, C.wim];
 const plekken = (() => { const zet = (w, lx, lz, rot, houding, zit) => { const p = dom.wereld(lx, 0, lz); w.g.position.set(p.x, W.opSteiger(p.x, p.z) ?? W.hoogte(p.x, p.z), p.z); w.g.rotation.set(0, huis.yaw + rot, 0); w.m.zet(houding, 1, houding === "zitten" ? 0 : null); w.m.mixer.update(0.01); if (zit) w.g.position.y += 0.44 - w.m.zithoogte() + 0.02; };
-  return [(w) => zet(w, -2.4, dom.oeverZ(-2.4) + 0.9, 0.3, "staan"), (w) => zet(w, -6.4, dom.oeverZ(-6.5) - 5.25, Math.PI, "zitten", true)]; })();
+  return [(w) => zet(w, -5.4, dom.oeverZ(-5.4) + 1.7, 0.4, "staan"), (w) => zet(w, -6.4, dom.oeverZ(-6.5) - 5.25, Math.PI, "zitten", true)]; })();
 {
   // Wim drinkt alleen Fristi: een pak naast hem op de picknicktafel
   const pak = new THREE.Group(), roze = new THREE.MeshStandardMaterial({ color: "#e8e2d4", roughness: 0.6 }), band = new THREE.MeshStandardMaterial({ color: "#d8357a", roughness: 0.6 });
   const romp = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.19, 0.07), roze); romp.position.y = 0.095; const st = new THREE.Mesh(new THREE.BoxGeometry(0.072, 0.07, 0.072), band); st.position.y = 0.1; const nok = new THREE.Mesh(new THREE.CylinderGeometry(0.0, 0.05, 0.04, 4), roze); nok.position.y = 0.21; nok.rotation.y = Math.PI / 4; pak.add(romp, st, nok);
   const pp = dom.wereld(-6.0, 0, dom.oeverZ(-6.5) - 6); pak.position.set(pp.x, W.hoogte(pp.x, pp.z) + 0.76, pp.z); scene.add(pak); W.fristi = pak; }
 // de kippen lopen over het gras tussen het huis en de oever, en soms over de steigers
+await Kippen.laad();
 const kippen = new Kippen(scene, {
   grond: (x, z) => W.opSteiger(x, z) ?? W.hoogte(x, z),
   mag: (x, z) => (W.opSteiger(x, z) !== null || W.oever(x, z) < -0.6) && !W.inHuis(x, z, 0.15) && (() => { const l = dom.lokaal(V(x, 0, z)); return l.x > -24 && l.x < 34 && l.z > -1; })(),
@@ -201,13 +205,18 @@ function vangst(vis) { const cm = Math.round(vis.lengte * 100), tekst = vis.leng
 // de hengel en de lijn
 const hengel = spul.maakHengel(); hengel.g.visible = false;
 // de meervalhengel: 1,80 m, kort en zwaar, de reel (multiplier) bovenop; Wim draait links
-const mhR = maakMeervalhengel(scene), mhL = maakMeervalhengel(scene, { links: true }); let hengelKort = mhR;
+const mhR = maakMeervalhengel(scene, { blank: "groen" }), mhL = maakMeervalhengel(scene, { links: true, blank: "groen" }); let hengelKort = mhR;
 const lijn = new THREE.Line(new THREE.BufferGeometry().setFromPoints([V(0, 0, 0), V(0, 0, 0), V(0, 0, 0)]), new THREE.LineBasicMaterial({ color: "#f2f6f8", transparent: true, opacity: 0.8 })); lijn.frustumCulled = false; lijn.visible = false; scene.add(lijn);
 function zetLijn(a, b, slap = 0) { const p = lijn.geometry.attributes.position, m = a.clone().lerp(b, 0.5); m.y -= slap; p.setXYZ(0, a.x, a.y, a.z); p.setXYZ(1, m.x, m.y, m.z); p.setXYZ(2, b.x, b.y, b.z); p.needsUpdate = true; lijn.visible = true; }
 /** Peppie houdt de hengel vast: steil = hoe ver omhoog, bocht = hoe krom. Geeft de top terug. */
-function houdHengel(yaw, steil, bocht) { const m = peppie.m, f = voor(yaw), buik = m.plek("DEF-spine001").clone().addScaledVector(f, 0.22), d = f.clone().multiplyScalar(Math.cos(steil)).setY(Math.sin(steil)), links = V(f.z, 0, -f.x);
-  hengel.g.visible = true; hengel.buig(bocht); const top = hengel.leg(buik, d);
-  m.arm("R", buik.clone().addScaledVector(d, 0.48), V(0, -1, 0).addScaledVector(links, -0.5)); m.arm("L", buik.clone().addScaledVector(d, 0.12), V(0, -1, 0).addScaledVector(links, 0.5)); return top; }
+/** Op de kant: de kolf van de hengel tegen de rechterheup, de hengel schuin omhoog naar het water, de molen eronder;
+ *  de rechterhand om de hengel bij de molen, de linker aan de slinger van de molen (zoals in Bobs video ref/dril-kant.mp4).
+ *  steil = hoek omhoog, bocht = hoe krom. Geeft de top terug. */
+function houdHengel(yaw, steil, bocht) { const m = peppie.m, f = voor(yaw), rechts = V(-f.z, 0, f.x), heup = m.plek("DEF-spine001").clone().addScaledVector(f, 0.08).addScaledVector(rechts, 0.1).add(V(0, -0.02, 0));
+  const d = f.clone().multiplyScalar(Math.cos(steil)).setY(Math.sin(steil)), onder = f.clone().multiplyScalar(Math.sin(steil)).setY(-Math.cos(steil));
+  hengel.g.visible = true; hengel.buig(bocht); const top = hengel.leg(heup, d);
+  m.arm("R", heup.clone().addScaledVector(d, 0.5).addScaledVector(onder, -0.02), V(0, -1, 0).addScaledVector(rechts, 0.6));
+  m.arm("L", heup.clone().addScaledVector(d, 0.55).addScaledVector(onder, 0.16).addScaledVector(rechts, -0.1), V(0, -1, 0).addScaledVector(rechts, -0.6)); return top; }
 const dobber = new THREE.Group(); { const a = new THREE.Mesh(new THREE.SphereGeometry(0.07, 10, 8), new THREE.MeshStandardMaterial({ color: "#f24a2a" })); a.scale.y = 1.5; a.position.y = 0.08; const b = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.3, 5), new THREE.MeshStandardMaterial({ color: "#fafafa" })); b.position.y = 0.26; dobber.add(a, b); dobber.visible = false; scene.add(dobber); }
 const spetter = (p, n = 24, k = 1) => { for (let i = 0; i < n; i++) fx.deeltje(p.clone().add(V(tussen(-0.3, 0.3), 0.1, tussen(-0.3, 0.3))), { leven: tussen(0.4, 1), kleur: i % 3 ? "#eef7fa" : "#c5e2ea", r0: 0.1, r1: 0.45 * k, v: V(tussen(-2.5, 2.5) * k, tussen(2.5, 6.5) * k, tussen(-2.5, 2.5) * k), g: 9, a: 0.9 }); };
 
@@ -217,7 +226,7 @@ function beginKant() { Object.assign(kant, { fase: "loop", n: 0 }); loop.pos.cop
 function stapKant(dt) {
   const k = kant; k.t += dt; let top;
   if (k.fase === "loop") {
-    stapLopen(dt); peppie.m.zet(loop.v > 0.3 ? "lopen" : "staan"); peppie.m.mixer.update(dt); top = houdHengel(loop.yaw, 1.15, 0.02); lijn.visible = false; dobber.visible = false;
+    stapLopen(dt); peppie.m.zet(loop.v > 0.3 ? "lopen" : "staan"); peppie.m.mixer.update(dt); top = houdHengel(loop.yaw, 0.95, 0.02); lijn.visible = false; dobber.visible = false;
     const doel = loop.pos.clone().addScaledVector(voor(loop.yaw), 17), kan = W.inWater(doel.x, doel.z) && W.diepte(doel.x, doel.z) > 0.8;
     knoppen({ A: kan ? "Werp" : null }); hud.tel.textContent = `${k.n} / 3`;
     if (kan && invoer.Atik) { k.fase = "worp"; k.t = 0; k.doel.copy(doel).setY(0); geluid.ruis({ duur: 0.3, freq: 3000, gain: 0.15 }); }
@@ -235,9 +244,9 @@ function stapKant(dt) {
     else if (onder && k.t > 1.6) { meld("Te laat… weg is hij"); k.fase = "loop"; }
     else if (!onder && invoer.Atik) k.fase = "loop";
   } else if (k.fase === "dril") {
-    peppie.m.zet("vechtklaar", 0.6); peppie.m.mixer.update(dt); const uit = stapDril(dt, invoer.A);
+    peppie.m.zet("staan"); peppie.m.mixer.update(dt); const uit = stapDril(dt, invoer.A);
     const ri = k.doel.clone().sub(loop.pos).setY(0).normalize(); k.doel.copy(loop.pos).addScaledVector(ri, dril.afstand).addScaledVector(V(ri.z, 0, -ri.x), Math.sin(k.t * 1.3) * 0.02 * dril.afstand).setY(0);
-    top = houdHengel(Math.atan2(ri.x, ri.z), 1.0, 0.22 + dril.span * 0.18); dobber.visible = false; zetLijn(top, k.doel.clone().setY(-0.1));
+    top = houdHengel(Math.atan2(ri.x, ri.z), 0.75 + Math.sin(k.t * 1.4) * 0.22 + (invoer.A ? -0.12 : 0), 0.22 + dril.span * 0.22); // pompen: omhoog trekken, zakken en indraaien dobber.visible = false; zetLijn(top, k.doel.clone().setY(-0.1));
     if (Math.random() < dt * 4) spetter(k.doel, 4, 0.4);
     knoppen({ A: "Draai" });
     if (uit === "binnen") { vangst(k.vis); k.n++; k.fase = "loop"; if (k.n >= 3) einde(true, `Drie vissen: ${spel.vangsten.slice(-3).map((v) => v.soort).join(", ")}.`); }
@@ -291,7 +300,7 @@ function stapBelly(dt) {
   const kn = invoer.toets; if (strepen()) invoer.sonarSleep = 0; b.sonar -= invoer.sonarSleep * 2.2; invoer.sonarSleep = 0; if (kn.KeyQ || kn.KeyZ) b.sonar += 1.4 * dt; if (kn.KeyC) b.sonar -= 1.4 * dt; b.sonar = klem(b.sonar, -2.6, 2.6);
   boot.visible = true; boot.position.set(b.pos.x, 0.0 + Math.sin(b.klok * 1.7) * 0.02, b.pos.z); boot.rotation.set(Math.sin(b.klok * 1.3) * 0.025 + (drilB ? drilB.trek * 0.06 : 0), b.yaw, Math.sin(b.klok * 1.1) * 0.025); bb.stang.rotation.y = b.sonar; bb.schroef.rotation.z += dt * (Math.abs(vaart) * 30); bb.motor.rotation.y = -s.x * 0.5;
   boot.updateMatrixWorld(true);
-  peppie.m.zet("zitten"); peppie.m.mixer.update(dt); peppie.g.position.copy(boot.localToWorld(bb.zit.clone())).add(V(0, -peppie.m.zithoogte() + 0.02, 0)); peppie.g.rotation.set(0, b.yaw, 0);
+  peppie.m.zet("zitten"); peppie.m.mixer.update(dt); peppie.g.position.copy(boot.localToWorld(bb.zit.clone().add(V(0, 0.02, -0.05)))).add(V(0, -peppie.m.zithoogte(), 0)); peppie.g.rotation.set(-0.2 + (drilB ? -drilB.op * 0.25 : 0), b.yaw, 0, "YXZ"); // achterover in de hoge stoel; bij het pompen nog verder
   const bodem = W.diepte(b.pos.x, b.pos.z);
   // de bundel: vanaf de transducer rechts voorin, in de richting van de stang; ± 20 graden breed
   const bron = boot.localToWorld(V(0.74, 0, 0.78)), sy = b.yaw + b.sonar, fb = voor(sy), rb = V(-fb.z, 0, fb.x);

@@ -75,7 +75,13 @@ export function maakBellyboat(soort = "paul", { scherm = null } = {}) {
   cil(0, -0.12, 0, 0.011, 0.95, rvs, stang); const greep = cil(0, 0.38, 0, 0.018, 0.12, M("#111"), stang); greep.rotation.z = Math.PI / 2; greep.position.x = -0.04;
   doos(0, -0.58, 0.04, 0.06, 0.07, 0.17, M("#151618"), stang); doos(0, -0.58, 0.13, 0.055, 0.06, 0.02, M("#30343a"), stang); // de transducer kijkt naar +z van de stang
   // een drinkbeker in een houder op de linker ponton
-  { cil(-B, top + 0.03, 0.18, 0.045, 0.06, zwartM); const beker = cil(-B, top + 0.09, 0.18, 0.04, 0.12, M("#8e9499", { metalness: 0.7, roughness: 0.3 }), g, 14); }
+  // de bekerhouder: een zwart plankje over de linker ponton met een houder erop; altijd een biertje erin (bij Wim een pak Fristi)
+  { const plank = new THREE.Group(); plank.position.set(-B, top + 0.012, 0.36); g.add(plank);
+    doos(0.02, 0, 0, 0.2, 0.018, 0.12, zwartM, plank); cil(-0.04, 0.045, 0, 0.042, 0.075, zwartM, plank, 16); cil(-0.04, 0.083, 0, 0.046, 0.008, M("#2b2b2b"), plank, 16);
+    if (soort === "wim") { const pak = new THREE.Group(); pak.position.set(-0.04, 0.05, 0); plank.add(pak); doos(0, 0.06, 0, 0.065, 0.16, 0.065, M("#ece6d8"), pak); doos(0, 0.07, 0, 0.067, 0.06, 0.067, M("#d8357a"), pak); const nok = new THREE.Mesh(new THREE.CylinderGeometry(0, 0.046, 0.035, 4), M("#ece6d8")); nok.rotation.y = Math.PI / 4; zet(nok, 0, 0.157, 0, pak); }
+    else { const fles = new THREE.Group(); fles.position.set(-0.04, 0.03, 0); plank.add(fles); const glas = M("#1f7a2e", { roughness: 0.15, metalness: 0.1, transparent: true, opacity: 0.9 });
+      cil(0, 0.08, 0, 0.032, 0.16, glas, fles, 16); { const sch = new THREE.Mesh(new THREE.CylinderGeometry(0.013, 0.032, 0.06, 16), glas); zet(sch, 0, 0.19, 0, fles); } cil(0, 0.25, 0, 0.013, 0.06, glas, fles, 12); cil(0, 0.283, 0, 0.015, 0.008, M("#c9a33a", { metalness: 0.8, roughness: 0.3 }), fles, 12);
+      const etiket = cil(0, 0.1, 0, 0.0335, 0.07, M("#f2f2f0"), fles, 16); cil(0, 0.1, 0, 0.0337, 0.02, M("#c8262b"), fles, 16); } }
   // de MADCAT-letters op de neuzen van Dave
   const opdruk = (tekst, achter, kleur, breed = 0.3, z0 = 0.45) => { const c = document.createElement("canvas"); c.width = 512; c.height = 128; const x = c.getContext("2d"); if (achter) { x.fillStyle = achter; x.fillRect(20, 14, 472, 100); } x.font = "italic 900 78px Arial Black, Arial, sans-serif"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillStyle = kleur; x.fillText(tekst, 256, 66);
     const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; const mm = new THREE.MeshBasicMaterial({ map: tx, transparent: true, toneMapped: false, depthWrite: false });

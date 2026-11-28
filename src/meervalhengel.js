@@ -5,33 +5,38 @@ import * as THREE from "three";
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 
-export function maakMeervalhengel(scene, { links = false, lengte = 1.8 } = {}) {
+export function maakMeervalhengel(scene, { links = false, lengte = 1.8, blank = "groen", reelMaat = 1 } = {}) {
   const L = lengte, HANDVAT = 0.62, N = 46, ZIJ = 8;
   // dikte langs de hengel: handvat (EVA) dik, reelzitting, voorgreep, dan de blank die dunner wordt tot de top
   const straal = (z) => z < 0.02 ? 0.016 : z < 0.32 ? 0.0165 : z < 0.46 ? 0.0115 : z < 0.6 ? 0.015 : 0.0105 - 0.0078 * ((z - 0.6) / (L - 0.6)) ** 0.8;
   const ringZ = []; for (let i = 0; i <= N; i++) { const f = i / N; ringZ.push(f < 0.4 ? (f / 0.4) * HANDVAT : HANDVAT + ((f - 0.4) / 0.6) * (L - HANDVAT)); }
   const pos = new Float32Array((N + 1) * (ZIJ + 1) * 3), kleur = new Float32Array(pos.length), idx = [];
-  const kl = (z) => z < 0.32 ? [0.12, 0.12, 0.12] : z < 0.46 ? [0.3, 0.3, 0.32] : z < 0.6 ? [0.12, 0.12, 0.12] : z > L - 0.05 ? [0.9, 0.85, 0.2] : [0.16, 0.17, 0.18];
+  const blankKleur = blank === "geel" ? [0.95, 0.78, 0.08] : [0.32, 0.78, 0.18];
+  const kl = (z) => z < 0.32 ? [0.12, 0.12, 0.12] : z < 0.46 ? [0.3, 0.3, 0.32] : z < 0.6 ? [0.12, 0.12, 0.12] : z > L - 0.05 ? [0.95, 0.95, 0.9] : blankKleur; // Black Cat Solid: een massieve glasblank, fel groen (zwaar) of geel (licht)
   for (let i = 0; i <= N; i++) for (let j = 0; j <= ZIJ; j++) kleur.set(kl(ringZ[i]), (i * (ZIJ + 1) + j) * 3);
   for (let i = 0; i < N; i++) for (let j = 0; j < ZIJ; j++) { const a = i * (ZIJ + 1) + j, b = a + ZIJ + 1; idx.push(a, a + 1, b, b, a + 1, b + 1); }
   const geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.BufferAttribute(pos, 3)); geo.setAttribute("color", new THREE.BufferAttribute(kleur, 3)); geo.setIndex(idx);
-  const g = new THREE.Group(), blank = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.3, metalness: 0.25, side: THREE.DoubleSide })); blank.castShadow = true; blank.frustumCulled = false; g.add(blank); scene.add(g);
+  const g = new THREE.Group(), staaf = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.3, metalness: 0.25, side: THREE.DoubleSide })); staaf.castShadow = true; staaf.frustumCulled = false; g.add(staaf); scene.add(g);
 
-  // de reel: een multiplier bovenop het handvat, goud en zwart, de draaiknop opzij
-  const reel = new THREE.Group(), goud = new THREE.MeshStandardMaterial({ color: "#b8913a", metalness: 0.8, roughness: 0.3 }), zw = new THREE.MeshStandardMaterial({ color: "#151618", metalness: 0.4, roughness: 0.4 });
-  const sp = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.07, 18), zw); sp.rotation.z = Math.PI / 2; reel.add(sp);
-  const lijnOpSpoel = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.026, 0.062, 18), new THREE.MeshStandardMaterial({ color: "#d8d23a", roughness: 0.7 })); lijnOpSpoel.rotation.z = Math.PI / 2; lijnOpSpoel.position.y = 0.006; reel.add(lijnOpSpoel);
-  for (const k of [-1, 1]) { const pl = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.014, 20), goud); pl.rotation.z = Math.PI / 2; pl.position.x = k * 0.042; reel.add(pl); }
-  const kant = links ? -1 : 1, as = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.03, 8), zw); as.rotation.z = Math.PI / 2; as.position.x = kant * 0.062; reel.add(as);
-  const slinger = new THREE.Group(); slinger.position.x = kant * 0.075; reel.add(slinger);
-  const armS = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.012, 0.075), zw); slinger.add(armS); for (const k of [-1, 1]) { const knop = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.011, 0.022, 10), zw); knop.rotation.z = Math.PI / 2; knop.position.set(kant * 0.014, 0, k * 0.036); slinger.add(knop); }
-  const ster = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.01, 6), goud); ster.rotation.z = Math.PI / 2; ster.position.x = kant * 0.056; reel.add(ster); // de slipster
-  const voet = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.022, 0.06), zw); voet.position.y = -0.03; reel.add(voet);
-  reel.position.set(0, 0.048, 0.39); reel.traverse((o) => { if (o.isMesh) o.castShadow = true; }); g.add(reel);
+  // de reel: een Abu Garcia Max (61 op de zware, 41 op de lichte): een lage, ronde baitcaster in donker gunmetal met rode
+  // accenten, groene gevlochten lijn op de spoel, een slinger met twee knoppen en de slipster aan de kant van de slinger
+  const reel = new THREE.Group(), gun = new THREE.MeshStandardMaterial({ color: "#7b8088", metalness: 0.65, roughness: 0.32 }), donker = new THREE.MeshStandardMaterial({ color: "#3a3d42", metalness: 0.6, roughness: 0.35 }), zw = new THREE.MeshStandardMaterial({ color: "#151618", metalness: 0.4, roughness: 0.4 }), rood = new THREE.MeshStandardMaterial({ color: "#c0221a", metalness: 0.5, roughness: 0.4 });
+  const kant = links ? -1 : 1;
+  const sp = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.056, 18), new THREE.MeshStandardMaterial({ color: "#8fbf96", roughness: 0.8 })); sp.rotation.z = Math.PI / 2; reel.add(sp); // de lijn op de spoel
+  for (const k of [-1, 1]) { const pl = new THREE.Mesh(new THREE.CylinderGeometry(0.036, 0.036, 0.018, 24), gun); pl.rotation.z = Math.PI / 2; pl.scale.set(1, 1, 0.8); pl.position.x = k * 0.037; reel.add(pl);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.027, 0.0025, 6, 20), rood); ring.rotation.y = Math.PI / 2; ring.position.x = k * 0.028; reel.add(ring); }
+  const brug = new THREE.Mesh(new THREE.BoxGeometry(0.074, 0.012, 0.03), donker); brug.position.set(0, 0.03, -0.006); reel.add(brug); // de duimsteun over de spoel
+  const voorkant = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.01, 0.012), zw); voorkant.position.set(0, 0.006, 0.03); reel.add(voorkant); // de lijngeleider
+  const as = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.02, 8), zw); as.rotation.z = Math.PI / 2; as.position.set(kant * 0.052, 0, -0.004); reel.add(as);
+  const slinger = new THREE.Group(); slinger.position.set(kant * 0.062, 0, -0.004); reel.add(slinger);
+  const armS = new THREE.Mesh(new THREE.BoxGeometry(0.006, 0.01, 0.1), zw); slinger.add(armS); for (const k of [-1, 1]) { const knop = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.011, 0.024, 12), zw); knop.rotation.z = Math.PI / 2; knop.scale.set(1, 1, 1.9); knop.position.set(kant * 0.013, 0, k * 0.048); slinger.add(knop); }
+  const ster = new THREE.Mesh(new THREE.CylinderGeometry(0.017, 0.017, 0.006, 5), gun); ster.rotation.z = Math.PI / 2; ster.position.set(kant * 0.05, 0, -0.004); reel.add(ster); // de slipster
+  const voet = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.016, 0.055), zw); voet.position.y = -0.026; reel.add(voet);
+  reel.scale.setScalar(reelMaat); reel.position.set(0, 0.042, 0.39); reel.traverse((o) => { if (o.isMesh) o.castShadow = true; }); g.add(reel);
 
   // de ogen aan de bovenkant
   const oogZ = [0.75, 0.95, 1.13, 1.3, 1.45, 1.58, 1.7, L - 0.004], ogen = oogZ.map((z) => { const r = new THREE.Mesh(new THREE.TorusGeometry(z < 1 ? 0.013 : 0.008, 0.0022, 5, 12), zw); g.add(r); return { z, r }; });
-  const lijnMat = new THREE.LineBasicMaterial({ color: "#e6e04a" }), lijnLangs = new THREE.Line(new THREE.BufferGeometry().setFromPoints(new Array(oogZ.length + 1).fill(0).map(() => V(0, 0, 0))), lijnMat); lijnLangs.frustumCulled = false; g.add(lijnLangs);
+  const lijnMat = new THREE.LineBasicMaterial({ color: "#9fd0a4" }), lijnLangs = new THREE.Line(new THREE.BufferGeometry().setFromPoints(new Array(oogZ.length + 1).fill(0).map(() => V(0, 0, 0))), lijnMat); lijnLangs.frustumCulled = false; g.add(lijnLangs);
 
   // de buiging: alleen de blank buigt (vanaf de voorgreep); hoek groeit naar de top. k = 1 is bijna dubbel.
   const C = [], NR = [], T = [];
