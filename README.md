@@ -22,6 +22,7 @@ Bediening: links op het scherm slepen = sturen, rechts slepen = rondkijken, knop
 - Mensen: MakeHuman (CC0), bewegingen Quaternius Universal Animation Library (CC0).
 - Modellen via Sketchfab (CC BY 4.0): hengel “Fishing Rod” (emelyarules), molen “Spinning Reel” (SiBeRiEIIIkA), stoel “Camping Chair” (lpfeffer), blikje “Beer can” (Arte Hexe), krat “Beer crate” (3DDomino), karper “Carp Fish” (huykhoi2407).
 - Bomen via Sketchfab (CC BY 4.0): “Realistic HD Lombardy poplar (16/75)” (PlantCatalog), “Maple trees pack (lowpoly, game ready, LODs)” (lolipop_1707), “Willow” (evolveduk); verkleind voor de telefoon.
+- Drone: “DJI 3 mini Pro” (wishmaster88, Sketchfab, CC BY 4.0), vereenvoudigd; staat in het spel voor Pauls DJI Mini 2.
 - Vissen via Sketchfab (CC BY 4.0): “Wels catfish” (faerbogdan99), “Bream (Abramis Brama)” en “Zander (Sander lucioperca)” (Nullifiedit), “Common Roach” (robert.meier.art); verkleind.
 - Lucht en texturen van Poly Haven (CC0): HDRI *Kloofendal 48d Partly Cloudy (Pure Sky)*, texturen *sparse_grass*, *river_small_rocks*, *brown_mud_rocks_01*.
 - three.js (MIT).

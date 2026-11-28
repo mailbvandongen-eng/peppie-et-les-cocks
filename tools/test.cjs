@@ -33,6 +33,7 @@ const T = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javasc
     s.invoer.y = 1; while (t < 6 && d.pos.distanceTo(W.huis.bed) > 0.9) { st(0.05); t += 0.05; if (Math.abs(d.pos.x - W.huis.bed.x) < 0.5 && Math.abs(d.pos.z - W.huis.bed.z) < 0.5) break; } s.invoer.y = 0;
     const l = W.huis.naarBinnen(d.pos); return JSON.stringify({ binnen: Math.abs(l.z) < W.huis.BZ / 2 && Math.abs(l.x) < W.huis.BX / 2, sec: +t.toFixed(1), totBed: +Math.hypot(d.pos.x - W.huis.bed.x, d.pos.z - W.huis.bed.z).toFixed(2), hoogte: +(d.pos.y - W.huis.bed.y).toFixed(2) }); }));
   await beeld("8-drone-binnen", 3000);
+  console.log("  piloten:", await p.evaluate(() => { const s = window.__spel, st = s.MISSIES.drone[1]; s.piloot.valT = 0.01; for (let t = 0; t < 3; t += 0.05) st(0.05); return s.piloot.lijst.map((q) => (q.w === s.C.paul ? "Paul" : "Bob") + (q === s.piloot.heeft ? "(ab)" : "") + (q.val > 0 ? " ligt" : " staat")).join(", "); }));
   console.log("  glas:", await p.evaluate(() => { const s = window.__spel, st = s.MISSIES.drone[1]; s.dr.pos.x = s.W.huis.bed.x; s.dr.pos.z = s.W.huis.bed.z; s.invoer.Atik = true; st(0.02); s.invoer.Atik = false; for (let t = 0; t < 2; t += 0.02) st(0.02); return `wakker: ${s.cocks.wakker}, klaar: ${s.spel.klaar}`; }));
   await beeld("9-wakker", 3000);
   // beverratten

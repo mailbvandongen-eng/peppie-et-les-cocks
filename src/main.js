@@ -27,7 +27,7 @@ const renderer = new THREE.WebGLRenderer({ antialias: !telefoon, powerPreference
 renderer.setPixelRatio(Math.min(devicePixelRatio, telefoon ? 1.5 : 2)); renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05; document.body.prepend(renderer.domElement);
 const scene = new THREE.Scene(); scene.background = new THREE.Color("#a9cfe8"); scene.fog = new THREE.Fog("#c4d6e2", 220, 700);
-const camera = new THREE.PerspectiveCamera(58, 1, 0.08, 900);
+const camera = new THREE.PerspectiveCamera(58, 1, 0.08, 900), pipCam = new THREE.PerspectiveCamera(40, 1.3, 0.1, 300);
 scene.add(new THREE.HemisphereLight("#dcefff", "#6f7a4e", 0.9));
 const zon = new THREE.DirectionalLight("#fff2d8", 2.6); zon.castShadow = true; zon.shadow.mapSize.set(2048, 2048); Object.assign(zon.shadow.camera, { left: -45, right: 45, top: 45, bottom: -45, near: 1, far: 260 }); zon.shadow.bias = -0.0006; scene.add(zon, zon.target);
 function pasAan() { renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
@@ -329,16 +329,64 @@ const drone = new THREE.Group(); const rotors = []; { const zwart = new THREE.Me
   for (const [x, z] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) { const a = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.02, 0.26), zwart); a.position.set(x * 0.13, 0, z * 0.13); a.rotation.y = Math.atan2(x, z); drone.add(a);
     const r = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.006, 14), new THREE.MeshStandardMaterial({ color: "#2a2d33", transparent: true, opacity: 0.45 })); r.position.set(x * 0.22, 0.035, z * 0.22); drone.add(r); rotors.push(r); }
   drone.traverse((o) => { if (o.isMesh) o.castShadow = true; }); drone.visible = false; scene.add(drone); }
+// de echte drone: een DJI Mini (model van Sketchfab, CC BY, zie README); 25 cm breed, neus naar voren; de oude doos-drone weg
+{ const { GLTFLoader } = await import("../lib/three-addons.js"), { MeshoptDecoder } = await import("../lib/meshopt_decoder.mjs");
+  const g = (await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync(`assets/drone/drone.glb?v=${window.VERSIE ?? ""}`)).scene; const b = new THREE.Box3().setFromObject(g), m = b.getSize(V(0, 0, 0)), c = b.getCenter(V(0, 0, 0)), k = 0.25 / Math.max(m.x, m.z);
+  g.position.set(-c.x * k, -c.y * k, -c.z * k); g.scale.setScalar(k); g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.material.metalness = 0.1; } });
+  for (const o of [...drone.children]) if (!rotors.includes(o)) drone.remove(o); drone.add(g); for (const r of rotors) { r.scale.setScalar(0.62); r.position.multiplyScalar(0.55); r.position.y = 0.03; r.material.opacity = 0.07; } }
 const glas = new THREE.Group(); { const g = new THREE.Mesh(new THREE.CylinderGeometry(0.038, 0.03, 0.11, 12, 1, true), new THREE.MeshStandardMaterial({ color: "#dff1f6", transparent: true, opacity: 0.45, side: THREE.DoubleSide, roughness: 0.05 })); const w = new THREE.Mesh(new THREE.CylinderGeometry(0.034, 0.028, 0.085, 12), new THREE.MeshStandardMaterial({ color: "#58b8e0", transparent: true, opacity: 0.8 })); w.position.y = -0.008; glas.add(g, w); glas.visible = false; scene.add(glas); }
 const dr = { pos: V(0, 0, 0), yaw: 0, v: V(0, 0, 0), glas: "hangt", gp: V(0, 0, 0), gv: 0, accu: 100, snurk: 0, over: 3 };
-function beginDrone() { dr.pos.copy(W.tuin).setY(W.hoogte(W.tuin.x, W.tuin.z) + 1.3); dr.yaw = huis.yaw + Math.PI; dr.v.set(0, 0, 0); Object.assign(dr, { glas: "hangt", accu: 110, over: 3 }); cam.pitch = 0.18; legCocks(false);
-  hud.missie.textContent = "Vlieg door het open slaapkamerraam en laat het glas water op de slapende Cocks vallen"; }
+// Paul en Bob vliegen samen, stomdronken, vanaf het gras. Eén van de twee heeft de afstandsbediening; de ander drinkt.
+// Ze wankelen, nemen een slok, en soms valt er een om: dan gaat de drone alle kanten op en pakt de ander de bediening.
+// Dave ligt boven in de toren zijn roes uit te slapen; Wim zit nuchter aan de picknicktafel met zijn Fristi.
+const piloot = { lijst: [], t: 0 };
+const ab = new THREE.Group(); { const zw = new THREE.MeshStandardMaterial({ color: "#2a2c30", roughness: 0.5 }); const k = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.035, 0.09), zw); ab.add(k);
+  for (const x of [-0.05, 0.05]) { const st = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.025, 6), zw); st.position.set(x, 0.025, 0); ab.add(st); }
+  const tel = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.008, 0.075), new THREE.MeshStandardMaterial({ color: "#10141a", emissive: "#3a6aa0", emissiveIntensity: 0.6 })); tel.position.set(0, 0.06, -0.03); tel.rotation.x = -0.9; ab.add(tel); ab.visible = false; scene.add(ab); }
+const blikMat = new THREE.MeshStandardMaterial({ color: "#16803a", roughness: 0.3, metalness: 0.55 });
+const maakBlik = () => { const b = spul.vorm("blik", 0.066); b.scale.setScalar(1.9); b.traverse((o) => { if (o.isMesh) o.material = blikMat; }); b.visible = false; scene.add(b); return b; };
+function beginDrone() {
+  // rollen: Paul en Bob vliegen, Dave slaapt, Wim aan tafel
+  cocks = C.dave; rest = [C.wim]; plekken[1](C.wim); for (const w of Object.values(C)) w.g.visible = true;
+  const basis = W.tuin.clone(); piloot.lijst = [C.paul, C.bob].map((w, i) => { const p = basis.clone().addScaledVector(t, i ? 0.9 : -0.9).addScaledVector(u, -1.5); p.y = W.hoogte(p.x, p.z);
+    w.g.position.copy(p); w.g.rotation.set(0, huis.yaw + Math.PI + (i ? 0.25 : -0.25), 0); w.m.zet("staan", 1, null); return { w, basis: p.clone(), fase: Math.random() * 6, val: 0, drink: 3 + Math.random() * 6, slok: 0, blik: w.blik ??= maakBlik(), wandel: V(0, 0, 0) }; });
+  piloot.heeft = piloot.lijst[Math.random() < 0.5 ? 0 : 1]; piloot.valT = tussen(18, 35); piloot.hikT = tussen(4, 9); ab.visible = true;
+  dr.pos.copy(W.tuin).setY(W.hoogte(W.tuin.x, W.tuin.z) + 1.3); dr.yaw = huis.yaw + Math.PI; dr.v.set(0, 0, 0); Object.assign(dr, { glas: "hangt", accu: 110, over: 3, schok: 0 }); cam.pitch = 0.18; legCocks(false);
+  hud.missie.textContent = "Paul en Bob vliegen (stomdronken). Vlieg door het torenraam en laat het glas water op Dave vallen"; }
 /** Botst een bol (in de wereld) tegen het huis, de grond of een ander huis? */
 function droneBotst(p, r = 0.28) { if (p.y < Math.max(0, W.hoogte(p.x, p.z)) + r) return true; const l = huis.naarBinnen(p); for (const [x0, y0, z0, x1, y1, z1] of W.dozen) if (l.x > x0 - r && l.x < x1 + r && l.y > y0 - r && l.y < y1 + r && l.z > z0 - r && l.z < z1 + r) return true;
   if (Math.abs(l.x) > huis.BX / 2 + 1 || Math.abs(l.z) > huis.BZ / 2 + 1) { if (p.y < 9 && W.inHuis(p.x, p.z, r)) return true; } return false; }
+function stapPiloten(dt) {
+  piloot.t += dt; const uit = { wiebel: { x: 0, y: 0, h: 0 }, dood: false };
+  for (const p of piloot.lijst) { const m = p.w.m, heeft = p === piloot.heeft;
+    if (p.val > 0) { // ligt in het gras, en krabbelt dan op
+      p.val -= dt; if (p.val < 2.6 && m.huidig !== "LayToIdle") m.zet("opstaan", 1, 0); if (p.val <= 0) m.zet("staan");
+      m.mixer.update(dt); p.blik.visible = !heeft; if (!heeft) { p.blik.position.copy(p.w.g.position).addScaledVector(t, 0.4).setY(p.w.g.position.y + 0.04); p.blik.rotation.set(0, 0, Math.PI / 2); } if (heeft) uit.dood = true; continue; }
+    // wankelen: om de voeten heen, en af en toe een stapje opzij
+    p.fase += dt; const zw = Math.sin(p.fase * 0.9) * 0.07 + Math.sin(p.fase * 2.3 + 1) * 0.03, vw = Math.sin(p.fase * 0.7 + 2) * 0.05;
+    p.wandel.lerp(V(Math.sin(p.fase * 0.31) * 0.5, 0, Math.cos(p.fase * 0.23) * 0.35), dt * 0.5); p.w.g.position.copy(p.basis).addScaledVector(t, p.wandel.x).addScaledVector(u, p.wandel.z);
+    p.w.g.rotation.x = vw; p.w.g.rotation.z = zw; m.zet("staan", 0.7); m.mixer.update(dt);
+    const g = p.w.g, fv = voor(g.rotation.y), borst = m.plek("DEF-spine003").clone(), mond = m.plek("DEF-head").clone().addScaledVector(fv, 0.12).add(V(0, -0.05, 0)), links = V(fv.z, 0, -fv.x);
+    // een slok: de ander vaak, de piloot soms (dan één hand van de bediening!)
+    if ((p.drink -= dt) <= 0 && p.slok <= 0) { p.slok = 2.4; p.drink = heeft ? tussen(14, 24) : tussen(5, 10); }
+    const drinkt = p.slok > 0; if (drinkt) p.slok -= dt; const op = drinkt ? Math.sin(Math.min(1, (2.4 - p.slok) / 2.4) * Math.PI) : 0;
+    if (heeft) { const voorBorst = borst.clone().addScaledVector(fv, 0.32).add(V(0, -0.12, 0)); ab.position.copy(voorBorst); ab.rotation.set(0.5, g.rotation.y, 0, "YXZ");
+      m.arm("L", voorBorst.clone().addScaledVector(links, 0.08), V(0, -1, 0)); if (!drinkt) m.arm("R", voorBorst.clone().addScaledVector(links, -0.08), V(0, -1, 0));
+      uit.wiebel.x = zw * 3.5; uit.wiebel.y = vw * 3; uit.wiebel.h = Math.sin(p.fase * 1.7) * 0.5; if (drinkt) { uit.wiebel.x += Math.sin(piloot.t * 3) * 0.6; uit.wiebel.h -= 0.5; } }
+    const hand = drinkt ? borst.clone().lerp(mond, op).addScaledVector(fv, 0.05 * (1 - op)) : borst.clone().addScaledVector(links, -0.28).add(V(0, -0.35, 0)).addScaledVector(fv, 0.08);
+    if (!heeft || drinkt) { m.arm("R", hand, V(0, -1, 0)); p.blik.visible = true; p.blik.position.copy(m.plek("DEF-handR")).add(V(0, -0.06, 0)); p.blik.rotation.set(drinkt ? -op * 1.9 : 0, g.rotation.y, 0, "YXZ"); } else p.blik.visible = false; }
+  // af en toe valt er een om; heeft hij de bediening, dan pakt de ander hem op zodra hij kan
+  if ((piloot.valT -= dt) <= 0) { piloot.valT = tussen(22, 45); const p = piloot.lijst[Math.random() < 0.6 ? piloot.lijst.indexOf(piloot.heeft) : 1 - piloot.lijst.indexOf(piloot.heeft)];
+    if (p.val <= 0) { p.val = 6; p.w.m.zet("liggen", 1, 0); geluid.ruis({ duur: 0.4, freq: 300, gain: 0.4 }); meld(`${p.w === C.paul ? "Paul" : "Bob"} gaat onderuit!`, 2.5);
+      if (p === piloot.heeft) setTimeout(() => { const ander = piloot.lijst.find((q) => q !== p); if (ander.val <= 0 && spel.modus === "drone") { piloot.heeft = ander; meld(`${ander.w === C.paul ? "Paul" : "Bob"} pakt de bediening`, 2); } }, 1500); } }
+  if (piloot.heeft.val > 0) { ab.position.copy(piloot.heeft.w.g.position).addScaledVector(u, 0.5).setY(piloot.heeft.w.g.position.y + 0.03); ab.rotation.set(0, 0.5, 0); }
+  if ((piloot.hikT -= dt) <= 0) { piloot.hikT = tussen(5, 11); geluid.toon({ freq: 320, freq2: 520, duur: 0.12, type: "triangle", gain: 0.05 }); }
+  return uit;
+}
 function stapDrone(dt) {
-  const s = stuur(); dr.yaw = cam.yaw + Math.PI; const f = voor(dr.yaw), rechts = V(-f.z, 0, f.x);
-  const doel = f.clone().multiplyScalar(s.y * 3.6).addScaledVector(rechts, s.x * 2.6); doel.y = (invoer.op ? 2.2 : 0) - (invoer.neer ? 2.2 : 0); dr.v.lerp(doel, Math.min(1, dt * 3.5));
+  const s0 = stuur(), pl = stapPiloten(dt), s = { x: pl.dood ? 0 : s0.x + pl.wiebel.x, y: pl.dood ? 0 : s0.y + pl.wiebel.y }; dr.yaw = cam.yaw + Math.PI; const f = voor(dr.yaw), rechts = V(-f.z, 0, f.x);
+  if (pl.dood) dr.v.add(V(Math.sin(spel.t * 7) * 3, -1.2, Math.cos(spel.t * 5) * 3).multiplyScalar(dt)); // de bediening ligt in het gras: de drone zwalkt en zakt
+  const doel = f.clone().multiplyScalar(s.y * 3.6).addScaledVector(rechts, s.x * 2.6); doel.y = pl.dood ? -0.6 : (invoer.op ? 2.2 : 0) - (invoer.neer ? 2.2 : 0) + pl.wiebel.h; dr.v.lerp(doel, Math.min(1, dt * (pl.dood ? 0.6 : 3.5)));
   for (const as of ["x", "y", "z"]) { const p = dr.pos.clone(); p[as] += dr.v[as] * dt; if (droneBotst(p)) dr.v[as] *= -0.25; else dr.pos.copy(p); }
   dr.accu -= dt; drone.visible = true; drone.position.copy(dr.pos); drone.rotation.set(dr.v.dot(f) * 0.07, dr.yaw, -dr.v.dot(rechts) * 0.08, "YXZ"); for (const r of rotors) r.rotation.y += dt * 60;
   cocks.m.mixer.update(cocks.wakker ? dt : 0);
@@ -397,12 +445,12 @@ function volg(doel) { const p = doel.clone().add(V(Math.sin(cam.yaw) * Math.cos(
 // ---------- menu en lus ----------
 const MISSIES = { kant: [beginKant, stapKant], belly: [beginBelly, stapBelly], drone: [beginDrone, stapDrone], rat: [beginRat, stapRat] };
 function start(modus) { geluid.start(); Object.assign(spel, { modus, klaar: false, t: 0 }); $("#menu").hidden = $("#uitslag").hidden = true; $("#hud").hidden = false;
-  boot.visible = drone.visible = glas.visible = net.visible = kooi.visible = dobber.visible = lijn.visible = hengel.g.visible = false; hud.scope.hidden = true; hud.span.hidden = hud.meter.hidden = true; dril.aan = false; peppie.g.visible = modus !== "drone"; if (modus !== "drone") legCocks(false); for (const r of rat.lijst) r.m.visible = false;
+  boot.visible = drone.visible = glas.visible = net.visible = kooi.visible = dobber.visible = lijn.visible = hengel.g.visible = false; hud.scope.hidden = true; hud.span.hidden = hud.meter.hidden = true; dril.aan = false; ab.visible = false; $("#pip").hidden = modus !== "drone"; for (const w of Object.values(C)) { w.g.rotation.x = w.g.rotation.z = 0; if (w.blik) w.blik.visible = false; } if (modus !== "drone") { kiesSpeler(spelerNaam); legCocks(false); } for (const r of rat.lijst) r.m.visible = false;
   hud.melding.hidden = true; meldT = 0; hud.missie.style.opacity = 1; clearTimeout(start.vervaag); start.vervaag = setTimeout(() => { hud.missie.style.opacity = 0; }, 6000);
   // met de livescope in beeld schuift het beeld naar rechtsonder, zodat de belly boat naast het scherm te zien is
   camera.clearViewOffset(); $("#stick").hidden = false; $("#weergave").hidden = modus !== "belly";
   MISSIES[modus][0](); }
-function naarMenu() { camera.clearViewOffset(); spel.modus = "menu"; $("#menu").hidden = false; $("#uitslag").hidden = true; $("#hud").hidden = true; }
+function naarMenu() { camera.clearViewOffset(); ab.visible = false; $("#pip").hidden = true; for (const w of Object.values(C)) { w.g.rotation.x = w.g.rotation.z = 0; if (w.blik) w.blik.visible = false; } kiesSpeler(spelerNaam); spel.modus = "menu"; $("#menu").hidden = false; $("#uitslag").hidden = true; $("#hud").hidden = true; }
 for (const k of document.querySelectorAll("#menu [data-missie]")) k.addEventListener("click", () => start(k.dataset.missie));
 $("#opnieuw").addEventListener("click", () => start(spel.modus)); for (const k of document.querySelectorAll("#weergave button")) k.addEventListener("click", () => zetWeergave(k.dataset.w)); $("#terug").addEventListener("click", naarMenu); $("#stop").addEventListener("click", naarMenu);
 const klok = new THREE.Clock(); let menuT = 0;
@@ -417,10 +465,16 @@ function lus() {
   for (const w of rest) w.m.mixer.update(dt); for (const w of Object.values(C)) w.m.pet?.userData.pas?.();
   kippen.stap(dt, spel.modus === "kant" || spel.modus === "rat" ? { x: loop.pos.x, z: loop.pos.z, v: loop.v } : null);
   invoer.Atik = invoer.Btik = false; fx.stap(dt); bomen.stap(dt, camera); water.stap(dt); vb.stap(dt, spel.modus === "belly" ? belly.pos : spel.modus === "kant" || spel.modus === "rat" ? loop.pos.clone().addScaledVector(u, 20) : W.steiger.eind.clone().addScaledVector(u, 25), camera);
-  renderer.render(scene, camera); requestAnimationFrame(lus);
+  renderer.render(scene, camera);
+  // in de drone-missie rechtsboven een tweede beeld: Paul en Bob op het gras, zodat je ze altijd ziet
+  if (spel.modus === "drone" && piloot.lijst.length) { const el = $("#pip"), r = el.getBoundingClientRect(), H = renderer.domElement.clientHeight;
+    const a = piloot.lijst[0].basis, b = piloot.lijst[1].basis, mid = a.clone().lerp(b, 0.5); pipCam.position.copy(mid).addScaledVector(u, -3.3).add(V(0, 2.1, 0)); pipCam.lookAt(mid.x, mid.y + 0.95, mid.z); pipCam.aspect = r.width / r.height; pipCam.updateProjectionMatrix();
+    renderer.setScissorTest(true); renderer.setScissor(r.left, H - r.bottom, r.width, r.height); renderer.setViewport(r.left, H - r.bottom, r.width, r.height); renderer.render(scene, pipCam);
+    renderer.setScissorTest(false); renderer.setViewport(0, 0, renderer.domElement.clientWidth, H); }
+  requestAnimationFrame(lus);
 }
 for (const k of document.querySelectorAll("#spelers button")) k.addEventListener("click", () => kiesSpeler(k.dataset.speler));
 kiesSpeler((() => { try { return localStorage.getItem("peppie-speler"); } catch { return null; } })() || "paul");
 $("#laden").hidden = true; $("#menu").hidden = false;
-window.__spel = { chirp, C, kiesSpeler, get dave() { return C.dave; }, get wim() { return C.wim; }, vb, kippen, zon, THREE, spel, W, start, belly, dr, rat, kant, loop, cam, invoer, dril, get peppie() { return peppie; }, get cocks() { return cocks; }, scope, camera, stapDril, MISSIES };
+window.__spel = { piloot, chirp, C, kiesSpeler, get dave() { return C.dave; }, get wim() { return C.wim; }, vb, kippen, zon, THREE, spel, W, start, belly, dr, rat, kant, loop, cam, invoer, dril, get peppie() { return peppie; }, get cocks() { return cocks; }, scope, camera, stapDril, MISSIES };
 requestAnimationFrame(lus);
