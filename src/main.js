@@ -246,13 +246,13 @@ const spetter = (p, n = 24, k = 1) => { for (let i = 0; i < n; i++) fx.deeltje(p
 
 // ---------- missie 1: vissen vanaf de kant ----------
 const kant = { fase: "loop", t: 0, wacht: 0, doel: V(0, 0, 0), vis: null, n: 0 };
-function beginKant() { Object.assign(kant, { fase: "loop", n: 0 }); loop.pos.copy(W.steiger.midden); loop.yaw = huis.yaw; cam.yaw = huis.yaw + Math.PI; cam.afstand = 5; hud.missie.textContent = "Vang drie vissen vanaf de oever of de steiger"; }
+function beginKant() { Object.assign(kant, { fase: "loop", n: 0 }); if (!spel.opties?.hier) loop.pos.copy(W.steiger.midden); loop.yaw = huis.yaw; cam.yaw = huis.yaw + Math.PI; cam.afstand = 5; hud.missie.textContent = "Vang drie vissen vanaf de oever of de steiger"; }
 function stapKant(dt) {
   const k = kant; k.t += dt; let top;
   if (k.fase === "loop") {
     stapLopen(dt); peppie.m.zet(loop.v > 0.3 ? "lopen" : "staan"); peppie.m.mixer.update(dt); top = houdHengel(loop.yaw, 0.85, 0.02); lijn.visible = false; dobber.visible = false;
     const doel = loop.pos.clone().addScaledVector(voor(loop.yaw), 17), kan = W.inWater(doel.x, doel.z) && W.diepte(doel.x, doel.z) > 0.8;
-    knoppen({ A: kan ? "Werp" : null }); hud.tel.textContent = `${k.n} / 3`;
+    knoppen({ A: kan ? "Werp" : null, B: spel.vrij ? "Stoppen" : null }); hud.tel.textContent = spel.vrij ? "" : `${k.n} / 3`; if (spel.vrij && invoer.Btik) { start("vrij", { hier: true }); return; }
     if (kan && invoer.Atik) { k.fase = "worp"; k.t = 0; k.doel.copy(doel).setY(0); geluid.ruis({ duur: 0.3, freq: 3000, gain: 0.15 }); }
   } else if (k.fase === "worp") {
     peppie.m.zet("staan"); peppie.m.mixer.update(dt); const f = Math.min(1, k.t / 0.9); top = houdHengel(loop.yaw, 1.2 - Math.sin(f * Math.PI) * 0.7, 0.05);
@@ -273,7 +273,7 @@ function stapKant(dt) {
     top = houdHengel(Math.atan2(ri.x, ri.z), 0.75 + Math.sin(k.t * 1.4) * 0.22 + (invoer.A ? -0.12 : 0), 0.22 + dril.span * 0.22); // pompen: omhoog trekken, zakken en indraaien dobber.visible = false; zetLijn(top, k.doel.clone().setY(-0.1));
     if (Math.random() < dt * 4) spetter(k.doel, 4, 0.4);
     knoppen({ A: "Draai" });
-    if (uit === "binnen") { vangst(k.vis); k.n++; k.fase = "loop"; if (k.n >= 3) einde(true, `Drie vissen: ${spel.vangsten.slice(-3).map((v) => v.soort).join(", ")}.`); }
+    if (uit === "binnen") { vangst(k.vis); k.n++; k.fase = "loop"; if (k.n >= 3 && !spel.vrij) einde(true, `Drie vissen: ${spel.vangsten.slice(-3).map((v) => v.soort).join(", ")}.`); }
     else if (uit === "breuk") { meld("Lijnbreuk! Te veel spanning."); geluid.fout(); k.fase = "loop"; } else if (uit === "los") { meld("Los… de lijn hing slap."); k.fase = "loop"; }
   }
   volg(loop.pos.clone().add(V(0, 1.4, 0)));
@@ -295,7 +295,7 @@ function kiesSpeler(naam) {
   spelerNaam = naam;
   peppie = C[naam]; cocks = C[["bob", "dave", "wim", "paul"].find((n) => n !== naam)]; rest = Object.values(C).filter((w) => w !== peppie && w !== cocks);
   rest.forEach((w, i) => plekken[i](w)); legCocks(false); for (const w of Object.values(C)) w.g.visible = true;
-  for (const b of Object.values(BB)) b.g.visible = false; bb = BB[naam]; boot = bb.g; for (const a of aangemeerd) a.b.visible = a.soort !== naam;
+  for (const b of Object.values(BB)) b.g.visible = false; bb = BB[naam]; boot = bb.g; for (const a of aangemeerd) a.b.visible = a.soort !== naam || spel.vrij;
   for (const k of document.querySelectorAll("#spelers button")) k.classList.toggle("aan", k.dataset.speler === naam); try { localStorage.setItem("peppie-speler", naam); } catch {}
 }
 const belly = { wolk: null, pos: V(0, 0, 0), yaw: 0, sonar: 0, aas: 1, vis: null, klok: 0, scopeT: 0, top: V(0, 0, 0), slip: 0.75, vastTak: 0 };
@@ -303,7 +303,7 @@ const scope = new Livescope(hud.scope), chirp = new Chirp(hud.scope); scope.voor
 let spelerNaam = "paul"; const strepen = () => spelerNaam === "wim"; // Wim heeft geen livescope, alleen zijn strepenkijker
 const aasgedrag = new Aasgedrag(); let drilB = null; // de dril vanuit de bellyboat (src/meerval.js)
 function beginBelly() {
-  belly.pos.copy(W.steiger.eind).addScaledVector(u, 32); belly.yaw = huis.yaw; belly.sonar = 0; belly.aas = 1; belly.vis = null; belly.v = 0; belly.w = 0; drilB = null; cam.yaw = huis.yaw + Math.PI; cam.afstand = 6.5; cam.pitch = 0.3; zetWeergave("hoog");
+  const vb_ = spel.opties?.boot; belly.pos.copy(W.steiger.eind).addScaledVector(u, 32); belly.yaw = huis.yaw; if (vb_) { belly.pos.set(vb_.b.position.x, 0, vb_.b.position.z); belly.yaw = vb_.b.rotation.y; vb_.b.visible = false; } belly.sonar = 0; belly.aas = 1; belly.vis = null; belly.v = 0; belly.w = 0; drilB = null; cam.yaw = huis.yaw + Math.PI; cam.afstand = 6.5; cam.pitch = 0.3; zetWeergave("hoog");
   hud.missie.textContent = strepen() ? "Wim heeft alleen zijn strepenkijker: vaar over de vis heen, laat het aas zakken en sla aan als hij pakt" : "Zoek met de transducer (veeg over het scherm) een grote meerval, vaar erboven, laat het aas zakken tot voor zijn kop en sla aan als hij pakt"; hud.tel.textContent = "";
 }
 /** De hengel in de bellyboat: de kolf tegen je buik onder je onderarm, de hengel vooruit over de punt; op = opgeheven (0..1),
@@ -346,7 +346,7 @@ function stapBelly(dt) {
     if (invoer.Atik) { // aanslaan
       if (pakt) { const v = pakt; if (v.lengte >= 1.6) b.wolk = { x: b.top.x, z: b.top.z, d: b.aas, t: 0 }; aasgedrag.pakt = null; v.nieuws = false; v.lok = null; v.vast = true; b.vis = v; drilB = new Dril(v, b.aas); geluid.stem(v.lengte >= 1.5 ? "groot" : "beet"); spetter(top.clone().setY(0), 12, 0.5); zetBodycam(true); hud.missie.style.opacity = 0; meld(v.soort === "Meerval" ? "Vast! Draai in (rode knop), pomp met ▲ ▼" : "Vast!", 2.5); }
       else { aasgedrag.mis(vb.alle(), b.top); b.aas = Math.max(0.3, b.aas - 0.7); } }
-    knoppen({ A: " ", hoogte: true }); hud.A.classList.add("rood");
+    const bijKant = spel.vrij && W.oever(b.pos.x, b.pos.z) < 7; knoppen({ A: " ", B: bijKant ? "Uitstappen" : null, hoogte: true }); hud.A.classList.add("rood"); if (bijKant && invoer.Btik) { uitstappen(); return; }
     zetLijn(top, V(top.x, -Math.min(b.aas, 2.5), top.z), 0);
     hud.tel.textContent = `${bodem.toFixed(1)} m diep · aas ${b.aas.toFixed(1)} m${r.aan ? " · ze zijn aan!" : ""}`;
   } else {
@@ -526,18 +526,41 @@ function stapRat(dt) {
   volg(loop.pos.clone().add(V(0, 1.3, 0)));
 }
 
+
+// ---------- de sandbox: vrij rondlopen en zelf kiezen wat je doet ----------
+// Loop over het terrein; waar iets te doen is verschijnt een knop: bij je bellyboat instappen, op een steiger de hengel
+// uitgooien. In de boot kun je bij de kant weer uitstappen (de boot blijft liggen waar je hem achterlaat).
+function beginVrij() { spel.vrij = true; if (!spel.opties?.hier && !spel.uitgestapt) { loop.pos.copy(W.tuin); loop.yaw = huis.yaw; } spel.uitgestapt = false; cam.yaw = huis.yaw + Math.PI; cam.afstand = 5; cam.pitch = 0.32; kiesSpeler(spelerNaam);
+  hud.missie.textContent = "Loop vrij rond. Bij je bellyboat kun je instappen, op een steiger je hengel uitgooien."; hud.tel.textContent = ""; }
+const eigenBoot = () => aangemeerd.find((a) => a.soort === spelerNaam);
+function stapVrij(dt) {
+  stapLopen(dt); peppie.m.zet(loop.v > 2.5 ? "rennen" : loop.v > 0.3 ? "lopen" : "staan"); peppie.m.mixer.update(dt); hengel.g.visible = false;
+  // wat is er in de buurt?
+  const eb = eigenBoot(), bijBoot = eb && Math.hypot(eb.b.position.x - loop.pos.x, eb.b.position.z - loop.pos.z) < 3.2, opSteiger = W.opSteiger(loop.pos.x, loop.pos.z) !== null;
+  knoppen({ A: bijBoot ? "Instappen" : null, B: opSteiger && !bijBoot ? "Vissen" : null });
+  if (bijBoot && invoer.Atik) { start("belly", { boot: eb }); return; }
+  if (opSteiger && !bijBoot && invoer.Btik) { start("kant", { hier: true }); return; }
+  // de camera draait langzaam mee achter je aan (tenzij je net zelf rondkeek)
+  cam.sleep = Math.max(0, cam.sleep - dt * 0.5); if (cam.sleep <= 0 && loop.v > 0.3) { let d = loop.yaw + Math.PI - cam.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); cam.yaw += d * Math.min(1, dt * 1.2); }
+  volg(loop.pos.clone().add(V(0, 1.4, 0)));
+}
+/** Uitstappen uit de bellyboat: naar de dichtstbijzijnde plek op de kant of een steiger; de boot blijft liggen. */
+function uitstappen() { const b = belly, eb = eigenBoot(); if (eb) { eb.b.position.set(b.pos.x, 0.02, b.pos.z); eb.b.rotation.y = b.yaw; }
+  let p = b.pos.clone(), beste = null; for (let a = 0; a < 6.28; a += 0.2) for (let r = 0.5; r < 9; r += 0.25) { const q = b.pos.clone().add(V(Math.sin(a) * r, 0, Math.cos(a) * r)); if (W.opSteiger(q.x, q.z) !== null || W.oever(q.x, q.z) < -0.6) { if (!beste || r < beste.r) beste = { q, r }; break; } }
+  if (beste) p = beste.q; loop.pos.copy(p); loop.yaw = Math.atan2(p.x - b.pos.x, p.z - b.pos.z); spel.uitgestapt = true; start("vrij"); }
+
 // ---------- camera ----------
 function volg(doel) { const p = doel.clone().add(V(Math.sin(cam.yaw) * Math.cos(cam.pitch) * cam.afstand, Math.sin(cam.pitch) * cam.afstand + 0.3, Math.cos(cam.yaw) * Math.cos(cam.pitch) * cam.afstand)); p.y = Math.max(p.y, Math.max(0, W.hoogte(p.x, p.z)) + 0.35); camera.position.copy(p); camera.lookAt(doel); zon.target.position.copy(doel); zon.position.copy(doel).add(V(40, 70, 25)); }
 
 // ---------- menu en lus ----------
-const MISSIES = { kant: [beginKant, stapKant], belly: [beginBelly, stapBelly], drone: [beginDrone, stapDrone], rat: [beginRat, stapRat] };
-function start(modus) { geluid.start(); Object.assign(spel, { modus, klaar: false, t: 0 }); $("#menu").hidden = $("#uitslag").hidden = true; $("#hud").hidden = false;
-  boot.visible = drone.visible = glas.visible = net.visible = kooi.visible = dobber.visible = lijn.visible = hengel.g.visible = mhR.g.visible = mhL.g.visible = false; if (bodycam.aan) zetBodycam(false); drilB = null; geluid.zet("slip", 0); geluid.zet("reel", 0); hud.scope.hidden = true; hud.span.hidden = hud.meter.hidden = true; dril.aan = false; ab.visible = false; $("#pip").hidden = modus !== "drone"; for (const w of Object.values(C)) { w.g.rotation.x = w.g.rotation.z = 0; if (w.blik) w.blik.visible = false; } if (modus !== "drone") { kiesSpeler(spelerNaam); legCocks(false); } for (const r of rat.lijst) r.m.visible = false;
+const MISSIES = { vrij: [beginVrij, stapVrij], kant: [beginKant, stapKant], belly: [beginBelly, stapBelly], drone: [beginDrone, stapDrone], rat: [beginRat, stapRat] };
+function start(modus, opties = {}) { geluid.start(); const vanVrij = spel.vrij && (opties.boot || opties.hier || modus === "vrij"); spel.vrij = vanVrij || modus === "vrij"; spel.opties = opties; Object.assign(spel, { modus, klaar: false, t: 0 }); $("#menu").hidden = $("#uitslag").hidden = true; $("#hud").hidden = false;
+  boot.visible = drone.visible = glas.visible = net.visible = kooi.visible = dobber.visible = lijn.visible = hengel.g.visible = mhR.g.visible = mhL.g.visible = false; if (bodycam.aan) zetBodycam(false); drilB = null; geluid.zet("slip", 0); geluid.zet("reel", 0); hud.scope.hidden = true; hud.span.hidden = hud.meter.hidden = true; dril.aan = false; ab.visible = false; $("#pip").hidden = modus !== "drone"; for (const w of Object.values(C)) { w.g.rotation.x = w.g.rotation.z = 0; if (w.blik) w.blik.visible = false; } if (modus !== "drone" && !opties.boot && !opties.hier) { kiesSpeler(spelerNaam); legCocks(false); } for (const r of rat.lijst) r.m.visible = false;
   hud.melding.hidden = true; meldT = 0; hud.missie.style.opacity = 1; clearTimeout(start.vervaag); start.vervaag = setTimeout(() => { hud.missie.style.opacity = 0; }, 6000);
   // met de livescope in beeld schuift het beeld naar rechtsonder, zodat de belly boat naast het scherm te zien is
   camera.clearViewOffset(); $("#stick").hidden = false; $("#weergave").hidden = modus !== "belly";
-  MISSIES[modus][0](); }
-function naarMenu() { camera.clearViewOffset(); if (bodycam.aan) zetBodycam(false); drilB = null; geluid.zet("slip", 0); geluid.zet("reel", 0); mhR.g.visible = mhL.g.visible = false; ab.visible = false; $("#pip").hidden = true; for (const w of Object.values(C)) { w.g.rotation.x = w.g.rotation.z = 0; if (w.blik) w.blik.visible = false; } kiesSpeler(spelerNaam); spel.modus = "menu"; $("#menu").hidden = false; $("#uitslag").hidden = true; $("#hud").hidden = true; }
+  MISSIES[modus][0](); if (spel.vrij && modus !== "vrij") hud.missie.style.opacity = 0; }
+function naarMenu() { spel.vrij = false; camera.clearViewOffset(); if (bodycam.aan) zetBodycam(false); drilB = null; geluid.zet("slip", 0); geluid.zet("reel", 0); mhR.g.visible = mhL.g.visible = false; ab.visible = false; $("#pip").hidden = true; for (const w of Object.values(C)) { w.g.rotation.x = w.g.rotation.z = 0; if (w.blik) w.blik.visible = false; } kiesSpeler(spelerNaam); spel.modus = "menu"; $("#menu").hidden = false; $("#uitslag").hidden = true; $("#hud").hidden = true; }
 for (const k of document.querySelectorAll("#menu [data-missie]")) k.addEventListener("click", () => start(k.dataset.missie));
 $("#opnieuw").addEventListener("click", () => start(spel.modus)); for (const k of document.querySelectorAll("#weergave button")) k.addEventListener("click", () => zetWeergave(k.dataset.w));
 for (const [id, d] of [["#slipMin", -0.1], ["#slipPlus", 0.1]]) $(id).addEventListener("pointerdown", (e) => { e.preventDefault(); belly.slip = klem(belly.slip + d, 0.2, 1); $("#slipTekst").textContent = `slip ${Math.round(belly.slip * 100)}%`; }); $("#terug").addEventListener("click", naarMenu); $("#stop").addEventListener("click", naarMenu);
@@ -553,8 +576,8 @@ function lus() {
   if (geluid.ctx) { const cp = camera.position, oever = Math.abs(W.oever(cp.x, cp.z)); geluid.zet("rivier-vogels", 0.32); geluid.zet("wind-bomen", 0.16); geluid.zet("kabbelen", Math.max(0, 0.4 - oever / 30)); }
   for (const a of aangemeerd) { a.f += dt; a.b.position.y = 0.02 + Math.sin(a.f * 1.5) * 0.015; }
   for (const w of rest) w.m.mixer.update(dt); for (const w of Object.values(C)) for (const a of [w.m.pet, w.m.bril, w.m.hoed, w.m.gopro]) a?.userData.pas?.();
-  kippen.stap(dt, spel.modus === "kant" || spel.modus === "rat" ? { x: loop.pos.x, z: loop.pos.z, v: loop.v } : null);
-  invoer.Atik = invoer.Btik = false; fx.stap(dt); bomen.stap(dt, camera); water.stap(dt); vb.stap(dt, spel.modus === "belly" ? belly.pos : spel.modus === "kant" || spel.modus === "rat" ? loop.pos.clone().addScaledVector(u, 20) : W.steiger.eind.clone().addScaledVector(u, 25), camera);
+  kippen.stap(dt, spel.modus === "kant" || spel.modus === "rat" || spel.modus === "vrij" ? { x: loop.pos.x, z: loop.pos.z, v: loop.v } : null);
+  invoer.Atik = invoer.Btik = false; fx.stap(dt); bomen.stap(dt, camera); water.stap(dt); vb.stap(dt, spel.modus === "belly" ? belly.pos : spel.modus === "kant" || spel.modus === "rat" || spel.modus === "vrij" ? loop.pos.clone().addScaledVector(u, 20) : W.steiger.eind.clone().addScaledVector(u, 25), camera);
   renderer.render(scene, camera);
   // in de drone-missie rechtsboven een tweede beeld: Paul en Bob op het gras, zodat je ze altijd ziet
   if (spel.modus === "drone" && piloot.lijst.length) { const el = $("#pip"), r = el.getBoundingClientRect(), H = renderer.domElement.clientHeight;
@@ -566,5 +589,5 @@ function lus() {
 for (const k of document.querySelectorAll("#spelers button")) k.addEventListener("click", () => kiesSpeler(k.dataset.speler));
 kiesSpeler((() => { try { return localStorage.getItem("peppie-speler"); } catch { return null; } })() || "paul");
 $("#laden").hidden = true; $("#menu").hidden = false;
-window.__spel = { mhR, mhL, aasgedrag, get drilB() { return drilB; }, bodycam, piloot, chirp, C, kiesSpeler, get dave() { return C.dave; }, get wim() { return C.wim; }, vb, kippen, zon, THREE, spel, W, start, belly, dr, rat, kant, loop, cam, invoer, dril, get peppie() { return peppie; }, get cocks() { return cocks; }, scope, camera, stapDril, MISSIES };
+window.__spel = { uitstappen, eigenBoot, mhR, mhL, aasgedrag, get drilB() { return drilB; }, bodycam, piloot, chirp, C, kiesSpeler, get dave() { return C.dave; }, get wim() { return C.wim; }, vb, kippen, zon, THREE, spel, W, start, belly, dr, rat, kant, loop, cam, invoer, dril, get peppie() { return peppie; }, get cocks() { return cocks; }, scope, camera, stapDril, MISSIES };
 requestAnimationFrame(lus);
