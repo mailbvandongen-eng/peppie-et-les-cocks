@@ -13,6 +13,7 @@ from mathutils import Vector
 
 OUT = sys.argv[sys.argv.index('--') + 1]
 VOORPANEEL = False                         # open voorkant, zoals op de foto met het bedchair
+STRETCHER = True                           # de Fox Camolite erin
 HIER = os.path.dirname(os.path.abspath(__file__))
 for o in list(bpy.data.objects): bpy.data.objects.remove(o)
 for m in list(bpy.data.meshes): bpy.data.meshes.remove(m)
@@ -233,6 +234,15 @@ for k in ('vl', 'al', 'a', 'ar', 'vr'):
 if not VOORPANEEL:                          # bies langs de opening
     buis('bies', [boogpunt(i / 30, -1) for i in range(30)] + [boogpunt(1 - i / 30, 1) for i in range(31)], 0.012, RAND, wortel, 8)
 
+# ---------- de stretcher erin (assets/kamperen/fox-camolite.glb, gemaakt met tools/bed/fox-camolite.py) ----------
+# dwars in de tent, zoals op de foto met de open voorkant; node "stretcher" (in het spel weg te laten of te verplaatsen)
+BED = os.path.join(HIER, '..', '..', 'assets', 'kamperen', 'fox-camolite.glb')
+if STRETCHER and os.path.exists(BED):
+    voor_import = set(bpy.data.objects); bpy.ops.import_scene.gltf(filepath=BED)
+    st = bpy.data.objects.new('stretcher', None); sc.collection.objects.link(st); st.parent = wortel
+    st.location = P(0, 0, -0.95); st.rotation_euler = (0, 0, math.pi / 2)
+    for o in set(bpy.data.objects) - voor_import:
+        if o.parent is None: o.parent = st
 # ---------- exporteren ----------
 for o in sc.objects: o.select_set(True)
 bpy.ops.export_scene.gltf(filepath=OUT, export_format='GLB', export_yup=True, export_apply=True, export_image_format='JPEG', export_jpeg_quality=88)
