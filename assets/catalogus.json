@@ -344,9 +344,9 @@
  {
   "bestand": "kamperen/ridgemonkey-emmer.glb",
   "map": "kamperen",
-  "naam": "kamperen/ridgemonkey-emmer.glb",
-  "bron": "?",
-  "licentie": "?",
+  "naam": "RidgeMonkey Perspective Collapsible Bucket 10 L (opvouwbare emmer met helder doorzichtige PVC-wand, ondersteboven als helm te gebruiken; hengsel als node \"hengsel\")",
+  "bron": "Zelf gebouwd in Blender (tools/emmer/ridgemonkey-perspective.py) naar de productfoto's van team-outdoors.nl; logo uit de productfoto",
+  "licentie": "Eigen werk; RidgeMonkey-logo is merk van RidgeMonkey",
   "kb": 129,
   "nieuw": true,
   "oud": false,
@@ -672,5 +672,19 @@
   "texturen": 1,
   "maxpx": 512,
   "voorbeeld": "assets/_voorbeeld/vis_voorn.glb.jpg"
+ },
+ {
+  "bestand": "vis/zonnebaars.glb",
+  "map": "vis",
+  "naam": "Zonnebaars (Henk)",
+  "bron": "“CC0 ブルーギル 🐟 Bluegill, Lepomis macrochirus” — ffishAsia-and-floraZia, Sketchfab (3D-scan, omgekleurd naar zonnebaars met tools/vis/)",
+  "licentie": "CC0",
+  "kb": 284,
+  "nieuw": true,
+  "oud": false,
+  "driehoeken": 11871,
+  "texturen": 1,
+  "maxpx": 1024,
+  "voorbeeld": "assets/_voorbeeld/vis_zonnebaars.glb.jpg"
  }
 ]
