@@ -11,6 +11,7 @@ const T = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javasc
   await p.goto("http://spel.test/"); await p.waitForSelector("#menu:not([hidden])", { timeout: 240000 });
   const beeld = async (n, wacht = 2500) => { await p.waitForTimeout(wacht); await p.screenshot({ path: `${UIT}/${n}.png` }); };
   await beeld("0-menu");
+  console.log("spelers:", await p.evaluate(() => { const s = window.__spel, uit = []; for (const n of ["dave", "wim", "bob", "paul"]) { s.kiesSpeler(n); uit.push(n + ":" + (s.peppie === s.C[n]) + "/" + s.cocks.m.naam); } return uit.join(" "); }));
   console.log("wereld:", await p.evaluate(() => { const s = window.__spel, W = s.W; return JSON.stringify({ huis: W.huis.pos.toArray().map((v) => +v.toFixed(1)), steiger: W.steiger.eind.toArray().map((v) => +v.toFixed(1)), diepSteiger: +W.diepte(W.steiger.eind.x, W.steiger.eind.z).toFixed(1), breed: (() => { let a = 0; while (a < 400 && W.inWater(W.oeverPunt.x + W.huis.u.x * (a + 2), W.oeverPunt.z + W.huis.u.z * (a + 2))) a += 1; return a; })(), bomen: W.bomen.length }); }));
   // belly boat: zet een reus recht onder de boot en kijk of de dril en de vangst werken
   await p.tap("[data-missie=belly]"); await beeld("1-belly");

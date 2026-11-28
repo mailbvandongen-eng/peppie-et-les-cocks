@@ -67,10 +67,14 @@ const mens = (rol) => { const m = maakMens(rol), g = new THREE.Group(); m.object
 const dom = W.domein;
 const huis = W.huis, u = huis.u, t = huis.t; // u = naar de rivier, t = langs de oever
 // de vier Cocks: Paul (koperrood haar) speel jij; Bob slaapt zijn roes uit in de toren; Dave (witte pet) en Wim (randje, Fristi) zijn in de tuin
-const peppie = mens("paul"), cocks = mens("bob"), dave = mens("dave"), wim = mens("wim");
-zetPet(dave.m);
-{ const zet = (w, lx, lz, rot, houding) => { const p = dom.wereld(lx, 0, lz); w.g.position.set(p.x, W.opSteiger(p.x, p.z) ?? W.hoogte(p.x, p.z), p.z); w.g.rotation.y = huis.yaw + rot; w.m.zet(houding); };
-  zet(dave, -2.4, dom.oeverZ(-2.4) + 0.9, 0.3, "staan"); zet(wim, -6.4, dom.oeverZ(-6.5) - 5.25, Math.PI, "zitten"); wim.m.mixer.update(0.01); wim.g.position.y += 0.44 - wim.m.zithoogte() + 0.02;
+// de vier Cocks; wie je speelt kies je in het menu. Van de anderen slaapt er één zijn roes uit in de toren (de drone-missie),
+// staat er één op de middelste steiger en zit er één aan de picknicktafel.
+const C = { paul: mens("paul"), dave: mens("dave"), bob: mens("bob"), wim: mens("wim") };
+zetPet(C.dave.m);
+let peppie = C.paul, cocks = C.bob, rest = [C.dave, C.wim];
+const plekken = (() => { const zet = (w, lx, lz, rot, houding, zit) => { const p = dom.wereld(lx, 0, lz); w.g.position.set(p.x, W.opSteiger(p.x, p.z) ?? W.hoogte(p.x, p.z), p.z); w.g.rotation.set(0, huis.yaw + rot, 0); w.m.zet(houding, 1, houding === "zitten" ? 0 : null); w.m.mixer.update(0.01); if (zit) w.g.position.y += 0.44 - w.m.zithoogte() + 0.02; };
+  return [(w) => zet(w, -2.4, dom.oeverZ(-2.4) + 0.9, 0.3, "staan"), (w) => zet(w, -6.4, dom.oeverZ(-6.5) - 5.25, Math.PI, "zitten", true)]; })();
+{
   // Wim drinkt alleen Fristi: een pak naast hem op de picknicktafel
   const pak = new THREE.Group(), roze = new THREE.MeshStandardMaterial({ color: "#e8e2d4", roughness: 0.6 }), band = new THREE.MeshStandardMaterial({ color: "#d8357a", roughness: 0.6 });
   const romp = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.19, 0.07), roze); romp.position.y = 0.095; const st = new THREE.Mesh(new THREE.BoxGeometry(0.072, 0.07, 0.072), band); st.position.y = 0.1; const nok = new THREE.Mesh(new THREE.CylinderGeometry(0.0, 0.05, 0.04, 4), roze); nok.position.y = 0.21; nok.rotation.y = Math.PI / 4; pak.add(romp, st, nok);
@@ -230,9 +234,17 @@ function stapKant(dt) {
 // kop, pens, dunne staart), bolle karpers en in de diepe kolken de reuzen. Dan vaar je erheen tot de vis onder je hengeltop
 // hangt, laat je het aas zakken tot zijn diepte en tik je tot hij pakt.
 const scopeTex = new THREE.CanvasTexture(hud.scope); scopeTex.colorSpace = THREE.SRGBColorSpace;
-const bb = maakBellyboat("paul", { scherm: scopeTex }), boot = bb.g; boot.visible = false; scene.add(boot);
-// de bellyboten van de anderen liggen bij de linker steiger, zoals op Bobs video
-const aangemeerd = [["wim", 19.6, 2.9, 0.25], ["dave", 21.4, 3.3, -0.15], ["bob", 12.4, 3.0, 0.4]].map(([soort, lx, lz, r]) => { const b = maakBellyboat(soort).g, p = dom.wereld(lx, 0, dom.oeverZ(lx) + lz); b.position.set(p.x, 0.02, p.z); b.rotation.y = huis.yaw + Math.PI / 2 + r; scene.add(b); return { b, f: Math.random() * 6 }; });
+// ieder zijn eigen bellyboat: Paul en Bob zwart met de Garmin, Wim kaki, Dave gifgroen; wie niet vaart ligt aangemeerd bij de linker steiger
+const BB = Object.fromEntries(["paul", "bob", "wim", "dave"].map((n) => { const b = maakBellyboat(n, { scherm: scopeTex }); b.g.visible = false; scene.add(b.g); return [n, b]; }));
+let bb = BB.paul, boot = bb.g;
+const aangemeerd = [["wim", 19.6, 2.9, 0.25], ["dave", 21.4, 3.3, -0.15], ["bob", 12.4, 3.0, 0.4], ["paul", 14.2, 3.1, -0.3]].map(([soort, lx, lz, r]) => { const b = maakBellyboat(soort).g, p = dom.wereld(lx, 0, dom.oeverZ(lx) + lz); b.position.set(p.x, 0.02, p.z); b.rotation.y = huis.yaw + Math.PI / 2 + r; scene.add(b); return { soort, b, f: Math.random() * 6 }; });
+/** Kies wie je speelt. */
+function kiesSpeler(naam) {
+  peppie = C[naam]; cocks = C[["bob", "dave", "wim", "paul"].find((n) => n !== naam)]; rest = Object.values(C).filter((w) => w !== peppie && w !== cocks);
+  rest.forEach((w, i) => plekken[i](w)); legCocks(false); for (const w of Object.values(C)) w.g.visible = true;
+  for (const b of Object.values(BB)) b.g.visible = false; bb = BB[naam]; boot = bb.g; for (const a of aangemeerd) a.b.visible = a.soort !== naam;
+  for (const k of document.querySelectorAll("#spelers button")) k.classList.toggle("aan", k.dataset.speler === naam); try { localStorage.setItem("peppie-speler", naam); } catch {}
+}
 const belly = { pos: V(0, 0, 0), yaw: 0, sonar: 0, aas: 1, tik: 0, vis: null, klok: 0, scopeT: 0, top: V(0, 0, 0) };
 const scope = new Livescope(hud.scope);
 function beginBelly() {
@@ -395,11 +407,13 @@ function lus() {
   } else if (spel.modus === "kijk") { /* camera van buitenaf (tools/kijk.cjs) */ } else if (!spel.klaar || spel.modus === "drone") MISSIES[spel.modus][1](dt);
   if (meldT > 0 && (meldT -= dt) <= 0) hud.melding.hidden = true;
   for (const a of aangemeerd) { a.f += dt; a.b.position.y = 0.02 + Math.sin(a.f * 1.5) * 0.015; }
-  for (const w of [dave, wim]) { w.m.mixer.update(dt); w.m.pet?.userData.pas?.(); }
+  for (const w of rest) w.m.mixer.update(dt); for (const w of Object.values(C)) w.m.pet?.userData.pas?.();
   kippen.stap(dt, spel.modus === "kant" || spel.modus === "rat" ? { x: loop.pos.x, z: loop.pos.z, v: loop.v } : null);
   invoer.Atik = invoer.Btik = false; fx.stap(dt); bomen.stap(dt, camera); water.stap(dt); vb.stap(dt, spel.modus === "belly" ? belly.pos : spel.modus === "kant" || spel.modus === "rat" ? loop.pos.clone().addScaledVector(u, 20) : W.steiger.eind.clone().addScaledVector(u, 25), camera);
   renderer.render(scene, camera); requestAnimationFrame(lus);
 }
+for (const k of document.querySelectorAll("#spelers button")) k.addEventListener("click", () => kiesSpeler(k.dataset.speler));
+kiesSpeler((() => { try { return localStorage.getItem("peppie-speler"); } catch { return null; } })() || "paul");
 $("#laden").hidden = true; $("#menu").hidden = false;
-window.__spel = { dave, wim, vb, kippen, zon, THREE, spel, W, start, belly, dr, rat, kant, loop, cam, invoer, dril, peppie, cocks, scope, camera, stapDril, MISSIES };
+window.__spel = { C, kiesSpeler, get dave() { return C.dave; }, get wim() { return C.wim; }, vb, kippen, zon, THREE, spel, W, start, belly, dr, rat, kant, loop, cam, invoer, dril, get peppie() { return peppie; }, get cocks() { return cocks; }, scope, camera, stapDril, MISSIES };
 requestAnimationFrame(lus);
