@@ -191,13 +191,13 @@ if C.get('gezicht'):
     # ---------- het echte gezicht: de foto op het hoofd projecteren en in de huidtextuur bakken ----------
     # gezicht = {"foto": pad, "ogen": [[x, y], [x, y]] (links en rechts in de foto), "mond": [x, y]}
     from PIL import Image
-    G_ = C['gezicht']; foto = np.asarray(Image.open(G_['foto']).convert('RGB'), dtype=np.float32) / 255.0; FH, FW = foto.shape[:2]
+    G_ = C['gezicht']; import os; fotoPad = G_['foto'].rsplit('.', 1)[0] + '_cartoon.png'; fotoPad = fotoPad if os.path.exists(fotoPad) else G_['foto']; foto = np.asarray(Image.open(fotoPad).convert('RGB'), dtype=np.float32) / 255.0; FH, FW = foto.shape[:2]
     # het licht uit de foto halen: grote vlekken licht en schaduw weg, de trekken (ogen, wenkbrauwen, mond, rimpels) blijven
     from PIL import ImageFilter
     iod = float(np.linalg.norm(np.array(G_['ogen'][1], float) - np.array(G_['ogen'][0], float)))
-    wazig = np.asarray(Image.open(G_['foto']).convert('RGB').filter(ImageFilter.GaussianBlur(iod * 0.45)), dtype=np.float32) / 255.0
+    wazig = np.asarray(Image.open(fotoPad).convert('RGB').filter(ImageFilter.GaussianBlur(iod * 0.45)), dtype=np.float32) / 255.0
     lum = lambda a: a @ np.array([0.3, 0.59, 0.11], dtype=np.float32)
-    foto = foto * (lum(wazig).mean() / np.maximum(lum(wazig), 0.05))[..., None] ** float(G_.get('vlak', 0.5))
+    foto = foto * (lum(wazig).mean() / np.maximum(lum(wazig), 0.05))[..., None] ** float(G_.get('vlak', 0.35))
     foto = np.clip(foto, 0, 1) ** 2.2   # sRGB -> lineair, net als de atlas
     P = np.array([list(B(q)) for q in pts])   # meters, z omhoog, gezicht naar -y
     ope, _, _, _, _ = fitfile(f'{S}/eyes/low-poly/low-poly.mhclo'); E_ = np.array([list(B(q)) for q in ope])
@@ -232,9 +232,8 @@ if C.get('gezicht'):
     huidpx[..., :3] = np.clip(huidpx[..., :3] * (huidKleur / np.maximum(huidGem, 1e-3)), 0, 1); atlas[yb:yb + h0, x0:x0 + w0] = huidpx
     stuk = np.minimum(stuk, huidKleur * 1.2); sm = stuk.reshape(-1, 3).mean(axis=0); stuk = sm + (stuk - sm) * 0.8
     e = np.sqrt(inEllips(np.stack([gx, gy], -1))); w_ = np.clip((0.92 - e) / 0.3, 0, 1) ** 1.3
-    stuk = stuk * w_[..., None] + huidKleur * 0.94 * (1 - w_[..., None])
+    stukFoto, wFoto = stuk, w_
     gv = VAK.setdefault('gezicht', (1024, 1536, 512, 512) if A == 2048 else (512, 768, 256, 256))
-    zet('gezicht', np.concatenate([stuk[::-1], np.ones((N_, N_, 1), np.float32)], -1)); img.pixels.foreach_set(atlas.ravel()); img.pack()
     # welke vlakken van het lijf vallen in de ellips en kijken naar voren?
     FPn = (FP - [kx0, ky0]) / zijde   # 0..1 in het stuk; v telt van onderen
     gezF, rest = [], []
@@ -243,6 +242,26 @@ if C.get('gezicht'):
         if Q[:, 2].min() > oogM[2] - io * 2.4 and abs(n[1] / nl) > 0.2 and np.mean(Q[:, 1]) < oogM[1] + io * 0.4 and (inEllips(FP[I]) < 1.9).all(): gezF.append(q)
         else: rest.append(q)
     f = rest
+    # de achtergrond van het stuk: de huid van het lijf zelf, op dezelfde plek van het hoofd (dan is de rand onzichtbaar)
+    achter = np.tile(huidKleur, (N_, N_, 1)).astype(np.float32); vul = np.zeros((N_, N_), bool)
+    for q in gezF:
+        I = [i for i, _ in q]; Tv = [t for _, t in q]
+        if any(t < 0 for t in Tv): continue
+        for tri in ([0, 1, 2], [0, 2, 3]) if len(q) == 4 else ([0, 1, 2],):
+            p2 = FPn[[I[k] for k in tri]] * N_; uvq = np.array([vt[Tv[k]] for k in tri])
+            bx0, by0 = np.floor(p2.min(axis=0)).astype(int); bx1, by1 = np.ceil(p2.max(axis=0)).astype(int); bx0, by0 = max(bx0, 0), max(by0, 0); bx1, by1 = min(bx1, N_ - 1), min(by1, N_ - 1)
+            if bx1 < bx0 or by1 < by0: continue
+            X_, Y_ = np.meshgrid(np.arange(bx0, bx1 + 1) + 0.5, np.arange(by0, by1 + 1) + 0.5)
+            d = (p2[1, 1] - p2[2, 1]) * (p2[0, 0] - p2[2, 0]) + (p2[2, 0] - p2[1, 0]) * (p2[0, 1] - p2[2, 1])
+            if abs(d) < 1e-9: continue
+            l0 = ((p2[1, 1] - p2[2, 1]) * (X_ - p2[2, 0]) + (p2[2, 0] - p2[1, 0]) * (Y_ - p2[2, 1])) / d; l1 = ((p2[2, 1] - p2[0, 1]) * (X_ - p2[2, 0]) + (p2[0, 0] - p2[2, 0]) * (Y_ - p2[2, 1])) / d; l2 = 1 - l0 - l1
+            ok = (l0 >= -0.01) & (l1 >= -0.01) & (l2 >= -0.01)
+            if not ok.any(): continue
+            u_ = l0 * uvq[0, 0] + l1 * uvq[1, 0] + l2 * uvq[2, 0]; v_ = l0 * uvq[0, 1] + l1 * uvq[1, 1] + l2 * uvq[2, 1]
+            kl = huidpx[np.clip((v_ * h0).astype(int), 0, h0 - 1), np.clip((u_ * w0).astype(int), 0, w0 - 1), :3]
+            rr, cc = (Y_ - 0.5).astype(int)[ok], (X_ - 0.5).astype(int)[ok]; achter[rr, cc] = kl[ok]; vul[rr, cc] = True
+    stuk = stukFoto * wFoto[..., None] + achter * (1 - wFoto[..., None])
+    zet('gezicht', np.concatenate([stuk[::-1], np.ones((N_, N_, 1), np.float32)], -1)); img.pixels.foreach_set(atlas.ravel()); img.pack()
     gvt = [(float(FPn[i, 0]), float(1 - FPn[i, 1])) for i in range(len(pts))]
     delen.append(deel('gezicht', pts, gvt, [[(i, i) for i, _ in q] for q in gezF], refs, 'gezicht'))
     print('gezicht:', len(gezF), 'vlakken')
