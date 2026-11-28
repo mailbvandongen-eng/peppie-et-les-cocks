@@ -21,7 +21,7 @@ export class Livescope {
   tik(px, py) { const STAP = [8, 12, 16, 20, 28, 36]; for (const k of this.knoppen) { if (px < k.x0 || px > k.x1 || py < k.y0 || py > k.y1) continue;
       if (k.id === "bereik-") this.vooruit = STAP[Math.max(0, STAP.indexOf(this.vooruit) - 1)]; if (k.id === "bereik+") this.vooruit = STAP[Math.min(STAP.length - 1, STAP.indexOf(this.vooruit) + 1)];
       if (k.id === "ver-") this.gain = Math.max(30, this.gain - 6); if (k.id === "ver+") this.gain = Math.min(100, this.gain + 6); if (k.id === "pauze") this.pauze = !this.pauze; if (k.id === "diep-" || k.id === "diep+" || k.id === "auto") this.autoUit = k.id !== "auto";
-      if (k.id === "diep-") this.diepte = Math.max(6, this.diepte - 6); if (k.id === "diep+") this.diepte = Math.min(36, this.diepte + 6); return true; } return false; }
+      if (k.id === "diep-") this.diepte = Math.max(4, this.diepte - 1); if (k.id === "diep+") this.diepte = Math.min(40, this.diepte + 1); return true; } return false; }
   /**
    * bodem(v) = diepte op v meter voor de transducer (negatief = erachter); vissen = [{ v, d, lengte, hoek, soort }];
    * school = [{ v, d }]; planten = [{ v, bodem, top }]; aas = { v, d } of null; onder = diepte onder de boot; richting = stand van de transducer.
@@ -90,7 +90,7 @@ export class Livescope {
 
     // ---- uitvergroten naar het scherm, met raster, cijfers en knoppen erover ----
     const x = this.x; x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high"; x.drawImage(this.klein, 0, 0, W, H);
-    const sx = (v) => ((v - X0) / (X1 - X0)) * W, sy = (d) => (d / D1) * H, lijn = Math.max(1, F / 600), stapM = R > 16 ? 2 : 1, stapD = DA > 12 ? 2 : 1;
+    const sx = (v) => ((v - X0) / (X1 - X0)) * W, sy = (d) => (d / D1) * H, lijn = Math.max(1, F / 600), pxM = Math.min(W / (X1 - X0), H / D1), stapM = pxM < F * 0.075 ? 2 : 1, stapD = stapM; // worden de hokjes van 1 bij 1 m te klein, dan worden ze 2 bij 2 m (zoals op de livescope zelf)
     x.strokeStyle = "rgba(255,255,255,0.33)"; x.lineWidth = lijn; x.fillStyle = "#fff";
     // bovenaan de afstand achter (links van 0) en voor de transducer, links de diepte
     x.font = `${Math.round(F * 0.034)}px ${FONT}`; x.textAlign = "center"; x.textBaseline = "top";
