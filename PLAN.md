@@ -98,3 +98,13 @@ Getekende stijl, herkenbaar aan kenmerken; iedereen korte broek, T-shirt, sneake
 - **Wim** (ref/gezicht/wim-nieuw): **groot en dik** (lang, brede schouders, flinke buik — moet goed uitkomen), donkerblauw T-shirt, bruine korte broek, zonnebril; ouder, kaal met een grijs randje opzij en achter, zwarte rechthoekige bril, brede lach, blozend; overhemd met fijn blauw patroon; bruine leren cowboyhoed met gevlochten band (op het water); trouwring.
 - **Paul** (ref/gezicht/paul-nieuw): rossig/koperblond kort warrig haar dat rechtop staat, rossige stoppelbaard en snor, ronde blozende wangen, kleine ogen die dichtknijpen als hij lacht, scheve grijns; geen oorbel; zwart T-shirt; vaak een GoPro op een hoofdband; jongste van de vier.
 - **Dave** (ref/gezicht/dave-nieuw): kort geschoren hoofd (bijna kaal, iets wijkende haargrens), grijzende stoppelbaard, smal gezicht met diepe lachrimpels, bruine ogen, enorme lach met veel tanden; zonnebril vaak op het hoofd; lichtblauw/mintgroen poloshirt of T-shirt; witte Adidas-pet op het water; slank.
+
+## 11. Complete vormgeving (Bob, 28-11) — werkvolgorde
+Volgens `CLAUDE.md`: beste bron eerst, zelf toetsen tegen foto's.
+1. **Geluid**: achtergrond (rivier, vogels, wind in populieren, krekels 's avonds), kippen en haan, plons, drone, bierflesje — Freesound (CC0/CC-BY).
+2. **Bellyboten en uitrusting** in Blender naar de foto's (pontons, naden, ventielen, stoel, tassen, schort, motor, Garmin + Scotty, hengelsteunen, bekerhouder, transducerstang).
+3. **Personages**: gezichten mooier (cartoonogen, kleur), bewegingen.
+4. **Spullen rond het huis**: stoelen, tafels, parasols, emmers, prullenbak, potten → echte modellen (Sketchfab/Poly Haven).
+5. **Huis en terrein**: texturen, ramen, dak, terras, zwembad; verre oevers met IGN-luchtfoto en hoogtemodel (heuvels).
+6. **Water, lucht en licht**: mooiere spiegeling en golfjes, zachter licht.
+7. **Knoppen en schermen**: één nette stijl.
