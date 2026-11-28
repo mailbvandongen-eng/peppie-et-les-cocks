@@ -1,5 +1,43 @@
 [
  {
+  "bestand": "autos/rav4.glb",
+  "map": "autos",
+  "naam": "Bobs zwarte Toyota RAV4",
+  "bron": "“2021 Toyota RAV4 Hybrid” — tonielpro520, Sketchfab (uit Fatbike Sniper)",
+  "licentie": "CC BY 4.0",
+  "kb": 1347,
+  "nieuw": true,
+  "oud": false,
+  "driehoeken": 39674,
+  "texturen": 0,
+  "maxpx": 0,
+  "voorbeeld": "assets/_voorbeeld/autos_rav4.glb.jpg"
+ },
+ {
+  "bestand": "autos/rav4.json",
+  "map": "autos",
+  "naam": "RAV4: wielen en maten",
+  "bron": "uit Fatbike Sniper",
+  "licentie": "eigen werk",
+  "kb": 0,
+  "nieuw": true,
+  "oud": false
+ },
+ {
+  "bestand": "autos/vito.glb",
+  "map": "autos",
+  "naam": "Mercedes Vito, zilvergrijs",
+  "bron": "“Mercedes-Benz Vito MK3 W447 from 2014” — szymonpasterczyk, Sketchfab; zilvergrijs gemaakt, wielen gezet, lichter",
+  "licentie": "CC BY 4.0",
+  "kb": 957,
+  "nieuw": true,
+  "oud": false,
+  "driehoeken": 152620,
+  "texturen": 0,
+  "maxpx": 0,
+  "voorbeeld": "assets/_voorbeeld/autos_vito.glb.jpg"
+ },
+ {
   "bestand": "bodem.jpg",
   "map": "texturen",
   "naam": "Rivierbodem",
@@ -312,6 +350,17 @@
   "nieuw": true,
   "oud": false,
   "voorbeeld": "assets/gras.jpg"
+ },
+ {
+  "bestand": "grind.jpg",
+  "map": "texturen",
+  "naam": "Grind (parkeerplaats)",
+  "bron": "“gravel_floor_02” — Poly Haven",
+  "licentie": "CC0",
+  "kb": 1211,
+  "nieuw": true,
+  "oud": false,
+  "voorbeeld": "assets/grind.jpg"
  },
  {
   "bestand": "lucht.jpg",

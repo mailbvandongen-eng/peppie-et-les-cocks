@@ -108,6 +108,15 @@ const plekken = (() => { const zet = (w, lx, lz, rot, houding, zit) => { const p
   const blik = (await new GLTFLoader().loadAsync(`assets/drank/fristi.glb?v=${window.VERSIE ?? ""}`)).scene; blik.traverse((o) => { if (o.isMesh) o.castShadow = true; });
   const pp = dom.wereld(-6.0, 0, dom.oeverZ(-6.5) - 6), wim = dom.wereld(-6.4, 0, dom.oeverZ(-6.5) - 5.25); blik.position.set(pp.x, W.hoogte(pp.x, pp.z) + 0.76, pp.z);
   blik.lookAt(wim.x, blik.position.y, wim.z); blik.rotateY(0.35); scene.add(blik); W.fristi = blik; }
+// de auto's op de parkeerplaatsen achter het huis: Bobs zwarte RAV4 (uit Fatbike Sniper) en een zilvergrijze Mercedes Vito
+{ const { GLTFLoader } = await import("../lib/three-addons.js"), { MeshoptDecoder } = await import("../lib/meshopt_decoder.mjs"), L = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+  const zet = async (bestand, lx, lz, draai, lak) => { const g = (await L.loadAsync(`assets/autos/${bestand}?v=${window.VERSIE ?? ""}`)).scene; g.traverse((o) => { if (!o.isMesh) return; o.castShadow = o.receiveShadow = true; if (lak && lak.re.test(o.material?.name ?? "")) { o.material = o.material.clone(); o.material.color.set(lak.kleur); o.material.metalness = 0.5; o.material.roughness = 0.3; } });
+    const p = dom.wereld(lx, 0, lz); g.position.set(p.x, W.hoogte(p.x, p.z), p.z); g.rotation.y = huis.yaw + draai; scene.add(g); return g; };
+  // een grindvlak om op te parkeren
+  { const t = new THREE.TextureLoader().load(`assets/grind.jpg?v=${window.VERSIE ?? ""}`); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(4, 3); t.colorSpace = THREE.SRGBColorSpace;
+    const p = dom.wereld(2, 0, -19.5), vlak = new THREE.Mesh(new THREE.PlaneGeometry(12, 8, 24, 16).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ map: t, roughness: 1, polygonOffset: true, polygonOffsetFactor: -2 }));
+    const pa = vlak.geometry.attributes.position; vlak.position.set(p.x, 0, p.z); vlak.rotation.y = huis.yaw; vlak.updateMatrixWorld(true); for (let i = 0; i < pa.count; i++) { const w = new THREE.Vector3(pa.getX(i), 0, pa.getZ(i)).applyMatrix4(vlak.matrixWorld); pa.setY(i, W.hoogte(w.x, w.z) + 0.03); } pa.needsUpdate = true; vlak.geometry.computeVertexNormals(); vlak.receiveShadow = true; scene.add(vlak); }
+  W.autos = { rav4: await zet("rav4.glb", 4, -19.5, 0, { re: /Silver_Sky/, kleur: "#0e0f11" }), vito: await zet("vito.glb", 0.6, -19.5, Math.PI) }; }
 // de kippen lopen over het gras tussen het huis en de oever, en soms over de steigers
 await Kippen.laad();
 const kippen = new Kippen(scene, {
