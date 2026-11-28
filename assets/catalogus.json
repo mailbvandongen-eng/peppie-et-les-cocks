@@ -314,6 +314,20 @@
   "voorbeeld": "assets/gras.jpg"
  },
  {
+  "bestand": "kamperen/trakker-tempest.glb",
+  "map": "kamperen",
+  "naam": "Trakker Tempest RS Brolly (Full System), karpertent",
+  "bron": "Zelf gebouwd naar de productfoto's en maten van Trakker (tools/tent/trakker-tempest.mjs); doek: “Fabric082A” — ambientCG (CC0)",
+  "licentie": "eigen werk + CC0",
+  "kb": 273,
+  "nieuw": true,
+  "oud": false,
+  "driehoeken": 7690,
+  "texturen": 2,
+  "maxpx": 512,
+  "voorbeeld": "assets/_voorbeeld/kamperen_trakker-tempest.glb.jpg"
+ },
+ {
   "bestand": "lucht.jpg",
   "map": "texturen",
   "naam": "Lucht",
