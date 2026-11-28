@@ -48,5 +48,5 @@
  "drank/heineken-blik.glb": { "naam": "Heineken, blik", "bron": "“Realistic Heineken can” — mihadshok9, Sketchfab; op maat en lichter gemaakt", "licentie": "CC BY 4.0" },
  "drank/heineken-krat.glb": { "naam": "Heineken, krat met flesjes", "bron": "“beer crate 12x750ml” — milansaman21, Sketchfab; groen met het Heineken-logo en twaalf flesjes (“Heineken Bottle”, liontrike)", "licentie": "CC BY 4.0" },
  "drank/whisky.glb": { "naam": "Jack Daniel's Old No.7", "bron": "“Jack Daniels Whiskey No.7 Bottle” — 3DDave247, Sketchfab; lichter gemaakt", "licentie": "CC BY 4.0" },
- "kamperen/trakker-tempest.glb": { "naam": "Trakker Tempest RS Brolly (Full System), karpertent", "bron": "Zelf gebouwd naar de productfoto's en maten van Trakker (tools/tent/trakker-tempest.mjs); doek: “Fabric082A” — ambientCG (CC0)", "licentie": "eigen werk + CC0" }
+ "kamperen/trakker-tempest.glb": { "naam": "Trakker Tempest RS Brolly (Full System), karpertent", "bron": "Zelf gebouwd in Blender naar de productfoto's en maten van Trakker, met stofsimulatie (tools/tent/trakker-tempest.py); doek: “Fabric082A” — ambientCG (CC0)", "licentie": "eigen werk + CC0" }
 }
