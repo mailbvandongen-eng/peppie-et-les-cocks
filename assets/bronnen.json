@@ -261,5 +261,30 @@
   "naam": "Grind (parkeerplaats)",
   "bron": "“gravel_floor_02” — Poly Haven",
   "licentie": "CC0"
+ },
+ "aas/dauwworm-doosje.glb": {
+  "naam": "Bekertje Canadese dauwwormen (Canadian Nightcrawlers, 12 stuks)",
+  "bron": "Zelf gebouwd in Blender (tools/aas/dauwwormen.py) naar de productfoto's van tom-cat.nl; wikkel en deksel uit die foto's (tools/aas/dauwwormen-textuur.py)",
+  "licentie": "Eigen werk; productfoto's tom-cat.nl als referentie/textuur"
+ },
+ "aas/dauwwormen-doos.glb": {
+  "naam": "Open doos met bekertjes Canadese dauwwormen en koelzakken",
+  "bron": "Zelf gebouwd in Blender (tools/aas/dauwwormen.py) naar productfoto canadese-dauwwormen-2 van tom-cat.nl; karton: ambientCG Cardboard002",
+  "licentie": "Eigen werk; karton CC0 (ambientCG); productfoto's tom-cat.nl als referentie/textuur"
+ },
+ "aas/madenbakje.glb": {
+  "naam": "FTM madenbakje 1 liter (dicht)",
+  "bron": "zelf gebouwd in Blender (tools/aas/madenbakje.py) naar de productfoto en maten van visgigant.nl (FTM Baitbox 1 liter Geel vierkant); etiket uit die foto",
+  "licentie": "eigen werk; FTM-etiket uit productfoto visgigant.nl"
+ },
+ "aas/madenbakje-open.glb": {
+  "naam": "FTM madenbakje 1 liter, open met maden (geanimeerd: kruipen)",
+  "bron": "zelf gebouwd in Blender (tools/aas/madenbakje.py) naar de productfoto en maten van visgigant.nl; maden en animatie zelf gemaakt",
+  "licentie": "eigen werk; FTM-etiket uit productfoto visgigant.nl"
+ },
+ "aas/made.glb": {
+  "naam": "Made (witte hengelsportmade, geanimeerd: kruipen)",
+  "bron": "zelf gebouwd in Blender (tools/aas/madenbakje.py), textuur made.png zelf gemaakt",
+  "licentie": "eigen werk"
  }
 }
