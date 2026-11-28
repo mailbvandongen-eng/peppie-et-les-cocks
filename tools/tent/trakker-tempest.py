@@ -14,6 +14,7 @@ from mathutils import Vector
 OUT = sys.argv[sys.argv.index('--') + 1]
 VOORPANEEL = False                         # open voorkant, zoals op de foto met het bedchair
 STRETCHER = True                           # de Fox Camolite erin
+SPEAKER = True                             # de JBL Charge 6 op de grond
 HIER = os.path.dirname(os.path.abspath(__file__))
 for o in list(bpy.data.objects): bpy.data.objects.remove(o)
 for m in list(bpy.data.meshes): bpy.data.meshes.remove(m)
@@ -243,6 +244,14 @@ if STRETCHER and os.path.exists(BED):
     st.location = P(0, 0, -0.95); st.rotation_euler = (0, 0, math.pi / 2)
     for o in set(bpy.data.objects) - voor_import:
         if o.parent is None: o.parent = st
+# ---------- de JBL Charge 6 op de grond naast de stretcher (assets/kamperen/jbl-charge-6.glb, tools/jbl/jbl-charge-6.py) ----------
+JBL = os.path.join(HIER, '..', '..', 'assets', 'kamperen', 'jbl-charge-6.glb')
+if SPEAKER and os.path.exists(JBL):
+    voor_import = set(bpy.data.objects); bpy.ops.import_scene.gltf(filepath=JBL)
+    sp = bpy.data.objects.new('speaker', None); sc.collection.objects.link(sp); sp.parent = wortel
+    sp.location = P(0.62, 0, -0.22); sp.rotation_euler = (0, 0, 0.35)
+    for o in set(bpy.data.objects) - voor_import:
+        if o.parent is None: o.parent = sp
 # ---------- exporteren ----------
 for o in sc.objects: o.select_set(True)
 bpy.ops.export_scene.gltf(filepath=OUT, export_format='GLB', export_yup=True, export_apply=True, export_image_format='JPEG', export_jpeg_quality=88)
