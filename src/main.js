@@ -255,7 +255,7 @@ const scopeTex = new THREE.CanvasTexture(hud.scope); scopeTex.colorSpace = THREE
 // ieder zijn eigen bellyboat: Paul en Bob zwart met de Garmin, Wim kaki, Dave gifgroen; wie niet vaart ligt aangemeerd bij de linker steiger
 const BB = Object.fromEntries(["paul", "bob", "wim", "dave"].map((n) => { const b = maakBellyboat(n, { scherm: scopeTex }); b.g.visible = false; scene.add(b.g); return [n, b]; }));
 let bb = BB.paul, boot = bb.g;
-const aangemeerd = [["wim", 19.6, 2.9, 0.25], ["dave", 21.4, 3.3, -0.15], ["bob", 12.4, 3.0, 0.4], ["paul", 14.2, 3.1, -0.3]].map(([soort, lx, lz, r]) => { const b = maakBellyboat(soort).g, p = dom.wereld(lx, 0, dom.oeverZ(lx) + lz); b.position.set(p.x, 0.02, p.z); b.rotation.y = huis.yaw + Math.PI / 2 + r; scene.add(b); return { soort, b, f: Math.random() * 6 }; });
+const aangemeerd = [["wim", 19.6, 2.9, 0.25], ["dave", 21.4, 3.3, -0.15], ["bob", 12.4, 3.0, 0.4], ["paul", 14.2, 3.1, -0.3]].map(([soort, lx, lz, r]) => { const bb_ = maakBellyboat(soort), b = bb_.g, p = dom.wereld(lx, 0, dom.oeverZ(lx) + lz); bb_.motor.rotation.x = -1.25; bb_.motor.position.y += 0.32; bb_.motor.position.z -= 0.12; /* aangemeerd: de motor omhoog geklapt */ b.position.set(p.x, 0.02, p.z); b.rotation.y = huis.yaw + Math.PI / 2 + r; scene.add(b); return { soort, b, f: Math.random() * 6 }; });
 /** Kies wie je speelt. */
 function kiesSpeler(naam) {
   spelerNaam = naam;

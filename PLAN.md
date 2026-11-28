@@ -89,3 +89,5 @@ Uitwerking van eigenschappen volgt later van Bob.
 - **Dril-houding**: hengel vooruit over de punt, schuin omhoog; top buigt tot bijna dubbel, lijn recht omlaag; reelhand op de reel, andere hand vóór de reel; achterover leunen bij pompen. Bij een reus met de slip bijna dicht word je over het water gesleurd.
 - **Gebeurtenissen**: hengel kan breken; de haak kan uitschieten en de 60-ponds lijn klapt terug. Een vis van 250 cm gaat verticaal in het water hangen (beelden volgen).
 - **Nacht**: spel krijgt ook een nachtstand met hoofdlampen en weerspiegeling op het water.
+
+- **Bellyboten (Bob, 28-11):** Wim = Black Cat Battle Boat (lichtgrijs, donkere band, klein sonarschermpje); Paul en Bob = Raptor 180 zwart carbon (RAPTOR met rode klauwkrassen); Dave = MADCAT groen/zwart met Garmin onder een zonnekap.

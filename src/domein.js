@@ -28,10 +28,12 @@ const TEX = {
       x.fillStyle = g; x.fillRect(k * b, y, b, n / 6); x.fillStyle = "rgba(40,15,5,0.45)"; x.fillRect(k * b, y + n / 6 - 4, b, 4); }
     korrel(x, n, 0.15); }),
   // verweerde gegroefde vlonderplanken
-  planken: (licht = 62, warm = 0.25) => tex(256, (x, n) => { const b = n / 7; for (let k = 0; k < 7; k++) { const li = licht + (Math.random() - 0.5) * 10; x.fillStyle = `hsl(32,${warm * 40}%,${li}%)`; x.fillRect(0, k * b, n, b);
-      for (let g = 0; g < 6; g++) { x.fillStyle = `rgba(30,25,20,${0.25 + Math.random() * 0.1})`; x.fillRect(0, k * b + 4 + g * (b - 6) / 6, n, 1.5); }
-      x.fillStyle = "rgba(20,15,10,0.7)"; x.fillRect(0, k * b + b - 2, n, 2); for (let i = 0; i < 3; i++) { x.fillStyle = "rgba(20,15,10,0.5)"; x.fillRect(Math.random() * n, k * b, 2, b); } }
-    korrel(x, n, 0.12); }),
+  // houten vlonderplanken (geen steen): elke plank een eigen tint met lange houtnerf en een donkere naad (zie ref/uitrusting/foto-18)
+  planken: (licht = 62, warm = 0.25) => tex(256, (x, n) => { const b = n / 6;
+    for (let k = 0; k < 6; k++) { const li = licht + (Math.random() - 0.5) * 9, sa = 22 + warm * 30; x.fillStyle = `hsl(${32 + Math.random() * 6},${sa}%,${li}%)`; x.fillRect(0, k * b, n, b);
+      for (let g = 0; g < 9; g++) { const y0 = k * b + 2 + Math.random() * (b - 4), a = Math.random() * 6, amp = 0.6 + Math.random() * 1.6; x.strokeStyle = `hsla(28,${sa + 10}%,${li - 12 - Math.random() * 10}%,${0.25 + Math.random() * 0.3})`; x.lineWidth = 0.6 + Math.random() * 1.2; x.beginPath(); for (let px = 0; px <= n; px += 8) { const py = y0 + Math.sin(px * 0.03 + a) * amp; px ? x.lineTo(px, py) : x.moveTo(px, py); } x.stroke(); }
+      if (Math.random() < 0.6) { const kx = Math.random() * n, ky = k * b + b * (0.3 + Math.random() * 0.4); x.fillStyle = `hsla(25,40%,${li - 25}%,0.6)`; x.beginPath(); x.ellipse(kx, ky, 4 + Math.random() * 4, 2 + Math.random() * 2, 0, 0, 6.3); x.fill(); } // een kwast
+      x.fillStyle = "rgba(25,18,10,0.75)"; x.fillRect(0, k * b + b - 2.5, n, 2.5); x.fillStyle = "rgba(25,18,10,0.6)"; x.fillRect(Math.random() * n, k * b, 2, b); } }),
   tegels: () => tex(256, (x, n) => { x.fillStyle = "#b9ad97"; x.fillRect(0, 0, n, n); for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++) { x.fillStyle = `hsl(38,${20 + Math.random() * 8}%,${76 + Math.random() * 6}%)`; x.fillRect(i * n / 2 + 2, j * n / 2 + 2, n / 2 - 4, n / 2 - 4); } korrel(x, n, 0.1); }),
   // blauw mozaïek (kleine tegeltjes in verschillende blauwen)
   zwembad: () => tex(256, (x, n) => { x.fillStyle = "#cfd8dc"; x.fillRect(0, 0, n, n); const k = n / 32; for (let i = 0; i < 32; i++) for (let j = 0; j < 32; j++) { x.fillStyle = `hsl(${205 + Math.random() * 10},${70 + Math.random() * 20}%,${36 + Math.random() * 18}%)`; x.fillRect(i * k + 0.6, j * k + 0.6, k - 1.2, k - 1.2); } }),
@@ -245,7 +247,7 @@ export function bouwDomein(W, scene) {
       doos(0, DEK, 0, bx, 0.07, bz, hout, s).receiveShadow = true; doos(0, DEK - 0.12, bz / 2 - 0.04, bx, 0.18, 0.08, hout, s); doos(-bx / 2 + 0.04, DEK - 0.12, 0, 0.08, 0.18, bz, hout, s); doos(bx / 2 - 0.04, DEK - 0.12, 0, 0.08, 0.18, bz, hout, s);
       for (let i = 0; i <= Math.ceil(bx / 2); i++) for (const k of [-1, 1]) cil(-bx / 2 + 0.1 + i * ((bx - 0.2) / Math.ceil(bx / 2)), DEK - 1.3, k * (bz / 2 - 0.1), 0.08, 0.08, 2.6, mat("paal", { color: "#3e3226" }), 8, s);
       stukken.push(s); }
-    if (trap) { const [tx_, n] = trap, st = mat("traptree", { map: T("steen") }), achter = Math.min(...delen.map((d) => d[1] - d[3] / 2)), yTop = gy(x + tx_, z0 + achter - n * 0.42) + 0.04;
+    if (trap) { const [tx_, n] = trap, st = hout, achter = Math.min(...delen.map((d) => d[1] - d[3] / 2)), yTop = gy(x + tx_, z0 + achter - n * 0.42) + 0.04;
       for (let i = 0; i < n; i++) { const top = DEK + ((yTop - DEK) * (i + 1)) / n; doos(tx_, (top - 0.4) / 2, achter - 0.21 - i * 0.42, 1.3, top + 0.4, 0.44, st, g); } }
     g.updateMatrixWorld(true); const inv = stukken.map((s) => ({ s, b: s.children[0].geometry.parameters }));
     const st_ = { naam, x, z0, groep: g, dek: DEK, stukken,
@@ -255,7 +257,7 @@ export function bouwDomein(W, scene) {
     steigers.push(st_); return st_; }
 
   // de linker steiger, bij de toren: laag en lang langs de oever, stenen trap omhoog, zwarte stoeltjes, rode parasol, de groene boot ligt ervoor
-  const houtL = mat("houtL", { map: T("planken", 58, 0.35) }), houtM = mat("houtM", { map: T("planken", 64, 0.15) }), houtR = mat("houtR", { map: T("planken", 34, 0.6) });
+  const houtL = mat("houtL", { map: T("planken", 70, 0.5) }), houtM = mat("houtM", { map: T("planken", 72, 0.55) }), houtR = mat("houtR", { map: T("planken", 34, 0.6) });
   const SL = steiger("links", 16.5, [[0, 0.5, 7.6, 1.9]], { hout: houtL, trap: [0.4, 4] });
   { const y = DEK, g = SL.groep; band(-3.2, y - 0.25, 1.48, 0, g); band(2.6, y - 0.25, 1.48, 0, g);
     stapelstoel(SL.x - 2.6, SL.z0 + 0.6, 0.3, "#26282a", y); stapelstoel(SL.x - 1.5, SL.z0 + 0.6, -0.2, "#26282a", y); tafeltje(SL.x - 2.05, SL.z0 + 0.15, "#26282a", y, 0.5); parasol(SL.x + 1.4, SL.z0 + 0.6, "#e0573a", false, y);
@@ -290,7 +292,7 @@ export function bouwDomein(W, scene) {
     for (let x = -34; x <= 36; x += 3.0) boom(x + Math.sin(x) * 0.6, -27 + Math.cos(x) * 1.2, 21 + ruis(x, 1) * 5, "populier");
     // struiken langs de oever tussen de steigers (de stekken), zoals op Bobs foto's en video
     for (const [a, b] of [[-38, -25.5], [-16.5, -6.5], [3, 12.5], [21, 34]]) for (let x = a; x < b; x += 1.6 + ruis(x, 3) * 1.4) { const z = oeverZ(x) - 1.1 - ruis(x, 7) * 1.6; boom(x, z, 2.2 + ruis(x, 9) * 2.4, "struik"); }
-    for (const [x, z, h, soort] of [[-17, 4, 13, "esdoorn"], [-24, 9, 15, "esdoorn"], [-30, 3, 15, "esdoorn"], [-27, 16, 10, "wilg"], [-17, 13, 9, "wilg"], [-35, 12, 14, "esdoorn"], [-22, -8, 13, "esdoorn"], [33, 6, 12, "esdoorn"], [36, -6, 14, "esdoorn"], [-14, -20, 12, "esdoorn"], [24, -18, 11, "esdoorn"], [29, 15, 9, "wilg"], [-40, 18, 10, "wilg"]]) boom(x, Math.min(z, oeverZ(x) - 2.5), h, soort); }
+    for (const [x, z, h, soort] of [[19.6, 99, 7, "esdoorn"], [-17, 4, 13, "esdoorn"], [-24, 9, 15, "esdoorn"], [-30, 3, 15, "esdoorn"], [-27, 16, 10, "wilg"], [-17, 13, 9, "wilg"], [-35, 12, 14, "esdoorn"], [-22, -8, 13, "esdoorn"], [33, 6, 12, "esdoorn"], [36, -6, 14, "esdoorn"], [-14, -20, 12, "esdoorn"], [24, -18, 11, "esdoorn"], [29, 15, 9, "wilg"], [-40, 18, 10, "wilg"]]) boom(x, Math.min(z, oeverZ(x) - 2.5), h, soort); }
 
   // ---------- de wereld laten weten wat waar is ----------
   D.updateMatrixWorld(true);

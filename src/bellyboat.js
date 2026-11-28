@@ -8,9 +8,9 @@ import * as THREE from "three";
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const KLEUREN = {
-  paul: { romp: "#1d1f22", neus: "#1d1f22", band: "#2c2f33", stoel: "#141517", sticker: null },
-  bob: { romp: "#1d1f22", neus: "#1d1f22", band: "#2c2f33", stoel: "#141517", sticker: null },
-  wim: { romp: "#6c705f", neus: "#d6cea6", band: "#5a5e50", stoel: "#1a1b1d", sticker: "#e8e0b8" },
+  paul: { romp: "#1d1f22", neus: "#1d1f22", band: "#2c2f33", stoel: "#141517", sticker: null, logo: "RAPTOR" },
+  bob: { romp: "#1d1f22", neus: "#1d1f22", band: "#2c2f33", stoel: "#141517", sticker: null, logo: "RAPTOR" },
+  wim: { romp: "#a3a8ac", neus: "#c4c8cb", band: "#3b3e42", stoel: "#1a1b1d", sticker: null }, // Black Cat Battle Boat: lichtgrijs met een donkere band
   dave: { romp: "#39d43b", neus: "#39d43b", band: "#141618", stoel: "#141517", sticker: null },
 };
 const mats = {}; const M = (k, o = {}) => (mats[k + JSON.stringify(o)] ??= new THREE.MeshStandardMaterial({ color: k, roughness: 0.55, ...o }));
@@ -64,6 +64,8 @@ export function maakBellyboat(soort = "paul", { scherm = null } = {}) {
   const arm = doos(-0.03, 0.14, -0.04, 0.035, 0.11, 0.03, zwartM, mount); arm.rotation.x = 0.5; doos(0.07, 0.03, 0.03, 0.03, 0.02, 0.12, M("#e07a14"), mount); doos(-0.06, 0.03, 0.06, 0.1, 0.018, 0.025, M("#b4d62a"), mount);
   const schermGroep = new THREE.Group(); schermGroep.position.set(-0.05, 0.25, -0.08); schermGroep.rotation.set(-0.55, Math.PI + 0.35, 0); mount.add(schermGroep);
   doos(0, 0, 0, 0.27, 0.18, 0.05, M("#121315", { roughness: 0.4 }), schermGroep); doos(0, -0.1, 0.02, 0.08, 0.04, 0.04, zwartM, schermGroep);
+  if (soort === "wim") schermGroep.scale.setScalar(0.6); // Wims strepenkijker: een klein schermpje
+  if (soort === "dave") { const kap = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.012, 0.12), M("#101113")); kap.position.set(0, 0.1, 0.05); kap.rotation.x = 0.2; schermGroep.add(kap); for (const k_ of [-1, 1]) { const z_ = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.18, 0.12), M("#101113")); z_.position.set(k_ * 0.145, 0.01, 0.05); schermGroep.add(z_); } } // zonnekap
   const beeld = new THREE.Mesh(new THREE.PlaneGeometry(0.235, 0.132), scherm ? new THREE.MeshBasicMaterial({ map: scherm, toneMapped: false }) : M("#0a1a50", { emissive: "#10308a", emissiveIntensity: 0.6 })); beeld.position.set(0, 0.01, 0.026); schermGroep.add(beeld);
   // de kabel van het scherm over de ponton naar achteren
   { const pts = [V(B - 0.05, top + 0.1, 0.46), V(B - 0.02, top + 0.02, 0.3), V(B + 0.02, top + 0.01, 0.0), V(B, top + 0.02, -0.25)]; const kb = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 20, 0.005, 5), zwartM); g.add(kb); }
@@ -75,6 +77,15 @@ export function maakBellyboat(soort = "paul", { scherm = null } = {}) {
   // een drinkbeker in een houder op de linker ponton
   { cil(-B, top + 0.03, 0.18, 0.045, 0.06, zwartM); const beker = cil(-B, top + 0.09, 0.18, 0.04, 0.12, M("#8e9499", { metalness: 0.7, roughness: 0.3 }), g, 14); }
   // de MADCAT-letters op de neuzen van Dave
+  const opdruk = (tekst, achter, kleur, breed = 0.3, z0 = 0.45) => { const c = document.createElement("canvas"); c.width = 512; c.height = 128; const x = c.getContext("2d"); if (achter) { x.fillStyle = achter; x.fillRect(20, 14, 472, 100); } x.font = "italic 900 78px Arial Black, Arial, sans-serif"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillStyle = kleur; x.fillText(tekst, 256, 66);
+    const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; const mm = new THREE.MeshBasicMaterial({ map: tx, transparent: true, toneMapped: false, depthWrite: false });
+    for (const k_ of [-1, 1]) { const pl = new THREE.Mesh(new THREE.PlaneGeometry(breed, breed / 4), mm); pl.position.set(k_ * (B + R + 0.004), 0.12, z0); pl.rotation.y = k_ * Math.PI / 2; g.add(pl); } };
+  // Paul en Bob: een Raptor 180 (zwart carbon), RAPTOR met drie rode klauwkrassen achter op de zijkant
+  if (k.logo) { const c = document.createElement("canvas"); c.width = 512; c.height = 128; const x = c.getContext("2d"); x.font = "900 70px Arial Black, Arial, sans-serif"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillStyle = "#d8dadc"; x.fillText(k.logo, 256, 66);
+    x.strokeStyle = "#d22a1e"; x.lineWidth = 9; x.lineCap = "round"; for (let i = 0; i < 3; i++) { x.beginPath(); x.moveTo(250 + i * 24, 20); x.lineTo(226 + i * 24, 112); x.stroke(); }
+    const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; const mm = new THREE.MeshBasicMaterial({ map: tx, transparent: true, toneMapped: false, depthWrite: false });
+    for (const k_ of [-1, 1]) { const pl = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.085), mm); pl.position.set(k_ * (B + R + 0.004), 0.13, -0.15); pl.rotation.y = k_ * Math.PI / 2; g.add(pl); } }
+  if (soort === "wim") opdruk("BLACK CAT", null, "#d9c84a", 0.36, 0.3);
   if (soort === "dave") { const c = document.createElement("canvas"); c.width = 512; c.height = 128; const x = c.getContext("2d"); x.font = "900 92px Impact, Arial Black, sans-serif"; x.textAlign = "center"; x.textBaseline = "middle"; x.lineWidth = 10; x.strokeStyle = "#0e2a10"; x.strokeText("MADCAT", 256, 66); x.fillStyle = "#8ef060"; x.fillText("MADCAT", 256, 66);
     const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; const mm = new THREE.MeshBasicMaterial({ map: tx, transparent: true, toneMapped: false, depthWrite: false });
     for (const k_ of [-1, 1]) { const pl = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.105), mm); pl.position.set(k_ * (B + R + 0.004), 0.14, 0.62); pl.rotation.y = k_ * Math.PI / 2; g.add(pl); } }

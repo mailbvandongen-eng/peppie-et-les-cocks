@@ -32,12 +32,12 @@ export function maakWater(renderer, scene, camera, W, { maat = 1080, telefoon = 
                + golf(p, normalize(vec2(0.6, -0.8)), 7.3, 4.2, 0.0009) + golf(p + 3.1, normalize(vec2(-0.3, 0.95)), 11.0, 5.0, 0.0005);
         g *= uRust * mix(1.0, 0.35, smoothstep(30.0, 250.0, afst));
         vec3 n = normalize(vec3(-g.x, 1.0, -g.y)), v = normalize(cameraPosition - vWp);
-        float fres = 0.02 + 0.98 * pow(1.0 - max(dot(n, v), 0.0), 5.0);
+        float fres = 0.06 + 0.94 * pow(1.0 - max(dot(n, v), 0.0), 4.0);
         vec4 r = vRefl; r.xy += n.xz * 0.35 * r.w * 0.18; vec3 refl = texture2DProj(tRefl, r).rgb;
         // hoe ver kijk je door het water heen tot de bodem? hoe langer, hoe groener en donkerder
         float diep = texture2D(tDiep, (p + uMaat * 0.5) / uMaat).r * 12.75, pad = diep / max(v.y, 0.18);
-        float weg = 1.0 - exp(-pad * 0.32);
-        vec3 kleur = mix(vec3(0.36, 0.47, 0.33), vec3(0.04, 0.11, 0.08), smoothstep(0.0, 1.0, weg));
+        float weg = 1.0 - exp(-pad * 0.55); // de Lot: groengrijs, je ziet maar een meter of twee naar beneden
+        vec3 kleur = mix(vec3(0.33, 0.37, 0.30), vec3(0.11, 0.14, 0.11), smoothstep(0.0, 1.0, weg));
         float a = clamp(weg * 1.05, 0.03, 0.94);
         vec3 c = mix(kleur, refl, fres); a = mix(a, 1.0, fres);
         float zon = pow(max(dot(reflect(-v, n), normalize(vec3(0.45, 0.62, 0.3))), 0.0), 380.0) * 3.0; c += vec3(1.0, 0.95, 0.85) * zon; a = max(a, min(1.0, zon));
