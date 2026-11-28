@@ -6,6 +6,7 @@ import * as THREE from "three";
 
 const SOORTEN = {
   esdoorn: { bestand: "esdoorn", varianten: ["large_1", "large_2", "large_3", "medium_1", "medium_2", "medium_3"].map((v) => ({ naam: v, dicht: new RegExp(`Acer_${v}_LOD2`), ver: new RegExp(`Acer_${v}_Billboard`) })), dichtbij: 75 },
+  struik: { bestand: "esdoorn", varianten: ["small_1", "small_2", "small_3", "Sapling_1", "Sapling_2", "Sapling_3"].map((v) => ({ naam: v, dicht: new RegExp(`Acer_${v}_LOD2`), ver: null })), dichtbij: 70 },
   populier: { bestand: "populier", varianten: [{ naam: "pop", dicht: /./, ver: null }], dichtbij: 140 },
   wilg: { bestand: "wilg", varianten: [{ naam: "wilg", dicht: /./, ver: null }], dichtbij: 90 },
 };

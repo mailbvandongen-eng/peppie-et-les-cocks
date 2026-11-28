@@ -320,13 +320,13 @@ export const mensenGeladen = () => Object.keys(modellen).length > 0;
 export function zetPet(m, kleur = "#f2f2ee") {
   let hoofd = null; m.object.traverse((b) => { if (b.isBone && b.name === "DEF-head") hoofd = b; }); if (!hoofd) return;
   const g = new THREE.Group(), mat = new THREE.MeshStandardMaterial({ color: kleur, roughness: 0.8 });
-  const bol = new THREE.Mesh(new THREE.SphereGeometry(0.105, 20, 10, 0, Math.PI * 2, 0, Math.PI * 0.5), mat); bol.scale.set(1.0, 0.55, 1.08); g.add(bol);
-  const klep = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.085, 0.008, 20, 1, false, -Math.PI / 2, Math.PI), mat); klep.scale.set(0.95, 1, 1.15); klep.position.set(0, 0.006, 0.1); klep.rotation.x = 0.18; g.add(klep);
-  const knoop = new THREE.Mesh(new THREE.SphereGeometry(0.01, 8, 6), mat); knoop.position.y = 0.075; g.add(knoop);
+  const bol = new THREE.Mesh(new THREE.SphereGeometry(0.088, 20, 10, 0, Math.PI * 2, 0, Math.PI * 0.5), mat); bol.scale.set(1.0, 0.55, 1.08); g.add(bol);
+  const klep = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.006, 20, 1, false, -Math.PI / 2, Math.PI), mat); klep.scale.set(0.95, 1, 1.15); klep.position.set(0, 0.006, 0.085); klep.rotation.x = 0.18; g.add(klep);
+  const knoop = new THREE.Mesh(new THREE.SphereGeometry(0.01, 8, 6), mat); knoop.position.y = 0.048; g.add(knoop);
   // drie zwarte strepen (Adidas) aan de zijkant
-  const zw = new THREE.MeshStandardMaterial({ color: "#111" }); for (let i = 0; i < 3; i++) { const st = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.05, 0.008), zw); st.position.set(0.1, 0.03, -0.02 + i * 0.016); st.rotation.z = -0.5; g.add(st); }
+  const zw = new THREE.MeshStandardMaterial({ color: "#111" }); for (let i = 0; i < 3; i++) { const st = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.05, 0.008), zw); st.position.set(0.086, 0.025, -0.02 + i * 0.014); st.rotation.z = -0.5; g.add(st); }
   g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
   // het bot heeft zijn eigen schaal en draaiing: de pet in wereldmaat op de kruin zetten
-  hoofd.add(g); g.userData.pas = () => { m.object.updateMatrixWorld(true); const s = new THREE.Vector3(); hoofd.getWorldScale(s); g.scale.setScalar(1 / s.x); };
-  g.position.set(0, 0.112, 0.006); g.userData.pas(); m.pet = g; return g;
+  hoofd.add(g); g.userData.pas = () => { m.object.updateMatrixWorld(true); const s = new THREE.Vector3(); hoofd.getWorldScale(s); g.scale.setScalar(0.78 / s.x); };
+  g.position.set(0, 0.118, 0.012); g.userData.pas(); m.pet = g; return g;
 }

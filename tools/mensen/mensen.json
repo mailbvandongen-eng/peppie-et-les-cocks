@@ -14,7 +14,24 @@
    "haar": "short04",
    "haarTint": "#b4521e",
    "huid": "#e8b49a",
-   "ogen": "blue"
+   "ogen": "blue",
+   "gezicht": {
+    "foto": "/root/apps/peppie-lot/ref/gezicht/paul.jpg",
+    "ogen": [
+     [
+      852,
+      456
+     ],
+     [
+      1092,
+      451
+     ]
+    ],
+    "mond": [
+     1008,
+     696
+    ]
+   }
   },
   {
    "naam": "dave",
@@ -27,7 +44,24 @@
    "shirtTint": "#cfc43a",
    "schoenen": "shoes05",
    "huid": "#e2a98c",
-   "ogen": "brown"
+   "ogen": "brown",
+   "gezicht": {
+    "foto": "/root/apps/peppie-lot/ref/gezicht/dave.jpg",
+    "ogen": [
+     [
+      312,
+      640
+     ],
+     [
+      672,
+      676
+     ]
+    ],
+    "mond": [
+     468,
+     990
+    ]
+   }
   },
   {
    "naam": "bob",
@@ -40,7 +74,24 @@
    "schoenen": "shoes01",
    "huid": "#e6b29a",
    "ogen": "blue",
-   "pakTint": "#2b2d31"
+   "pakTint": "#2b2d31",
+   "gezicht": {
+    "foto": "/root/apps/peppie-lot/ref/gezicht/bob3.jpg",
+    "ogen": [
+     [
+      497,
+      505
+     ],
+     [
+      728,
+      422
+     ]
+    ],
+    "mond": [
+     683,
+     750
+    ]
+   }
   },
   {
    "naam": "wim",
@@ -56,7 +107,24 @@
    "haarTint": "#c4c0b8",
    "randje": 0.075,
    "huid": "#e9b8a3",
-   "ogen": "grey"
+   "ogen": "grey",
+   "gezicht": {
+    "foto": "/root/apps/peppie-lot/ref/gezicht/wim.jpg",
+    "ogen": [
+     [
+      450,
+      515
+     ],
+     [
+      715,
+      510
+     ]
+    ],
+    "mond": [
+     575,
+     742
+    ]
+   }
   }
  ]
 }

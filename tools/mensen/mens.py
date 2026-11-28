@@ -83,11 +83,12 @@ def fitfile(path):
 B = lambda p: Vector((p[0] * 0.1, -p[2] * 0.1, p[1] * 0.1))   # decimeters, y omhoog -> meters, z omhoog
 
 # ---------- alle plaatjes op één vel ----------
-A = 1024
+A = 2048 if C.get('gezicht') else 1024
 atlas = np.zeros((A, A, 4), dtype=np.float32)
 # (x, y vanaf boven, breedte, hoogte) in pixels
 VAK = {'huid': (0, 0, 512, 512), 'pak': (512, 0, 512, 512), 'haar': (0, 512, 256, 256), 'schoen': (256, 512, 256, 256),
        'oog': (512, 512, 128, 128), 'wenkbrauw': (640, 512, 128, 128)}
+if A == 2048: VAK = {k: tuple(v * 2 for v in w) for k, w in VAK.items()}
 def laad(path):
     im = bpy.data.images.load(path); w, h = im.size
     px = np.array(im.pixels[:], dtype=np.float32).reshape(h, w, 4)   # rij 0 = onderaan
@@ -186,6 +187,65 @@ pts, vt, f, refs, _ = fitfile(f'{S}/proxymeshes/{prox}/{prox}.proxy')
 weg_p = {i for i, r in enumerate(refs) if any(bi in verborgen for bi, bw in r if bw > 0.2)}
 f = [q for q in f if sum(i in weg_p for i, _ in q) < 2]
 print('lijf: vlakken over', len(f), 'verborgen punten', len(weg_p))
+if C.get('gezicht'):
+    # ---------- het echte gezicht: de foto op het hoofd projecteren en in de huidtextuur bakken ----------
+    # gezicht = {"foto": pad, "ogen": [[x, y], [x, y]] (links en rechts in de foto), "mond": [x, y]}
+    from PIL import Image
+    G_ = C['gezicht']; foto = np.asarray(Image.open(G_['foto']).convert('RGB'), dtype=np.float32) / 255.0; FH, FW = foto.shape[:2]
+    # het licht uit de foto halen: grote vlekken licht en schaduw weg, de trekken (ogen, wenkbrauwen, mond, rimpels) blijven
+    from PIL import ImageFilter
+    iod = float(np.linalg.norm(np.array(G_['ogen'][1], float) - np.array(G_['ogen'][0], float)))
+    wazig = np.asarray(Image.open(G_['foto']).convert('RGB').filter(ImageFilter.GaussianBlur(iod * 0.45)), dtype=np.float32) / 255.0
+    lum = lambda a: a @ np.array([0.3, 0.59, 0.11], dtype=np.float32)
+    foto = foto * (lum(wazig).mean() / np.maximum(lum(wazig), 0.05))[..., None] ** float(G_.get('vlak', 0.5))
+    foto = np.clip(foto, 0, 1) ** 2.2   # sRGB -> lineair, net als de atlas
+    P = np.array([list(B(q)) for q in pts])   # meters, z omhoog, gezicht naar -y
+    ope, _, _, _, _ = fitfile(f'{S}/eyes/low-poly/low-poly.mhclo'); E_ = np.array([list(B(q)) for q in ope])
+    oogL = E_[E_[:, 0] < 0].mean(axis=0); oogR = E_[E_[:, 0] > 0].mean(axis=0); oogM = (oogL + oogR) / 2; io = np.linalg.norm(oogR - oogL)
+    mondZ = oogM[2] - io * 1.12
+    fl, fr = np.array(G_['ogen'][0], float), np.array(G_['ogen'][1], float); fm = np.array(G_['mond'], float)
+    # model (x, z) -> foto (px, py): ogen op ogen (draaiing en schaal), mond bepaalt de hoogte
+    flip = 1 if G_.get('spiegel') else -1   # wie je van voren ziet: zijn rechteroog staat links in de foto
+    mL, mR = (oogR, oogL) if flip < 0 else (oogL, oogR)
+    ex = (fr - fl) / np.linalg.norm(fr - fl); ey = np.array([-ex[1], ex[0]]); fom = (fl + fr) / 2
+    sx = np.linalg.norm(fr - fl) / io; sy = np.dot(fm - fom, ey) / (oogM[2] - mondZ)
+    def naarFoto(q):
+        dx = (q[..., 0] - oogM[0]) * (-flip); dz = oogM[2] - q[..., 2]
+        return fom[None] + dx[..., None] * sx * ex[None] + dz[..., None] * sy * ey[None]
+    FP = naarFoto(P)
+    # alleen de voorkant van het hoofd: boven de kin, gezicht naar voren; zacht naar de randen
+    # het gezicht wordt een eigen stukje huid met de foto erop (vlak geprojecteerd, dus zonder naden); de rand loopt over in de huidkleur
+    fh = abs(fm[1] - fom[1]); cxp, cyp = fom[0] + (fm[0] - fom[0]) * 0.35, fom[1] + fh * 0.45; ra, rb = np.linalg.norm(fr - fl) * 1.18, fh * 2.05
+    def inEllips(q): return ((q[..., 0] - cxp) / ra) ** 2 + ((q[..., 1] - cyp) / rb) ** 2
+    zijde = max(ra, rb) * 2.1; kx0, ky0 = cxp - zijde / 2, cyp - zijde / 2
+    # het stuk foto uitsnijden (512 x 512) en naar de rand toe overvloeien in de huidkleur van het model
+    N_ = 512; gx, gy = np.meshgrid((np.arange(N_) + 0.5) / N_ * zijde + kx0, (np.arange(N_) + 0.5) / N_ * zijde + ky0)
+    stuk = foto[np.clip(gy.astype(int), 0, FH - 1), np.clip(gx.astype(int), 0, FW - 1)]
+    x0, y0, w0, h0 = VAK['huid']; yb = A - y0 - h0; huidpx = atlas[yb:yb + h0, x0:x0 + w0]
+    wang = foto[int(fom[1] + fh * 0.5) - 8:int(fom[1] + fh * 0.5) + 8, int(fl[0]) - 8:int(fl[0]) + 8].reshape(-1, 3).mean(axis=0)
+    # de hele huid van het lijf krijgt de kleur van de wangen op de foto: dan valt de rand van het gezicht weg
+    # kleur van de foto, helderheid van de MakeHuman-huid (de foto's zijn vaak donker of rood belicht)
+    huidGem = huidpx[..., :3].reshape(-1, 3).mean(axis=0); L = lambda c: float(c @ np.array([0.3, 0.59, 0.11]))
+    tint = wang / max(L(wang), 1e-3); tint = tint ** 0.5   # de tint van de foto, maar gematigd
+    huidKleur = np.clip(tint * L(huidGem) / max(L(tint), 1e-3) * 0.5 + huidGem * 0.5, 0, 1)
+    stuk = stuk * (L(huidKleur) / max(L(wang), 1e-3)) * (huidKleur / L(huidKleur)) / np.maximum(wang / max(L(wang), 1e-3), 1e-3)
+    huidpx[..., :3] = np.clip(huidpx[..., :3] * (huidKleur / np.maximum(huidGem, 1e-3)), 0, 1); atlas[yb:yb + h0, x0:x0 + w0] = huidpx
+    stuk = np.minimum(stuk, huidKleur * 1.2); sm = stuk.reshape(-1, 3).mean(axis=0); stuk = sm + (stuk - sm) * 0.8
+    e = np.sqrt(inEllips(np.stack([gx, gy], -1))); w_ = np.clip((0.92 - e) / 0.3, 0, 1) ** 1.3
+    stuk = stuk * w_[..., None] + huidKleur * 0.94 * (1 - w_[..., None])
+    gv = VAK.setdefault('gezicht', (1024, 1536, 512, 512) if A == 2048 else (512, 768, 256, 256))
+    zet('gezicht', np.concatenate([stuk[::-1], np.ones((N_, N_, 1), np.float32)], -1)); img.pixels.foreach_set(atlas.ravel()); img.pack()
+    # welke vlakken van het lijf vallen in de ellips en kijken naar voren?
+    FPn = (FP - [kx0, ky0]) / zijde   # 0..1 in het stuk; v telt van onderen
+    gezF, rest = [], []
+    for q in f:
+        I = [i for i, _ in q]; Q = P[I]; n = np.cross(Q[1] - Q[0], Q[2] - Q[0]); nl = np.linalg.norm(n) or 1
+        if Q[:, 2].min() > oogM[2] - io * 2.4 and abs(n[1] / nl) > 0.2 and np.mean(Q[:, 1]) < oogM[1] + io * 0.4 and (inEllips(FP[I]) < 1.9).all(): gezF.append(q)
+        else: rest.append(q)
+    f = rest
+    gvt = [(float(FPn[i, 0]), float(1 - FPn[i, 1])) for i in range(len(pts))]
+    delen.append(deel('gezicht', pts, gvt, [[(i, i) for i, _ in q] for q in gezF], refs, 'gezicht'))
+    print('gezicht:', len(gezF), 'vlakken')
 delen.append(deel('lijf', pts, vt, f, refs, 'huid'))
 for map_, naam, vak in ([('hair/' + C['haar'], C['haar'], 'haar')] if C.get('haar') else []) + [('eyes/low-poly', 'low-poly', 'oog'), ('eyebrows/eyebrow001', 'eyebrow001', 'wenkbrauw')]:
     pts, vt, f, refs, _ = fitfile(f'{S}/{map_}/{naam}.mhclo')
