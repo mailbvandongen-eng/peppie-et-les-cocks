@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { laadMensen, maakMens, zetPet } from "./mensen.js";
 import { Effecten } from "./effecten.js";
 import { Livescope } from "./livescope.js";
+import { Chirp } from "./chirp.js";
 import { bouwWereld } from "./wereld.js";
 import { laadVisspullen } from "./hengel.js";
 import { Kippen } from "./kippen.js";
@@ -124,7 +125,7 @@ const cam = { yaw: huis.yaw + Math.PI, pitch: 0.28, afstand: 5, sleep: 0 };
   sc.addEventListener("pointerdown", (e) => { e.preventDefault(); geluid.start(); scid = e.pointerId; scx = sc0 = e.clientX; sct = e.clientY; sc.setPointerCapture(scid); });
   sc.addEventListener("pointermove", (e) => { if (e.pointerId === scid) { invoer.sonarSleep += (e.clientX - scx) / sc.clientWidth; scx = e.clientX; } });
   // een korte tik (zonder vegen) bedient de knoppen van het toestel: bereik, gevoeligheid, pauze
-  sc.addEventListener("pointerup", (e) => { if (e.pointerId !== scid) return; scid = null; if (Math.abs(e.clientX - sc0) < 8 && Math.abs(e.clientY - sct) < 8) { const r = sc.getBoundingClientRect(); if (scope.tik(((e.clientX - r.left) * sc.width) / r.width, ((e.clientY - r.top) * sc.height) / r.height)) { geluid.toon({ freq: 1400, duur: 0.04, gain: 0.03 }); belly.scopeT = 0; } } });
+  sc.addEventListener("pointerup", (e) => { if (e.pointerId !== scid) return; scid = null; if (Math.abs(e.clientX - sc0) < 8 && Math.abs(e.clientY - sct) < 8) { const r = sc.getBoundingClientRect(); if ((strepen() ? chirp : scope).tik(((e.clientX - r.left) * sc.width) / r.width, ((e.clientY - r.top) * sc.height) / r.height)) { geluid.toon({ freq: 1400, duur: 0.04, gain: 0.03 }); belly.scopeT = 0; } } });
   sc.addEventListener("pointercancel", (e) => { if (e.pointerId === scid) scid = null; });
   for (const [id, naam] of [["#knopA", "A"], ["#knopB", "B"], ["#knopOp", "op"], ["#knopNeer", "neer"], ["#knopLinks", "links"], ["#knopRechts", "rechts"]]) { const k = $(id);
     k.addEventListener("pointerdown", (e) => { e.preventDefault(); geluid.start(); invoer[naam] = true; if (naam === "A") invoer.Atik = true; if (naam === "B") invoer.Btik = true; k.classList.add("in"); });
@@ -240,13 +241,15 @@ let bb = BB.paul, boot = bb.g;
 const aangemeerd = [["wim", 19.6, 2.9, 0.25], ["dave", 21.4, 3.3, -0.15], ["bob", 12.4, 3.0, 0.4], ["paul", 14.2, 3.1, -0.3]].map(([soort, lx, lz, r]) => { const b = maakBellyboat(soort).g, p = dom.wereld(lx, 0, dom.oeverZ(lx) + lz); b.position.set(p.x, 0.02, p.z); b.rotation.y = huis.yaw + Math.PI / 2 + r; scene.add(b); return { soort, b, f: Math.random() * 6 }; });
 /** Kies wie je speelt. */
 function kiesSpeler(naam) {
+  spelerNaam = naam;
   peppie = C[naam]; cocks = C[["bob", "dave", "wim", "paul"].find((n) => n !== naam)]; rest = Object.values(C).filter((w) => w !== peppie && w !== cocks);
   rest.forEach((w, i) => plekken[i](w)); legCocks(false); for (const w of Object.values(C)) w.g.visible = true;
   for (const b of Object.values(BB)) b.g.visible = false; bb = BB[naam]; boot = bb.g; for (const a of aangemeerd) a.b.visible = a.soort !== naam;
   for (const k of document.querySelectorAll("#spelers button")) k.classList.toggle("aan", k.dataset.speler === naam); try { localStorage.setItem("peppie-speler", naam); } catch {}
 }
 const belly = { pos: V(0, 0, 0), yaw: 0, sonar: 0, aas: 1, tik: 0, vis: null, klok: 0, scopeT: 0, top: V(0, 0, 0) };
-const scope = new Livescope(hud.scope);
+const scope = new Livescope(hud.scope), chirp = new Chirp(hud.scope);
+let spelerNaam = "paul"; const strepen = () => spelerNaam === "wim"; // Wim heeft geen livescope, alleen zijn strepenkijker
 function beginBelly() {
   belly.pos.copy(W.steiger.eind).addScaledVector(u, 32); belly.yaw = huis.yaw; belly.sonar = 0; belly.aas = 1; belly.vis = null; belly.v = 0; belly.w = 0; cam.yaw = huis.yaw + Math.PI; cam.afstand = 6.5; cam.pitch = 0.3; zetWeergave("varen");
   hud.missie.textContent = "Zoek een grote meerval op de livescope (dikke kop, dunne staart) en vang er een van 2 meter of meer"; hud.tel.textContent = "";
@@ -258,7 +261,7 @@ function stapBelly(dt) {
     const nx = b.pos.x + f.x * b.v * dt, nz = b.pos.z + f.z * b.v * dt; if (W.diepte(nx, nz) > 0.7) b.pos.set(nx, 0, nz); else b.v = 0; }
   const vaart = b.v;
   // de transducer draaien: vegen over het scherm (of Q/C)
-  const kn = invoer.toets; b.sonar -= invoer.sonarSleep * 2.2; invoer.sonarSleep = 0; if (kn.KeyQ || kn.KeyZ) b.sonar += 1.4 * dt; if (kn.KeyC) b.sonar -= 1.4 * dt; b.sonar = klem(b.sonar, -2.6, 2.6);
+  const kn = invoer.toets; if (strepen()) invoer.sonarSleep = 0; b.sonar -= invoer.sonarSleep * 2.2; invoer.sonarSleep = 0; if (kn.KeyQ || kn.KeyZ) b.sonar += 1.4 * dt; if (kn.KeyC) b.sonar -= 1.4 * dt; b.sonar = klem(b.sonar, -2.6, 2.6);
   boot.visible = true; boot.position.set(b.pos.x, 0.0 + Math.sin(b.klok * 1.7) * 0.02, b.pos.z); boot.rotation.set(Math.sin(b.klok * 1.3) * 0.025, b.yaw, Math.sin(b.klok * 1.1) * 0.025); bb.stang.rotation.y = b.sonar; bb.schroef.rotation.z += dt * (Math.abs(vaart) * 30 + (dril.aan ? 4 : 0)); bb.motor.rotation.y = -s.x * 0.5;
   boot.updateMatrixWorld(true);
   peppie.m.zet("zitten"); peppie.m.mixer.update(dt); peppie.g.position.copy(boot.localToWorld(bb.zit.clone())).add(V(0, -peppie.m.zithoogte() + 0.02, 0)); peppie.g.rotation.set(0, b.yaw, 0);
@@ -295,7 +298,11 @@ function stapBelly(dt) {
   }
   // het scherm: tien keer per seconde een nieuw beeld, ook op het toestel op de arm
   if ((b.scopeT -= dt) <= 0) { b.scopeT = 0.1; const nu = new Date(), av = zie(top.x, top.z);
-    scope.teken({ bodem: (v) => W.diepte(bron.x + fb.x * v, bron.z + fb.z * v), vissen: inBeeld, aas: dril.aan || av === null ? null : { v: av, d: b.aas - b.tik * 0.3 },
+    if (strepen()) { const r = (x, z) => Math.hypot(x - bron.x, z - bron.z);
+      chirp.stap(0.1, { onder: W.diepte(bron.x, bron.z), vissen: vb.alle().map((v) => ({ r: r(v.x, v.z), d: v === b.vis ? klem(dril.afstand * 0.8, 0.6, W.diepte(v.x, v.z) - 0.2) : v.d, lengte: v.lengte })).filter((f) => f.r < 8),
+        school: vb.scholen.flatMap((q) => { if (r(q.x, q.z) > 8) return []; const out = []; for (let i = 0; i < q.n; i++) { const o = vb.schoolPunt(q, i); out.push({ r: r(o.x, o.z), d: o.d }); } return out; }),
+        aas: dril.aan ? null : { r: r(top.x, top.z), d: b.aas }, temp: 14.8 + Math.sin(b.klok * 0.4) * 0.05, snelheid: Math.abs(b.v) * 1.944, tijd: `${String(nu.getHours()).padStart(2, "0")}:${String(nu.getMinutes()).padStart(2, "0")}` });
+    } else scope.teken({ bodem: (v) => W.diepte(bron.x + fb.x * v, bron.z + fb.z * v), vissen: inBeeld, aas: dril.aan || av === null ? null : { v: av, d: b.aas - b.tik * 0.3 },
       school: vb.scholen.flatMap((q) => { const out = []; for (let i = 0; i < q.n; i++) { const o = vb.schoolPunt(q, i), v = zie(o.x, o.z); if (v !== null) out.push({ v, d: o.d }); } return out; }), planten: planten.inBundel(zie),
       richting: b.sonar, onder: W.diepte(bron.x, bron.z), snelheid: Math.abs(b.v) * 1.944, volt: 12.5, temp: 14.78 + Math.sin(b.klok * 0.4) * 0.02, tijd: `${String(nu.getHours()).padStart(2, "0")}:${String(nu.getMinutes()).padStart(2, "0")}` });
     scopeTex.needsUpdate = true; }
@@ -415,5 +422,5 @@ function lus() {
 for (const k of document.querySelectorAll("#spelers button")) k.addEventListener("click", () => kiesSpeler(k.dataset.speler));
 kiesSpeler((() => { try { return localStorage.getItem("peppie-speler"); } catch { return null; } })() || "paul");
 $("#laden").hidden = true; $("#menu").hidden = false;
-window.__spel = { C, kiesSpeler, get dave() { return C.dave; }, get wim() { return C.wim; }, vb, kippen, zon, THREE, spel, W, start, belly, dr, rat, kant, loop, cam, invoer, dril, get peppie() { return peppie; }, get cocks() { return cocks; }, scope, camera, stapDril, MISSIES };
+window.__spel = { chirp, C, kiesSpeler, get dave() { return C.dave; }, get wim() { return C.wim; }, vb, kippen, zon, THREE, spel, W, start, belly, dr, rat, kant, loop, cam, invoer, dril, get peppie() { return peppie; }, get cocks() { return cocks; }, scope, camera, stapDril, MISSIES };
 requestAnimationFrame(lus);
