@@ -1,12 +1,12 @@
 // node tools/assets.cjs — de assets-catalogus: een voorbeeldplaatje per asset (assets/_voorbeeld/), assets/catalogus.json en assets.html.
 // Per asset: naam, map, grootte, driehoeken, texturen (max px), bron, licentie, en "nieuw" als het minder dan 3 dagen oud is.
-const { chromium } = require("/root/tools/pw/node_modules/playwright-core"); const fs = require("fs"), path = require("path");
+const { chromium } = require(process.env.PW_CORE ?? "/root/tools/pw/node_modules/playwright-core"); const fs = require("fs"), path = require("path");
 const ROOT = path.resolve(__dirname, ".."), A = path.join(ROOT, "assets"), VB = path.join(A, "_voorbeeld"); fs.mkdirSync(VB, { recursive: true });
 const bronnen = JSON.parse(fs.readFileSync(path.join(A, "bronnen.json"), "utf8"));
-const alle = []; (function loop(d) { for (const f of fs.readdirSync(d)) { const p = path.join(d, f); if (f.startsWith("_") || f === "bronnen.json" || f === "catalogus.json") continue; if (fs.statSync(p).isDirectory()) loop(p); else alle.push(path.relative(A, p)); } })(A);
+const alle = []; (function loop(d) { for (const f of fs.readdirSync(d)) { const p = path.join(d, f); if (f.startsWith("_") || f === "bronnen.json" || f === "catalogus.json") continue; if (fs.statSync(p).isDirectory()) loop(p); else alle.push(path.relative(A, p).split(path.sep).join("/")); } })(A);
 const T = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".glb": "model/gltf-binary", ".png": "image/png", ".jpg": "image/jpeg" };
 (async () => {
-  const b = await chromium.launch({ executablePath: "/usr/bin/chromium", args: ["--no-sandbox", "--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"] });
+  const b = await chromium.launch({ executablePath: process.env.CHROMIUM ?? "/usr/bin/chromium", args: ["--no-sandbox", "--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"] });
   const p = await b.newPage({ viewport: { width: 320, height: 240 } });
   await p.route("http://a.test/**", (r) => { const f = path.join(ROOT, decodeURIComponent(new URL(r.request().url()).pathname)); r.fulfill(fs.existsSync(f) ? { body: fs.readFileSync(f), contentType: T[path.extname(f)] ?? "application/octet-stream" } : { status: 404 }); });
   const lijst = [];

@@ -103,10 +103,11 @@ let peppie = C.paul, cocks = C.bob, rest = [C.dave, C.wim];
 const plekken = (() => { const zet = (w, lx, lz, rot, houding, zit) => { const p = dom.wereld(lx, 0, lz); w.g.position.set(p.x, W.opSteiger(p.x, p.z) ?? W.hoogte(p.x, p.z), p.z); w.g.rotation.set(0, huis.yaw + rot, 0); w.m.zet(houding, 1, houding === "zitten" ? 0 : null); w.m.mixer.update(0.01); if (zit) w.g.position.y += 0.44 - w.m.zithoogte() + 0.02; };
   return [(w) => zet(w, -5.4, dom.oeverZ(-5.4) + 1.7, 0.4, "staan"), (w) => zet(w, -6.4, dom.oeverZ(-6.5) - 5.25, Math.PI, "zitten", true)]; })();
 {
-  // Wim drinkt alleen Fristi: een pak naast hem op de picknicktafel
-  const pak = new THREE.Group(), roze = new THREE.MeshStandardMaterial({ color: "#e8e2d4", roughness: 0.6 }), band = new THREE.MeshStandardMaterial({ color: "#d8357a", roughness: 0.6 });
-  const romp = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.19, 0.07), roze); romp.position.y = 0.095; const st = new THREE.Mesh(new THREE.BoxGeometry(0.072, 0.07, 0.072), band); st.position.y = 0.1; const nok = new THREE.Mesh(new THREE.CylinderGeometry(0.0, 0.05, 0.04, 4), roze); nok.position.y = 0.21; nok.rotation.y = Math.PI / 4; pak.add(romp, st, nok);
-  const pp = dom.wereld(-6.0, 0, dom.oeverZ(-6.5) - 6); pak.position.set(pp.x, W.hoogte(pp.x, pp.z) + 0.76, pp.z); scene.add(pak); W.fristi = pak; }
+  // Wim drinkt alleen Fristi: een blikje (250 ml, echt etiket) naast hem op de picknicktafel, logo naar hem toe
+  const { GLTFLoader } = await import("../lib/three-addons.js");
+  const blik = (await new GLTFLoader().loadAsync(`assets/drank/fristi.glb?v=${window.VERSIE ?? ""}`)).scene; blik.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+  const pp = dom.wereld(-6.0, 0, dom.oeverZ(-6.5) - 6), wim = dom.wereld(-6.4, 0, dom.oeverZ(-6.5) - 5.25); blik.position.set(pp.x, W.hoogte(pp.x, pp.z) + 0.76, pp.z);
+  blik.lookAt(wim.x, blik.position.y, wim.z); blik.rotateY(0.35); scene.add(blik); W.fristi = blik; }
 // de kippen lopen over het gras tussen het huis en de oever, en soms over de steigers
 await Kippen.laad();
 const kippen = new Kippen(scene, {

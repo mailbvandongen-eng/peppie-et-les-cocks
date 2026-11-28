@@ -3,6 +3,8 @@
 import * as THREE from "three"; import { GLTFLoader } from "../lib/three-addons.js"; import { MeshoptDecoder } from "../lib/meshopt_decoder.mjs";
 const r = new THREE.WebGLRenderer({ antialias: true }); r.setSize(innerWidth, innerHeight); r.toneMapping = THREE.ACESFilmicToneMapping; document.body.append(r.domElement);
 const s = new THREE.Scene(); s.add(new THREE.HemisphereLight("#dcefff", "#6f7a4e", 1.4)); const z = new THREE.DirectionalLight("#fff", 2.4); z.position.set(5, 10, 6); s.add(z);
+// omgevingslicht uit de lucht, anders worden metalen dingen (blikjes, molens) zwart
+{ const t = await new THREE.TextureLoader().loadAsync("../assets/lucht.jpg"); t.mapping = THREE.EquirectangularReflectionMapping; t.colorSpace = THREE.SRGBColorSpace; s.environment = new THREE.PMREMGenerator(r).fromEquirectangular(t).texture; s.environmentIntensity = 0.6; }
 const c = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.1, 500);
 const q = new URLSearchParams(location.search); window.SCENE = null; const g = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync(q.get("m"));
 const re = q.get("n") ? new RegExp(q.get("n")) : null; if (re) g.scene.traverse((o) => { if (o.isMesh && !re.test(o.name)) o.visible = false; });

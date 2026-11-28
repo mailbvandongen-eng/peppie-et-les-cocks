@@ -31,6 +31,8 @@ Bediening: links op het scherm slepen = sturen, rechts slepen = rondkijken, knop
   - kip-dichtbij.mp3: “R01-58-Close Chicken Vocals.wav” door craigsmith (zero) https://freesound.org/people/craigsmith/sounds/479593/
   - krekels-avond.mp3: “Crickets, very distant barks summer night.wav” door Daphne_in_Wonderland (zero) https://freesound.org/people/Daphne_in_Wonderland/sounds/383479/
 - Geluid: de plons komt uit Bobs eigen dril-video; het geluid van de slip en de reel is door Bob aangeleverd (28-11) met toestemming om het te gebruiken.
+- Fristi-blikje: model “Soda Can 250ml” (sebastian204, Sketchfab, CC BY 4.0), met als etiket de productfoto van Fristi Rood Fruit 250 ml (FrieslandCampina, via PS in foodservice).
+- Drank via Sketchfab (CC BY 4.0): “Heineken Bottle” (liontrike), “Realistic Heineken can” (mihadshok9), “Jack Daniels Whiskey No.7 Bottle” (3DDave247); Heineken-krat: “beer crate 12x750ml” (milansaman21) in Heineken-groen met het logo van het blik-etiket en twaalf flesjes. Op echte maat gezet en lichter gemaakt voor de telefoon.
 - Kippen: “ANIMAL & FOOD | Chicken Model (CS2)” (kill6lucius, Sketchfab, CC BY 4.0), met eigen kleuren per kip.
 - Drone: “DJI 3 mini Pro” (wishmaster88, Sketchfab, CC BY 4.0), vereenvoudigd; staat in het spel voor Pauls DJI Mini 2.
 - Vissen via Sketchfab (CC BY 4.0): “Wels catfish” (faerbogdan99), “Bream (Abramis Brama)” en “Zander (Sander lucioperca)” (Nullifiedit), “Common Roach” (robert.meier.art); verkleind.
